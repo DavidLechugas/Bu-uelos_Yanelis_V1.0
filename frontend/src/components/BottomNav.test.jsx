@@ -1,0 +1,53 @@
+import { describe, expect, it, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { BottomNav } from './BottomNav.jsx';
+
+describe('BottomNav', () => {
+  it('muestra Inicio, Ventas, Domicilios e Inventario', () => {
+    render(<BottomNav active="inicio" onSelect={() => {}} />);
+    expect(
+      screen.getByRole('button', { name: /Inicio/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Ventas/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Domicilios/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Inventario/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('marca la pestaña activa como página actual', () => {
+    render(<BottomNav active="inicio" onSelect={() => {}} />);
+    expect(
+      screen.getByRole('button', { name: /Inicio/ }),
+    ).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('notifica la selección de otra sección para que la app avise', async () => {
+    const onSelect = vi.fn();
+    const user = userEvent.setup();
+    render(<BottomNav active="inicio" onSelect={onSelect} />);
+    await user.click(screen.getByRole('button', { name: /Ventas/ }));
+    expect(onSelect).toHaveBeenCalledWith({
+      id: 'ventas',
+      label: 'Ventas',
+      icon: '📈',
+    });
+  });
+
+  it('no notifica nada especial por Inicio (ya es la vista actual)', async () => {
+    const onSelect = vi.fn();
+    const user = userEvent.setup();
+    render(<BottomNav active="inicio" onSelect={onSelect} />);
+    await user.click(screen.getByRole('button', { name: /Inicio/ }));
+    expect(onSelect).toHaveBeenCalledWith({
+      id: 'inicio',
+      label: 'Inicio',
+      icon: '🏠',
+    });
+  });
+});

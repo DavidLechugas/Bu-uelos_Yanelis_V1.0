@@ -1,0 +1,39 @@
+# Raíz del proyecto Buñuelos Yanelys
+
+# Dependencias y build
+node_modules/
+dist/
+dist-ssr/
+*.local
+target/
+build/
+
+# Maven wrapper (jar binario)
+.mvn/wrapper/maven-wrapper.jar
+
+# Entorno y secretos: nunca commitear credenciales
+.env
+.env.*
+!.env.example
+
+# Editor y sistema
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Docs de Maven generadas
+HELP.md
+
+# Ejecutable local de Cloudflare (descarga oficial, no versionar)
+tools/bin/
+
+# Material sensible y registros locales
+*.pem
+*.key
+*.log

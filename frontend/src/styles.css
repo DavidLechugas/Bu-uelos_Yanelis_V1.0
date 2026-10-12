@@ -1,0 +1,888 @@
+/* ============================================================
+   Buñuelos Yanelys — prototipo local
+   Paleta crema/caramelo/marrón. Texto mínimo 14 px,
+   objetivos táctiles mínimos 44 px.
+
+   Tipografía en rem: NO se fija font-size en html, así
+   que rem hereda el tamaño de letra preferido del
+   navegador. (px y rem escalan igual con el zoom del
+   navegador; lo que respeta la preferencia del usuario
+   es no fijar px en la raíz.)
+   Escala: cuerpo 1rem · etiquetas .9375rem · mínimo
+   .875rem · entradas ≥1rem · títulos y valores con
+   clamp (rem + vw, acotados).
+   ============================================================ */
+
+:root {
+  --cream-bg: #f4e3cb;
+  --cream-surface: #fff9f0;
+  --cream-deep: #f3e4c8;
+  --caramel-strong: #a5631a;
+  --caramel: #c98f3f;
+  --caramel-border: #d9a75c;
+  --caramel-soft: #f7e8d2;
+  --brown-700: #6b4226;
+  --brown-800: #57351d;
+  --text: #3d2b1a;
+  --muted: #7a6350;
+  --green: #1e7a34;
+  --red: #b3261e;
+  --shadow: 0 8px 24px rgba(90, 58, 20, 0.12);
+  --radius: 16px;
+  --radius-small: 10px;
+  --shell-width: 480px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--cream-bg);
+  color: var(--text);
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid var(--brown-700);
+  outline-offset: 2px;
+}
+
+/* ---------- Login ---------- */
+
+.login-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.brand-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background-color: var(--caramel-strong);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.brand-circle--small {
+  width: 40px;
+  height: 40px;
+  font-size: 0.875rem;
+}
+
+.brand-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.brand-tagline {
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.card {
+  background-color: var(--cream-surface);
+  border: 1px solid var(--caramel-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-title {
+  font-size: clamp(1.25rem, 1.125rem + 0.6vw, 1.375rem);
+  font-weight: 700;
+}
+
+.demo-notice {
+  font-size: 0.9375rem;
+  background-color: var(--caramel-soft);
+  border-left: 3px solid var(--caramel);
+  border-radius: var(--radius-small);
+  padding: 10px 12px;
+}
+
+.role-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.role-fieldset legend {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+.role-options {
+  display: flex;
+  gap: 12px;
+}
+
+.role-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  border: 1px solid var(--caramel-border);
+  border-radius: var(--radius-small);
+  background-color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.role-option--active {
+  border-color: var(--caramel-strong);
+  background-color: var(--caramel-soft);
+}
+
+.role-option input {
+  accent-color: var(--brown-700);
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.field input {
+  height: 48px;
+  border: 1px solid var(--caramel-border);
+  border-radius: var(--radius-small);
+  background-color: #fff;
+  padding: 0 14px;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.field input[aria-invalid="true"] {
+  border-color: var(--red);
+}
+
+.field-error {
+  font-size: 0.9375rem;
+  color: var(--red);
+}
+
+.btn-primary {
+  min-height: 48px;
+  border: 0;
+  border-radius: var(--radius-small);
+  background-color: var(--brown-700);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0 20px;
+}
+
+.btn-primary:hover {
+  background-color: var(--brown-800);
+}
+
+.btn-secondary {
+  min-height: 48px;
+  border: 1px solid var(--brown-700);
+  border-radius: var(--radius-small);
+  background-color: transparent;
+  color: var(--brown-700);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  padding: 0 16px;
+}
+
+.btn-secondary:hover {
+  background-color: var(--caramel-soft);
+}
+
+.btn-help {
+  min-height: 44px;
+  border: 0;
+  background: none;
+  color: var(--brown-700);
+  font-size: 0.9375rem;
+  text-decoration: underline;
+  text-align: center;
+}
+
+.help-text {
+  font-size: 0.9375rem;
+  color: var(--muted);
+  background-color: var(--cream-deep);
+  border-radius: var(--radius-small);
+  padding: 10px 12px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 1.25rem;
+}
+
+/* ---------- Dashboard ---------- */
+
+.app-shell {
+  max-width: var(--shell-width);
+  margin: 0 auto;
+  min-height: 100dvh;
+  position: relative;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 60px;
+  padding: 0 8px 0 4px;
+  background-color: var(--caramel-strong);
+  color: #fff;
+}
+
+.header-title {
+  flex: 1;
+  font-size: clamp(1.125rem, 1rem + 0.75vw, 1.25rem);
+  font-weight: 700;
+}
+
+.profile-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background-color: #fff;
+  color: var(--caramel-strong);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.dashboard-main {
+  /* 96 px deja libre la navegación inferior (60 px) + margen;
+     el safe-area se suma para no tapar contenido en móviles
+     con barra de gestos. */
+  padding: 16px 16px calc(96px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.greeting {
+  font-size: clamp(1.25rem, 1rem + 1.5vw, 1.5rem);
+  font-weight: 700;
+}
+
+.stats-grid {
+  display: grid;
+  /* minmax(0,1fr): la tarjeta se encoge y el texto
+     ajusta en lugar de desbordar la rejilla. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stat-card {
+  padding: 14px 16px;
+  position: relative;
+}
+
+.stat-label {
+  font-size: 0.9375rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: clamp(1.375rem, 1.125rem + 1.25vw, 1.5rem);
+  font-weight: 700;
+  /* Valores largos (p. ej. "$1.234.567") ajustan
+     en vez de ensanchar la tarjeta. */
+  overflow-wrap: break-word;
+}
+
+.stat-card--green .stat-value {
+  color: var(--green);
+}
+
+.stat-card--red .stat-value {
+  color: var(--red);
+}
+
+.stat-badge {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 0.875rem;
+  color: var(--brown-700);
+  background-color: var(--caramel-soft);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.card > h2 {
+  font-size: clamp(1rem, 0.875rem + 0.75vw, 1.125rem);
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.dashboard-main .card {
+  padding: 16px;
+}
+
+.inventory-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inventory-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.9375rem;
+  background-color: var(--caramel-soft);
+  border-radius: var(--radius-small);
+  padding: 10px 12px;
+}
+
+.inventory-product {
+  flex: 1;
+  font-weight: 600;
+  min-width: 120px;
+}
+
+.inventory-units {
+  font-weight: 700;
+  color: var(--red);
+}
+
+.inventory-note {
+  color: var(--muted);
+}
+
+.weekly-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.chart-bar {
+  fill: var(--caramel);
+}
+
+/* Etiquetas de los días de la gráfica: HTML bajo la SVG
+   (ver .chart-x-axis en WeeklyChart). Tamaño estable:
+   no escalan con el viewBox, así que cumplen el mínimo
+   de 14 px en 320 px y no crecen desproporcionadamente
+   en pantallas anchas. */
+.chart-x-axis {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  /* Mismo padding proporcional que la SVG (28/320 =
+     8.75 %): cada etiqueta queda centrada bajo su
+     barra. */
+  padding: 0 8.75%;
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* ---------- Estados de carga y error ---------- */
+
+.skeleton {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.skeleton-card {
+  height: 96px;
+  border-radius: var(--radius);
+  background-color: var(--cream-deep);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.error-card h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.error-detail {
+  font-size: 0.9375rem;
+  color: var(--red);
+  margin-bottom: 8px;
+}
+
+.error-card p {
+  font-size: 0.9375rem;
+  margin-bottom: 8px;
+}
+
+.error-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* ---------- Avisos ---------- */
+
+.notice {
+  font-size: 0.9375rem;
+  border-radius: var(--radius-small);
+  padding: 10px 12px;
+}
+
+.notice--info {
+  background-color: var(--caramel-soft);
+  border-left: 3px solid var(--caramel);
+}
+
+.notice--demo {
+  background-color: #e9f3e6;
+  border-left: 3px solid var(--green);
+}
+
+.notice-toast {
+  position: fixed;
+  /* Sobre la navegación inferior, más el safe-area si existe. */
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: var(--shell-width);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--cream-surface);
+  border: 1px solid var(--caramel-border);
+  border-radius: var(--radius-small);
+  box-shadow: var(--shadow);
+  padding: 10px 12px;
+  /* Por encima del overlay del drawer (z-index 50) para que
+     el aviso siempre sea visible y cerrable. */
+  z-index: 60;
+}
+
+.notice-toast p {
+  flex: 1;
+  font-size: 0.9375rem;
+}
+
+.notice-close {
+  flex-shrink: 0;
+}
+
+/* ---------- Avisos PWA (actualización / sin conexión) ---------- */
+
+/* Igual que .notice-toast pero apilado por encima: conviven
+   sin taparse (el de PWA queda ~64 px más arriba). */
+.pwa-toast {
+  position: fixed;
+  bottom: calc(148px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: var(--shell-width);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--cream-surface);
+  border: 1px solid var(--caramel-border);
+  border-radius: var(--radius-small);
+  box-shadow: var(--shadow);
+  padding: 10px 12px;
+  z-index: 60;
+}
+
+.pwa-toast p {
+  flex: 1;
+  font-size: 0.9375rem;
+}
+
+.pwa-toast-btn {
+  flex-shrink: 0;
+  min-height: 44px;
+}
+
+.pwa-toast-close {
+  flex-shrink: 0;
+}
+
+/* ---------- Drawer ---------- */
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(40, 24, 10, 0.55);
+  z-index: 50;
+}
+
+.drawer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 80%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--cream-surface);
+  border-right: 1px solid var(--caramel-border);
+  box-shadow: var(--shadow);
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 4px 12px;
+  border-bottom: 1px solid var(--caramel-border);
+}
+
+.drawer-brand-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.drawer-brand-name {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.drawer-role {
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.drawer-menu {
+  list-style: none;
+  margin: 0;
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.drawer-item {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  border: 0;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-align: left;
+  padding: 0 14px;
+}
+
+.drawer-item:hover {
+  background-color: var(--cream-deep);
+}
+
+.drawer-logout {
+  width: 100%;
+  min-height: 48px;
+  margin-top: auto;
+  border: 0;
+  border-top: 1px solid var(--caramel-border);
+  background: transparent;
+  color: var(--brown-700);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.drawer-logout:hover {
+  background-color: var(--cream-deep);
+}
+
+/* ---------- Navegación inferior ---------- */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--shell-width);
+  display: flex;
+  background-color: var(--cream-surface);
+  border-top: 1px solid var(--caramel-border);
+  /* Safe area de móviles (barra de gestos): crece hacia arriba
+     sin tapar el borde inferior del contenido. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 30;
+}
+
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 60px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+.bottom-nav-item--active {
+  color: var(--caramel-strong);
+  font-weight: 700;
+  box-shadow: inset 0 2px 0 var(--caramel-strong);
+}
+
+.bottom-nav-icon {
+  font-size: 1.125rem;
+}
+
+/* ---------- Escritorio (≥1025 px) ---------- */
+
+/* Tramos explícitos y sin solapamiento: móvil
+   (estilos base), tableta 600-1024 px y
+   escritorio ≥1025 px.
+
+   Escritorio: el shell aprovecha el lienzo con
+   un ancho razonable (clamp entre 60rem y
+   68rem). Con el shell anterior de 720 px las
+   cuatro métricas quedaban de ~129 px y la
+   gráfica de ~377 px (mitad del ancho); con
+   este ancho las tarjetas rondan los 250 px y
+   la gráfica ~520 px, legibles sin rediseñar
+   la paleta. */
+@media (min-width: 1025px) {
+  .app-shell,
+  .bottom-nav,
+  .notice-toast {
+    max-width: clamp(60rem, 90vw, 68rem);
+  }
+
+  .app-header {
+    padding: 0 24px;
+  }
+
+  .dashboard-main {
+    padding: 24px 24px calc(96px + env(safe-area-inset-bottom, 0px));
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stats-grid {
+    /* Cruza el ancho completo: las cuatro métricas
+       en fila (como la referencia), ~250 px por
+       tarjeta en vez de ~120 px dentro de una
+       columna. */
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .greeting,
+  .notice,
+  .skeleton,
+  .error-card {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------- Tableta (600-1024 px) ---------- */
+
+/* De 600 a 1024 px (tabletas en vertical) el shell
+   móvil de 480 px dejaba márgenes enormes y tarjetas
+   estrechas: el shell sube a 720 px y el contenido
+   aprovecha el lienzo en una sola columna (gráfica a
+   ancho completo). La tipografía crece sola con los
+   clamp de cada elemento (saludo 24 px, h2 18 px,
+   valor 24 px, título del encabezado 20 px a partir
+   de ~500 px de ancho de viewport). El escritorio
+   (≥1025 px) conserva su rejilla de dos columnas. */
+@media (min-width: 600px) and (max-width: 1024px) {
+  :root {
+    --shell-width: 720px;
+  }
+
+  .app-header {
+    padding: 0 24px;
+  }
+
+  .dashboard-main {
+    padding: 20px 24px calc(96px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .stat-card {
+    padding: 18px 20px;
+  }
+}
+
+/* ---------- Tableta ancha (900-1024 px) ---------- */
+
+/* A 900-1024 px (p. ej. iPad Pro de 12,9" vertical)
+   el shell de 720 px dejaría márgenes grandes: el
+   shell sube a 840 px, las métricas siguen en 2
+   columnas amplias y el tablero fluye en una sola
+   columna (la rejilla de dos columnas es de
+   escritorio, ≥1025 px). */
+@media (min-width: 900px) and (max-width: 1024px) {
+  .app-shell,
+  .bottom-nav,
+  .notice-toast {
+    max-width: 840px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dashboard-main {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* ---------- Móvil estrecho (≤360 px) ---------- */
+
+/* En 320 px las opciones de rol se compactan (menos
+   relleno y hueco) para ganar margen; el texto se
+   mantiene en .9375rem (15 px) y cabe sin
+   desbordar: "Administrador" necesita ~120 px de
+   los ~143 px disponibles a 320 px. El objetivo
+   táctil sigue siendo ≥48 px. */
+@media (max-width: 360px) {
+  .login-page {
+    padding: 24px 12px;
+  }
+
+  .login-card {
+    padding: 20px 16px;
+  }
+
+  .role-options {
+    gap: 10px;
+  }
+
+  .role-option {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .role-option input {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* ---------- Pantallas cortas (apaisado / teclado virtual) ---------- */
+
+/* Con poca altura (p. ej. 375 px en apaisado o con el
+   teclado virtual abierto) se compacta el inicio de sesión
+   para que campos y botón queden accesibles antes; el
+   desbordamiento vertical sigue disponible (min-height: 100dvh). */
+@media (max-height: 500px) {
+  .login-page {
+    padding: 16px;
+  }
+
+  .brand {
+    margin-bottom: 12px;
+  }
+
+  .login-card {
+    gap: 12px;
+    padding: 16px;
+  }
+}
+
+/* ---------- Movimiento reducido ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-card {
+    animation: none;
+  }
+}

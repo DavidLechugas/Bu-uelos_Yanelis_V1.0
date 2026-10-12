@@ -1,0 +1,50 @@
+# Blueprint de Render para el backend de demostración.
+#
+# Esquema verificado contra la referencia oficial:
+# https://render.com/docs/blueprint-spec
+#
+# Este archivo NO contiene secretos:
+#   - Las variables con `sync: false` se piden en el
+#     Dashboard de Render al crear/sincronizar el
+#     servicio (ahí se pega la URI de MongoDB Atlas,
+#     nunca por chat ni por correo).
+#   - El despliegue automático está APAGADO
+#     (autoDeployTrigger: off) hasta que el usuario lo
+#     active a propósito tras validar la demo.
+#
+# El frontend NO va en Render: se despliega en
+# Cloudflare Pages (ver docs/DEPLOY.md).
+services:
+  - type: web
+    runtime: docker
+    name: bunuelos-yanelys-backend
+    # Se despliega desde el repo que contiene este
+    # render.yaml; rama por defecto del repo (el
+    # coordinador del repo define cuál; no asumir
+    # "main" aquí).
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    branch: main
+    # Plan free (0.1 CPU / 512 MB). VERIFICAR precio y
+    # límites actuales en render.com/pricing: los
+    # términos del tier free cambian.
+    plan: free
+    # Solo comprobación de vida (liveness): no consulta
+    # MongoDB (la app arranca aunque la DB tarde).
+    healthCheckPath: /api/health
+    autoDeployTrigger: 'off'
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      # OBLIGATORIA (fail closed sin ella: la app no
+      # arranca). URI de MongoDB Atlas con usuario y
+      # contraseña codificados (percent-encoding).
+      - key: SPRING_MONGODB_URI
+        sync: false
+      # Origen EXACTO del frontend (Cloudflare Pages),
+      # p. ej. https://tu-proyecto.pages.dev (sin barra
+      # final). Sin ella, CORS deniega todo acceso
+      # cruzado (fail closed).
+      - key: FRONTEND_ORIGIN
+        sync: false

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Buñuelos Yanelys">
+  <!-- Fondo de color pleno (necesario para iconos maskable): caramelo fuerte, el color del encabezado de la app. -->
+  <rect width="512" height="512" fill="#a5631a"/>
+  <!-- Disco crema. Diámetro 390 px ≤ 409.6 px (zona segura del 80 % para iconos maskable). -->
+  <circle cx="256" cy="256" r="195" fill="#f4e3cb"/>
+  <!-- Buñuelo dorado con borde marrón. -->
+  <circle cx="256" cy="256" r="118" fill="#d9a75c" stroke="#6b4226" stroke-width="14"/>
+  <!-- Brillo superior suave. -->
+  <path d="M 176 216 A 96 96 0 0 1 336 216" fill="none" stroke="#f7e8d2" stroke-width="16" stroke-linecap="round" opacity="0.55"/>
+  <!-- Hoyuelos de la masa frita. -->
+  <g fill="#b57a2e">
+    <circle cx="222" cy="248" r="12"/>
+    <circle cx="262" cy="222" r="9"/>
+    <circle cx="292" cy="262" r="11"/>
+    <circle cx="246" cy="292" r="10"/>
+    <circle cx="206" cy="282" r="8"/>
+  </g>
+</svg>

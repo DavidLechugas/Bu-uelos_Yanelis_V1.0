@@ -1,0 +1,12 @@
+# Contexto de build de la imagen Docker (Render lo usa con
+# BuildKit). Solo se necesita el código de producción.
+target/
+src/test/
+.git/
+.gitignore
+.gitattributes
+HELP.md
+.env
+.env.*
+*.pem
+*.key
