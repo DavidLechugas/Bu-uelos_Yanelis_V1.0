@@ -1,32 +1,40 @@
-# Despliegue de la demo — Cloudflare Pages + Render + MongoDB Atlas
+# Despliegue de la demo — Cloudflare Workers + Render + MongoDB Atlas
 
 Guía para publicar la **demostración pública de solo lectura**
 (login simulado, tablero con snapshot de demo, drawer).
 **No es producción**: la demo no tiene autenticación real y
 sirve datos de demostración. La auth real es una fase posterior.
 
-> Estado actual: **preparación local lista; nada desplegado.**
+> Estado actual (2026-10-13): **demo pública desplegada y tablero verificado en Chrome**.
 > Las credenciales se configuran **solo en los dashboards** de
 > cada proveedor (Render, Cloudflare, Atlas). **Nunca** pegar
 > URIs, usuarios ni contraseñas en el chat, issues ni commits.
 
-## Arquitectura destino
+## Arquitectura actual
 
 | Parte | Dónde | Notas |
 | --- | --- | --- |
-| Frontend (React) | **Cloudflare Pages** | Estático (`dist/`), HTTPS, SPA |
+| Frontend (React) | **Cloudflare Workers Static Assets** | Estático (`dist/`), HTTPS |
 | Backend (Spring Boot) | **Render** (contenedor Docker) | API de solo lectura `/api` |
 | MongoDB | **Atlas** (cluster M0, DB demo propia) | No migrar las DBs locales |
 
-El navegador carga el frontend desde Pages y la API desde
+El navegador carga el frontend desde Workers y la API desde
 Render (orígenes distintos → CORS con origen exacto, ver
 `ApiCorsConfig`).
 
+- Aplicación: https://bu-uelos-yanelis-v1-0.davidinternet224.workers.dev
+- Backend: https://bu-uelos-yanelis-v1-0.onrender.com
+- Datos de demo: https://bu-uelos-yanelis-v1-0.onrender.com/api/dashboard
+- Atlas: clúster `BunuelosYanelis`, base `bunuelos_yanelys_demo`,
+  colección `dashboard_snapshot`, documento `_id: "dashboard-demo"`.
+
+Pages fue el plan inicial; el despliegue actual usa Workers. No hace
+falta mantener el portátil encendido para acceder a esta demo.
+
 ## 0. Antes de empezar
 
-- Cuentas creadas en **Cloudflare**, **Render** y **MongoDB
-  Atlas** (acceso aún no confirmado; el coordinador del repo
-  maneja el remoto Git).
+- Cuentas y servicios configurados por el usuario en **Cloudflare**,
+  **Render** y **MongoDB Atlas**.
 - Repositorio: `DavidLechugas/Bu-uelos_Yanelis_V1.0`; rama
   confirmada `main`. Se conserva su historial al subir el proyecto.
 - El backend local (8080), Vite (5173/4173) y Mongo local
@@ -129,7 +137,7 @@ quieres que la demo muestre otros números.)
      usuario/contraseña codificados). **Fail closed**: sin
      ella la app no arranca.
    - `FRONTEND_ORIGIN` = la URL **exacta** del frontend en
-     Cloudflare Pages (ver paso 4), sin barra final.
+     Cloudflare Workers (ver paso 4), sin barra final.
 4. Deploy. Verifica en la URL `onrender.com` del servicio:
    - `GET /api/health` → `{"status":"UP",...}` (liveness).
    - `GET /api/dashboard` → el snapshot de la semilla (404
@@ -140,7 +148,39 @@ quieres que la demo muestre otros números.)
 > **solo** con el perfil `prod` (en dev sigue siendo
 > `127.0.0.1`).
 
-## 4. Cloudflare Pages — frontend
+## 4. Cloudflare Workers — frontend actual
+
+En el Worker existente → **Settings → Build**, configurar:
+
+| Campo | Valor |
+| --- | --- |
+| Rama de producción | `main` |
+| Directorio raíz | `frontend` |
+| Comando de compilación | `npm run build` |
+| Implementar comando | `npx wrangler deploy --assets ./dist --compatibility-date 2026-10-06` |
+| Disable builds | Apagado |
+
+En **Variables y secretos de compilación** (no enlaces de implementación):
+
+- `NODE_VERSION` = `24`
+- `VITE_API_BASE_URL` = `https://bu-uelos-yanelis-v1-0.onrender.com`
+
+Guardar y reintentar compilación. En **Settings → Domains & Routes**,
+habilitar la URL `workers.dev` si aparece "No hay direcciones URL habilitadas".
+En Render, `FRONTEND_ORIGIN` debe ser exactamente
+`https://bu-uelos-yanelis-v1-0.davidinternet224.workers.dev`.
+Tras cambiar variables en Render, guardar y redesplegar; cambiar
+`VITE_API_BASE_URL` requiere recompilar el frontend.
+
+No subir la URI de Atlas ni credenciales a Cloudflare. Los valores
+`VITE_*` se incluyen públicamente en JavaScript.
+
+Referencias oficiales: [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/)
+y [workers.dev](https://developers.cloudflare.com/workers/configuration/routing/workers-dev/).
+
+### Alternativa no utilizada: Cloudflare Pages
+
+Lo siguiente describe el plan inicial, no el formulario del Worker actual.
 
 1. Dashboard de Cloudflare → *Workers & Pages* → *Create
    application* → *Pages* → *Connect to Git* → mismo repo.
@@ -197,19 +237,38 @@ scripts\4-cloudflare-build.cmd https://<tu-servicio>.onrender.com
    (liveness; no toca la DB).
 2. `GET <backend>/api/dashboard` → JSON del snapshot
    (confirma la semilla manual y la allowlist de Atlas).
-3. Abre la URL de Pages → login simulado → tablero con los
+3. Abre la URL de Workers → login simulado → tablero con los
    datos de demo. Si el tablero no carga:
    - Console del navegador: error CORS → `FRONTEND_ORIGIN`
      (Render) no coincide **exactamente** con el origen de
-     Pages (protocolo + host, sin barra final).
-   - 404/500 de `/api/dashboard` → `VITE_API_BASE_URL`
-     mal en Pages o documento de semilla no insertado.
-4. PWA: manifest e iconos se sirven desde Pages; el SW
+     Workers (protocolo + host, sin barra final).
+   - 404 de `/api/dashboard` → revisar URL y documento de semilla.
+   - 500 de `/api/dashboard` → consultar logs runtime de Render;
+     no cambiar configuración sin identificar la causa.
+4. PWA: manifest e iconos se sirven desde Cloudflare; el SW
    sigue sin cachear `/api`.
+
+Verificado el 2026-10-13: API 200, datos correctos y CORS exacto;
+Chrome aislado con Playwright muestra tablero, inventario y gráfica sin
+errores de consola. Instalación Android y offline en hosting aún pendientes.
+
+Diagnóstico de errores encontrados:
+
+- `Database name must not be empty`: falta `/bunuelos_yanelys_demo` en URI.
+- Atlas `8000`, `user is not allowed to do action [find]`: corregir permiso
+  sobre la base exacta; no abrir la red para resolver un error de autorización.
+- 404 en `/api/dashboard`: falta el documento `dashboard-demo`.
+- Campos en cero/null: respetar nombres del JSON de la sección 2.
+- `Failed to fetch`: revisar CORS y URL compilada. El texto sobre
+  `127.0.0.1:8080` del prototipo no aplica al despliegue remoto.
 
 ## 6. CI (GitHub Actions)
 
 `.github/workflows/ci.yml` corre en cada push/PR:
+
+**Estado conocido:** el primer run no inició por un bloqueo de facturación
+de la cuenta GitHub. No se ha confirmado CI verde. El Dockerfile sí fue
+construido y ejecutado en Render; Docker sigue ausente localmente.
 
 - **frontend**: `npm ci`, `lint`, `test`, `build`.
 - **backend**: Java 21 (Temurin) + servicio `mongo:8`
@@ -241,5 +300,5 @@ scripts\4-cloudflare-build.cmd https://<tu-servicio>.onrender.com
 ## 8. Deshacer
 
 - Render: pausar/eliminar el servicio (dashboard).
-- Cloudflare Pages: pausar deployments o eliminar el proyecto.
+- Cloudflare Workers: deshabilitar builds y URL pública, o eliminar el Worker.
 - Atlas: eliminar el cluster M0 de demo.

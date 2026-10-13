@@ -64,14 +64,19 @@ Frontend en CMD: `cd /d "D:\Proyectos personales\bunuelos-yanelys\frontend"`; lo
 
 `DemoDataInitializer` (@Profile dev/test) hace upsert con solo `$setOnInsert` del documento `_id: "dashboard-demo"` en `dashboard_snapshot`: si ya existe, se preserva sin sobrescribir. `prod` no inserta nada. Los tests limpian únicamente sus propios documentos.
 
-## Despliegue demo (fase staging — SOLO preparación local)
+## Despliegue demo (verificado el 2026-10-13)
 
-- Guía paso a paso: **`docs/DEPLOY.md`**. Nada desplegado; todo se configura en los dashboards (Render, Cloudflare, Atlas). Credenciales **nunca** en chat/commits.
-- Render: `backend/Dockerfile` Java 21; `render.yaml` rama main, rootDir backend, Dockerfile/context relativos a esa raíz. Perfil prod exige `SPRING_MONGODB_URI`, lee `PORT` y escucha en 0.0.0.0; dev conserva loopback. Auto-deploy apagado hasta validar el primer despliegue, después habilitar checksPass.
-- API pública solo demo/lectura: `FRONTEND_ORIGIN` debe ser origen HTTPS exacto sin barra final ni comodines; CORS no autentica. En Pages configurar `VITE_API_BASE_URL` con URL HTTPS pública de Render y `NODE_VERSION=24`. SPA fallback automático sin 404.html.
+- Guía paso a paso: **`docs/DEPLOY.md`**. Demo pública desplegada: frontend **Cloudflare Workers Static Assets**, backend Render y MongoDB Atlas. Pages fue el plan inicial, NO el servicio actual. Credenciales **nunca** en chat/commits.
+- Frontend: `https://bu-uelos-yanelis-v1-0.davidinternet224.workers.dev`; URL workers.dev habilitada en Settings → Domains & Routes. Workers Builds: rama main, raíz frontend, build `npm run build`, deploy `npx wrangler deploy --assets ./dist --compatibility-date 2026-10-06`. Variables de COMPILACIÓN: NODE_VERSION=24 y VITE_API_BASE_URL=https://bu-uelos-yanelis-v1-0.onrender.com. No confundir con enlaces de implementación ni variables runtime.
+- Backend: `https://bu-uelos-yanelis-v1-0.onrender.com`, Live confirmado por usuario. FRONTEND_ORIGIN=https://bu-uelos-yanelis-v1-0.davidinternet224.workers.dev (sin barra final). Perfil prod; URI Atlas solo en Render e incluye /bunuelos_yanelys_demo antes de ?. No registrar la URI ni la contraseña.
+- Render: `backend/Dockerfile` Java 21; `render.yaml` rama main, rootDir backend, Dockerfile/context relativos a esa raíz. Perfil prod exige `SPRING_MONGODB_URI`, lee `PORT` y escucha en 0.0.0.0; dev conserva loopback. Blueprint con auto-deploy off; estado del servicio creado manualmente sin confirmar. No habilitar checksPass sin resolver primero bloqueo de Actions.
+- API pública solo demo/lectura: `FRONTEND_ORIGIN` debe ser origen HTTPS exacto sin barra final ni comodines; CORS no autentica. No extrapolar configuración/fallback de Pages a Workers. La navegación actual no usa rutas URL nuevas.
 - Atlas: base `bunuelos_yanelys_demo`, credenciales solo en Render; prod no siembra. Insertar únicamente snapshot demo según DEPLOY.md. Añadir IPs outbound de Render a allowlist, no abrir a todas las IPs.
 - CI: frontend lint/test/build/audit; backend Java21 + Mongo8/base CI desechable y build Docker. El contenedor no se probó localmente (Docker ausente); verificar resultado en Actions. Productos/Inventario tendrán persistencia real; sus APIs de escritura requieren auth antes de publicar.
-- Estado: suites locales verdes (frontend 36, backend 9 con los 2 nuevos de CORS). Pendiente: validar cuentas y desplegar vía dashboards (usuario), luego activar autoDeploy a propósito.
+- Atlas: clúster BunuelosYanelis, usuario BunuelosApp con permiso limitado a bunuelos_yanelys_demo; documento dashboard-demo insertado manualmente en dashboard_snapshot. Campos exactos: inventarioBajo[].producto/unidades/mensaje y ventasUltimos7Dias[].dia/ventas (NO nombre/cantidad/estado ni total).
+- Verificación remota: GET /api/dashboard 200 con datos correctos y cabecera CORS exacta; Chrome aislado + Playwright, login demo → tablero con $428.000, 36 pedidos, inventario y gráfica; sin errores de consola. Últimas suites locales aprobadas: frontend 36, backend 23 (no se repitieron por cambios solo documentales).
+- CI: primer run bloqueado antes de ejecutar por facturación de cuenta GitHub (NO fallo de código). No afirmar CI verde ni build Docker en Actions. Render sí construyó/ejecutó su contenedor. Auto-deploy real y eliminación de 0.0.0.0/0 en Atlas aún no confirmados; verificar antes de afirmarlo. Instalación Android sigue pendiente.
+- Diagnóstico resuelto: nombre de DB vacío → añadir DB en URI; Atlas error 8000/find → corregir privilegios de usuario sobre nombre exacto; 404 → falta snapshot; Failed to fetch → FRONTEND_ORIGIN. Texto de error del frontend aún menciona 127.0.0.1:8080 (pendiente contextualizar; no requiere backend local en hosting).
 
 ## Diseño responsive y tipografía (contrato actual)
 
@@ -93,5 +98,5 @@ Frontend en CMD: `cd /d "D:\Proyectos personales\bunuelos-yanelys\frontend"`; lo
 ## Pendientes
 
 - **Iconos SVG en lugar de emojis** (pedido del usuario para DESPUÉS; NO reemplazar ahora): ☰/✕ del header/drawer y 🏠📈🛵📦 de la navegación inferior.
-- Validar HTTPS e instalación Android; hosting permanente y GitHub después.
+- HTTPS público y tablero remoto verificados; validar instalación Android y offline en hosting, confirmar auto-deploy y restringir allowlist Atlas a rangos outbound de Render.
 - Auth real y pantallas de gestión.
