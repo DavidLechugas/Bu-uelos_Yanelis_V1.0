@@ -82,6 +82,8 @@ Frontend en CMD: `cd /d "D:\Proyectos personales\bunuelos-yanelys\frontend"`; lo
 
 ## Diseño responsive y tipografía (contrato actual)
 
+- Hosting posterior al push311ebcc: Chrome aislado375x900 confirma tres tarjetas343px y gráfica343px (mismo ancho del contenido), sin tarjeta mitadfila. Captura Temp/opencode/remote-full-width-375.png. Corrección de anchos **ya publicada y comprobada**, no solo local.
+
 - Ajuste 2026-10-14 confirmado para móvil: shell ocupa 100% del ancho (sin límite480px), métricas como filas completas por debajo de600px y tres columnas desde600px; gráfica ocupa ancho completo del contenido, conservando margen de lectura16px. Verificado en Chrome320/375/540/599/600/768/1024/1280, letra32px y zoomCSS200%, sin overflow, drawerEscape/foco. 17tests focales dashboard/nav/App, lint y build aprobados. Este ajuste reemplaza la descripción histórica de dos columnas móvil/cuatro métricas escritorio de abajo.
 
 - Tipografía en **rem**; NO se fija `font-size` en `html`, así que `rem` hereda el tamaño de letra preferido del navegador. (px y rem escalan igual con el zoom del navegador; lo que respeta la preferencia es no fijar px en la raíz.)
@@ -100,6 +102,8 @@ Frontend en CMD: `cd /d "D:\Proyectos personales\bunuelos-yanelys\frontend"`; lo
 - Si los servidores del usuario ya corren (5173/8080), reusarlos; si no, arrancar los propios y cerrar **solo los propios** por puerto al terminar. No matar procesos ajenos.
 
 ## Pendientes
+
+- Datos de Pedidos CONFIRMADOS: cliente, teléfono, dirección, detalle, totalCOP, domiciliario opcional al crear/asignable después. App **exclusivamente interna** para encargados (admin/domiciliarios), NO clientes, NO registro público ni cuentas de clientes. Datos cliente solo para registro/entrega de pedidos y detrás de permisos. Estados aún por definir; no inventar costo domicilio separado. Este acuerdo reemplaza la nota de campos aún sin confirmar de abajo.
 
 - Proxy ya publicado tras commits `bcc378c`, `755686c`, `e2e1771`: web remota comprobada en Chrome375x812 con Inicio/Pedidos/Domicilios, dashboard Render200/Atlas y GETWorker/api/health200. Login aún simulado, no cuentas/pedidos reales. Frontend aún compila VITE_API_BASE_URL absoluto: antes de auth quitarlo y rebuild para usar proxy same-origin. Actions run38622997955 falló antes de iniciar jobs por billing GitHub, confirmado por anotaciones; no fallo de código ni CIverde.
 - Siguiente trabajo solicitado: Pedidos y Domicilios funcionales, administrador crea domiciliarios directamente y asigna pedidos; cada domiciliario solo ve los propios. Propuesta de campos del pedido cliente/teléfono/dirección/detalle/total/asignación; aún sin confirmar detalle del formulario. Implementar login/autorización primero, no nuevas escrituras públicas inseguras ni datos personales en demo. No inventar estados o campos como requisitos confirmados.

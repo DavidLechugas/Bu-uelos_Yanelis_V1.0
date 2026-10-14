@@ -13,6 +13,16 @@ cuentas de los domiciliarios. No invitaciones ni registro público. El negocio
 se centra en crear pedidos y asignarlos a domiciliarios. **Inventario retirado**
 de la interfaz y del alcance; conservar datos existentes de Atlas.
 
+**Usuarios internos solamente**, confirmado por el usuario: administrador y
+domiciliarios encargados. Los clientes NO tienen cuentas ni registro ni
+acceso a la app. Sus datos se usan únicamente para registrar/entregar pedidos.
+
+Campos iniciales del pedido confirmados: cliente, teléfono, dirección,
+detalle, total en COP y domiciliario opcional al crear (asignable después).
+No se confirmó costo de domicilio separado. Estados concretos y reglas de
+modificación todavía por definir. El acceso a estos datos requiere login y
+permisos en el servidor; no publicarlos como parte de la demo anónima.
+
 **Estado: implementación por etapas. El login sigue simulado.** No hay
 usuarios reales, sesiones autenticadas ni escrituras de pedidos/domiciliarios
 todavía. No introducir contraseñas reales en la pantalla actual.
@@ -98,8 +108,8 @@ el servidor. No basta ocultar controles en React.
 
 Conservar snapshot y datos existentes; no migrar ni borrar la base actual
 automáticamente. Productos demo se mantiene por compatibilidad, pero no
-es la prioridad nueva. Campos del pedido y estados concretos aún pendientes
-de especificar. No guardar datos personales reales en la demo sin seguridad.
+es la prioridad nueva. Estados concretos aún pendientes de especificar.
+No guardar datos personales reales en la demo sin seguridad.
 
 ## Organización por dominio
 
