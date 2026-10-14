@@ -17,6 +17,7 @@ function renderDrawer(overrides = {}) {
     open: true,
     role: 'Administrador',
     usuario: 'Ana',
+    items: MENU,
     onClose: vi.fn(),
     onNavigate: vi.fn(),
     onLogout: vi.fn(),

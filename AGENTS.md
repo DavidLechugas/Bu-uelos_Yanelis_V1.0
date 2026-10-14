@@ -8,8 +8,10 @@ solo añade lo que no está allí. Historial completo de decisiones y verificaci
 
 - App interna: admin y domiciliarios; sin clientes ni registro público. Inventario retirado.
 - Pedidos: cliente, teléfono, dirección, detalle, totalCOP, domiciliario opcional (asignable después).
-  Estados y costo de domicilio sin definir: preguntar, no inventar.
-- Login real primero; ninguna escritura ni dato personal expuesto antes de auth y permisos en servidor.
+  Estados (confirmado 2026-10-14): Pendiente → Asignado → En camino → Entregado, más Cancelado.
+  Admin cambia todo; domiciliario solo marca En camino/Entregado en sus pedidos. Costo de domicilio
+  separado sin definir: no inventarlo. Diseño de Pedidos/Domicilios: estilo actual, sin Penpot.
+- Login real implementado (ver `docs/AUTH.md`); datos personales solo con sesión y permisos en servidor.
 - PWA: `vite-plugin-pwa` solo en build, `registerType: prompt` (actualiza al pulsar, nunca recarga
   formularios sola). SW precachea solo la interfaz; `/api` NetworkOnly. Guía `docs/PWA.md`.
 - Iconos SVG en lugar de emojis: pedido para DESPUÉS, no ahora.
@@ -28,6 +30,8 @@ solo añade lo que no está allí. Historial completo de decisiones y verificaci
 - Workers Builds (Cloudflare): rama main, raíz `frontend`, build `npm run build`; variables de
   compilación `NODE_VERSION=24` y, de momento, `VITE_API_BASE_URL` (Render absoluto).
 - Render: `FRONTEND_ORIGIN` = URL exacta de Workers, sin barra final; URI de Atlas solo allí.
+  Primer admin: `ADMIN_BOOTSTRAP_USERNAME`/`ADMIN_BOOTSTRAP_PASSWORD` (las pone el usuario; borrarlas
+  tras entrar). El frontend ya no usa `VITE_API_BASE_URL` (se puede quitar de Cloudflare).
 - Atlas: clúster BunuelosYanelis, base `bunuelos_yanelys_demo`, usuario de permisos limitados, doc
   `dashboard-demo` en `dashboard_snapshot` (campos `ventasUltimos7Dias[].dia/ventas`).
 - `DemoDataInitializer` (perfiles dev/test) hace upsert con solo `$setOnInsert`; prod no siembra.

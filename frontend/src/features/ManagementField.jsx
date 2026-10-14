@@ -1,11 +1,15 @@
 import { useId } from 'react';
 
-export function ManagementField({ label, error, ...props }) {
+/** Campo etiquetado con error accesible. `multiline` usa textarea. */
+export function ManagementField({ label, error, hint, multiline = false, ...props }) {
   const id = useId();
+  const Control = multiline ? 'textarea' : 'input';
+  const describedBy = [error && `${id}-error`, hint && `${id}-hint`].filter(Boolean).join(' ') || undefined;
   return (
     <div className="management-field">
       <label htmlFor={id}>{label}</label>
-      <input id={id} {...props} aria-invalid={Boolean(error)} aria-describedby={error ? `${id}-error` : undefined} />
+      <Control id={id} {...props} aria-invalid={Boolean(error)} aria-describedby={describedBy} />
+      {hint && <p id={`${id}-hint`} className="management-hint">{hint}</p>}
       {error && <p id={`${id}-error`} className="field-error">{error}</p>}
     </div>
   );

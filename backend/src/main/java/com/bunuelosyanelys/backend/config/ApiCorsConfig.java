@@ -62,7 +62,7 @@ public class ApiCorsConfig implements WebMvcConfigurer {
         }
         registry.addMapping(API_PATH)
                 .allowedOrigins(frontendOrigin)
-                .allowedMethods("GET", "OPTIONS")
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "OPTIONS")
                 .allowCredentials(false)
                 .maxAge(3600);
     }

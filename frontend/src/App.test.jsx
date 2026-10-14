@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App.jsx';
+import { ADMIN, COURIER, mockApi, order } from './test/mockApi.js';
 
 const DASHBOARD_DATA = {
   saludo: 'Buenos días, Ana',
@@ -9,7 +10,7 @@ const DASHBOARD_DATA = {
   pedidos: 36,
   alertas: 3,
   entregasActivas: 4,
-  inventarioBajo: [{ producto: 'Queso costeño', unidades: 2, mensaje: 'revisar' }],
+  inventarioBajo: [],
   ventasUltimos7Dias: [
     { dia: 'Lun', ventas: 52000 },
     { dia: 'Mar', ventas: 61000 },
@@ -21,130 +22,96 @@ const DASHBOARD_DATA = {
   ],
 };
 
-async function loginSimulado(user) {
-  await user.type(screen.getByLabelText('Usuario'), 'Ana');
-  await user.type(screen.getByLabelText('Contraseña'), 'demo');
-  await user.click(screen.getByRole('button', { name: 'Entrar' }));
-  await screen.findByText('Buenos días, Ana');
+function adminRoutes(extra = {}) {
+  return {
+    'GET /api/auth/session': { body: { usuario: ADMIN } },
+    'GET /api/dashboard': { body: DASHBOARD_DATA },
+    'GET /api/orders': { body: [order()] },
+    'GET /api/couriers': { body: [{ id: 'u-luis', nombre: 'Luis', usuario: 'luis', activo: true, pedidosActivos: 0 }] },
+    'POST /api/auth/logout': { status: 204 },
+    ...extra,
+  };
 }
 
-describe('App — flujo completo del prototipo', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
+afterEach(() => vi.unstubAllGlobals());
 
-  it('muestra el login al inicio', () => {
+describe('App — sesión real y navegación por rol', () => {
+  it('sin sesión muestra el login tras consultar al servidor', async () => {
+    mockApi({ 'GET /api/auth/session': { body: { usuario: null } } });
     render(<App />);
-    expect(screen.getByText('Iniciar sesión')).toBeInTheDocument();
+    expect(screen.getByText('Conectando con el servidor…')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument();
   });
 
-  it('acceso simulado: entra al tablero y vuelve al login con Cerrar sesión', async () => {
-    vi.stubGlobal('fetch', () =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(DASHBOARD_DATA),
-      }),
-    );
+  it('si el servidor no responde, el login explica el problema', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+    render(<App />);
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo conectar con el servidor');
+  });
+
+  it('el administrador entra al tablero y cierra sesión en el servidor', async () => {
+    const { calls } = mockApi(adminRoutes());
     const user = userEvent.setup();
     render(<App />);
-    await loginSimulado(user);
-
-    expect(screen.getByRole('button', { name: 'Abrir menú' })).toBeInTheDocument();
-    expect(screen.getByText('$428.000')).toBeInTheDocument();
+    expect(await screen.findByText('Buenos días, Ana')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Perfil de Yanelys' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
-    expect(
-      await screen.findByRole('dialog', { name: 'Menú principal' }),
-    ).toBeInTheDocument();
-
+    expect(within(screen.getByRole('dialog')).getByText('Administrador')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
-    expect(await screen.findByText('Iniciar sesión')).toBeInTheDocument();
+
+    expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument();
+    expect(calls.some((call) => call.method === 'POST' && call.path === '/api/auth/logout')).toBe(true);
   });
 
-  it('las secciones pendientes del drawer avisan honestamente', async () => {
-    vi.stubGlobal('fetch', () =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(DASHBOARD_DATA),
-      }),
-    );
+  it('la barra inferior lleva a Pedidos y Domicilios funcionales', async () => {
+    mockApi(adminRoutes());
     const user = userEvent.setup();
     render(<App />);
-    await loginSimulado(user);
+    await screen.findByText('Buenos días, Ana');
 
+    await user.click(screen.getByRole('button', { name: 'Pedidos' }));
+    expect(await screen.findByRole('heading', { name: 'Carmen' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Nuevo pedido' })).toBeInTheDocument();
+
+    const nav = screen.getByRole('navigation', { name: 'Navegación principal' });
+    await user.click(within(nav).getByRole('button', { name: 'Domicilios' }));
+    expect(await screen.findByRole('heading', { name: 'Luis' })).toBeInTheDocument();
+    expect(screen.queryByText(/no está implementada/)).not.toBeInTheDocument();
+  });
+
+  it('el domiciliario solo ve sus pedidos, sin tablero ni barra inferior', async () => {
+    const { calls } = mockApi({
+      'GET /api/auth/session': { body: { usuario: COURIER } },
+      'GET /api/orders': { body: [order({ estado: 'ASIGNADO', domiciliarioId: COURIER.id, domiciliarioNombre: 'Luis' })] },
+    });
+    render(<App />);
+    expect(await screen.findByRole('heading', { name: 'Carmen' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Mis pedidos', level: 1 })).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Navegación principal' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Nuevo pedido' })).not.toBeInTheDocument();
+    expect(calls.some((call) => call.path === '/api/dashboard' || call.path === '/api/couriers')).toBe(false);
+  });
+
+  it('las secciones pendientes del drawer avisan y el aviso se puede cerrar', async () => {
+    mockApi(adminRoutes());
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText('Buenos días, Ana');
     await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
-    await user.click(
-      await screen.findByRole('button', { name: 'Configuración' }),
-    );
-    expect(
-      await screen.findByText(
-        /La sección «Configuración» no está implementada en este prototipo/,
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it('la navegación inferior avisa honestamente en secciones no implementadas', async () => {
-    vi.stubGlobal('fetch', () =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(DASHBOARD_DATA),
-      }),
-    );
-    const user = userEvent.setup();
-    render(<App />);
-    await loginSimulado(user);
-
-    await user.click(screen.getByRole('button', { name: /Pedidos/ }));
-    expect(
-      await screen.findByText(
-        /La sección «Pedidos» no está implementada en este prototipo/,
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it('el aviso se puede cerrar', async () => {
-    vi.stubGlobal('fetch', () =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(DASHBOARD_DATA),
-      }),
-    );
-    const user = userEvent.setup();
-    render(<App />);
-    await loginSimulado(user);
-
-    await user.click(screen.getByRole('button', { name: /Domicilios/ }));
-    const toast = await screen.findByText(
-      /La sección «Domicilios» no está implementada/,
-    );
+    await user.click(screen.getByRole('button', { name: 'Estadísticas' }));
+    expect(screen.getByText('La sección «Estadísticas» todavía no está disponible.')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Cerrar aviso' }));
-    expect(toast).not.toBeInTheDocument();
+    expect(screen.queryByText(/todavía no está disponible/)).not.toBeInTheDocument();
   });
 
-  it('navega a Productos e Inicio, preserva demo entre vistas y la reinicia al salir', async () => {
-    vi.stubGlobal('fetch', () => Promise.resolve({ ok: true, json: () => Promise.resolve(DASHBOARD_DATA) }));
+  it('una sesión caducada devuelve al login con un aviso', async () => {
+    mockApi(adminRoutes({ 'GET /api/orders': { status: 401, body: { error: 'Tu sesión no está activa.' } } }));
     const user = userEvent.setup();
     render(<App />);
-    await loginSimulado(user);
-    await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
-    await user.click(screen.getByRole('button', { name: 'Productos', exact: true }));
-    expect(screen.getByRole('heading', { name: 'Productos', level: 1 })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Productos', level: 1 })).toHaveFocus();
-    await user.click(screen.getByRole('button', { name: 'Agregar producto' }));
-    await user.type(screen.getByLabelText('Nombre'), 'Producto sesión');
-    await user.type(screen.getByLabelText('Precio (COP)'), '1000');
-    await user.click(screen.getByRole('button', { name: 'Guardar producto demo' }));
-    expect(screen.queryByRole('button', { name: 'Inventario' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Inicio', exact: true }));
-    expect(screen.getByRole('heading', { name: 'Inicio', level: 1 })).toHaveFocus();
-    await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
-    await user.click(screen.getByRole('button', { name: 'Productos', exact: true }));
-    expect(screen.getByText('Producto sesión')).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
-    await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
-    await loginSimulado(user);
-    await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
-    await user.click(screen.getByRole('button', { name: 'Productos', exact: true }));
-    expect(screen.queryByText('Producto sesión')).not.toBeInTheDocument();
+    await screen.findByText('Buenos días, Ana');
+    await user.click(screen.getByRole('button', { name: 'Pedidos' }));
+    expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('Tu sesión terminó');
   });
 });

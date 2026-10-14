@@ -21,7 +21,7 @@ const DASHBOARD_DATA = {
   ],
 };
 
-const SESSION = { role: 'Administrador', usuario: 'Ana' };
+const SESSION = { role: 'ADMIN', usuario: 'ana', nombre: 'Ana' };
 
 function renderDashboard(session = SESSION) {
   return render(
@@ -109,13 +109,5 @@ describe('Dashboard', () => {
     );
     expect(await screen.findByText('Buenos días, Ana')).toBeInTheDocument();
     expect(screen.getByText(/Datos de demostración/)).toBeInTheDocument();
-  });
-
-  it('muestra aviso informativo para el rol Domiciliario sin inventar permisos', async () => {
-    stubFetch(DASHBOARD_DATA);
-    renderDashboard({ role: 'Domiciliario', usuario: 'Pedro' });
-    expect(
-      await screen.findByText(/Rol Domiciliario: esta es una vista de demostración/),
-    ).toBeInTheDocument();
   });
 });

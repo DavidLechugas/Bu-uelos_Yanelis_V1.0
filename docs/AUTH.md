@@ -1,5 +1,28 @@
 # Login real para web y teléfono
 
+## Estado — 2026-10-14: IMPLEMENTADO (etapas 2 y 3)
+
+- **Sesión:** cookie `by_session` HttpOnly, SameSite=Lax, Secure en prod, sin Domain;
+  token aleatorio de 256 bits, en Mongo solo su SHA-256 (`auth_sessions`, índice TTL,
+  7 días). Sobrevive a reinicios de Render. Logout, desactivar o cambiar contraseña revocan.
+- **CSRF:** cookie `XSRF-TOKEN` + cabecera `X-XSRF-TOKEN` (Spring Security). La emite
+  `GET /api/auth/session` (pública, devuelve `{usuario: null}` sin sesión).
+- **Contraseñas:** BCrypt (`DelegatingPasswordEncoder`), 8–72 caracteres. Bloqueo de 15 min
+  tras 5 fallos por usuario (en memoria). Mensaje genérico exista o no la cuenta.
+- **Primer admin:** variables de Render `ADMIN_BOOTSTRAP_USERNAME`, `ADMIN_BOOTSTRAP_PASSWORD`
+  (y opcional `ADMIN_BOOTSTRAP_NAME`). Solo se usan si no existe ningún admin; borrarlas tras
+  el primer acceso. Nunca en el repo ni en el chat.
+- **API:** `/api/auth/{session,login,logout}`; `/api/couriers` (ADMIN: listar, crear,
+  `PATCH /{id}/activo`, `PUT /{id}/password`); `/api/orders` (GET por rol, POST admin,
+  `PUT /{id}/domiciliario` admin, `PATCH /{id}/estado` con transiciones validadas en
+  `OrderService`). `/api/dashboard` ahora exige ADMIN. Resto: `denyAll`.
+- **Frontend:** siempre `/api` mismo origen (Vite proxy en local, Worker en hosting);
+  `VITE_API_BASE_URL` ya no se lee. Vistas `features/orders` y `features/couriers`.
+- Pruebas: backend 39 (integración real con Mongo `bunuelos_yanelys_test`), frontend 83,
+  E2E Chrome local con backend real (base `bunuelos_yanelys_e2e`, desechable).
+
+Lo que sigue abajo es el plan original; se conserva como referencia.
+
 ## Objetivo confirmado — 2026-10-14
 
 Mantener Cloudflare Workers + Render + MongoDB Atlas. No depender del

@@ -52,7 +52,7 @@ export function Dashboard({ session, onOpenDrawer, onSelectNav }) {
 
   return (
     <div className="dashboard">
-      <Header title="Inicio" usuario={session.usuario} onOpenDrawer={onOpenDrawer} />
+      <Header title="Inicio" usuario={session.nombre} onOpenDrawer={onOpenDrawer} />
 
       <main className="dashboard-main">
         {status === 'loading' && <DashboardSkeleton />}
@@ -70,12 +70,6 @@ export function Dashboard({ session, onOpenDrawer, onSelectNav }) {
               />
             )}
             <p className="greeting">{data.saludo}</p>
-            {session.role === 'Domiciliario' && (
-              <Notice
-                tone="info"
-                text="Rol Domiciliario: esta es una vista de demostración. Los permisos de este rol no están definidos en el prototipo."
-              />
-            )}
 
             <div className="stats-grid stats-grid--orders">
               <StatCard

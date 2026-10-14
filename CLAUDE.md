@@ -45,15 +45,15 @@ backend → suites completas. Los tests nunca deben tocar Atlas real. No silenci
 ## Arquitectura
 
 - `frontend/` Vite 7 + React 19 (JSX, CSS plano). `src/api/client.js` es el único punto de llamadas
-  HTTP (base `VITE_API_BASE_URL` o `/api` same-origin); `hooks/useDashboard.js` alimenta el tablero.
+  HTTP, siempre `/api` del mismo origen (cookies y CSRF); `hooks/useDashboard.js` alimenta el tablero.
   `components/` = shell (Header, Drawer, BottomNav, Login simulado, Dashboard/WeeklyChart).
-  `features/<dominio>/` = módulos de negocio (`products/` es demo en memoria; `inventory/` es código
-  residual retirado de la UI). Nuevos dominios (auth, orders, couriers) van como features.
+  `features/<dominio>/` = módulos de negocio: `orders/`, `couriers/` (API real) y `products/` (demo en
+  memoria). Tests de UI con `src/test/mockApi.js`.
 - `frontend/worker/index.js` — Cloudflare Worker: sirve `dist/` (binding `ASSETS`) y hace proxy de
   `/api` a Render (`wrangler.jsonc`). Tests en `worker/proxy.test.js`.
 - `backend/` Spring Boot 4, Java 21, paquete `com.bunuelosyanelys.backend`, organizado por dominio:
-  `dashboard/` (snapshot en MongoDB + `DemoDataInitializer`), `health/`, `config/ApiCorsConfig`
-  (CORS fail-closed). Perfil dev escucha en loopback; perfil prod exige `SPRING_MONGODB_URI`, lee
+  `auth/` (usuarios, sesiones, login, alta inicial), `orders/`, `couriers/`, `dashboard/` (snapshot
+  demo), `health/`, `common/` (errores JSON), `config/` (SecurityConfig, CORS fail-closed). Perfil dev escucha en loopback; perfil prod exige `SPRING_MONGODB_URI`, lee
   `PORT` y escucha en 0.0.0.0. React habla solo con el backend, nunca con MongoDB/Atlas.
 - Despliegue: frontend en **Cloudflare Workers Static Assets** (no Pages), backend en Render
   (`render.yaml`, `backend/Dockerfile`), datos en Atlas (`bunuelos_yanelys_demo.dashboard_snapshot`).
@@ -65,16 +65,14 @@ backend → suites completas. Los tests nunca deben tocar Atlas real. No silenci
 
 ## Estado y próximo trabajo
 
-Publicado: login **simulado**, dashboard leído de Atlas, drawer, Productos demo, proxy `/api`, layout
-móvil a ancho completo. **No implementado:** login real, cuentas, pedidos, domiciliarios, asignación
-(los botones lo avisan honestamente). Orden autorizado, en etapas verificables:
+Implementado (2026-10-14, detalle en `docs/AUTH.md`): login real con sesión en cookie HttpOnly
+guardada en Mongo, CSRF, admin crea/activa/desactiva domiciliarios, pedidos con estados
+Pendiente → Asignado → En camino → Entregado (+Cancelado). Admin cambia todo; el domiciliario
+solo ve los suyos y marca En camino/Entregado. El primer admin sale de `ADMIN_BOOTSTRAP_*` en Render.
 
-1. Login real con sesiones/cookies first-party, CSRF y permisos en servidor (sin tokens en
-   localStorage). Antes: quitar `VITE_API_BASE_URL` del build de Cloudflare para ir same-origin.
-2. Admin crea cuentas de Domiciliario directamente; alta del primer admin por procedimiento privado.
-3. Pedidos: cliente, teléfono, dirección, detalle, totalCOP, domiciliario opcional (asignable después).
-   Domiciliario ve solo sus pedidos. Estados y costo de domicilio **no acordados**: no inventarlos.
-4. Persistencia real en Atlas vía API; no añadir más estado demo en memoria como si fuera real.
+Pendiente: tablero con métricas reales de pedidos (hoy sigue siendo el snapshot demo), editar
+pedidos, Productos persistente, iconos SVG, validar instalación Android. Costo de domicilio
+separado: no acordado.
 
 ## Reglas
 

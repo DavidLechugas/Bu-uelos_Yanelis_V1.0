@@ -3,14 +3,6 @@ import { useEffect, useRef } from 'react';
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-const MENU_ITEMS = [
-  'Productos',
-  'Domiciliarios',
-  'Estadísticas',
-  'Alertas',
-  'Perfil',
-  'Configuración',
-];
 
 function trapTabKey(event, container) {
   // El selector ya excluye botones deshabilitados y tabindex="-1".
@@ -37,9 +29,9 @@ function trapTabKey(event, container) {
  * foco, bloquea el scroll del fondo y restaura el foco al cerrar.
  *
  * App decide qué secciones están implementadas. Las pendientes
- * avisan honestamente. «Cerrar sesión» reinicia la demo.
+ * avisan honestamente. «Cerrar sesión» cierra la sesión en el servidor.
  */
-export function Drawer({ open, role, onClose, onNavigate, onLogout }) {
+export function Drawer({ open, role, items = [], onClose, onNavigate, onLogout }) {
   const drawerRef = useRef(null);
   const previousFocusRef = useRef(null);
 
@@ -112,7 +104,7 @@ export function Drawer({ open, role, onClose, onNavigate, onLogout }) {
 
         <nav aria-label="Secciones">
           <ul className="drawer-menu">
-            {MENU_ITEMS.map((item) => (
+            {items.map((item) => (
               <li key={item}>
                 <button
                   type="button"

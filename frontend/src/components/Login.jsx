@@ -1,20 +1,19 @@
 import { useState } from 'react';
-
-const ROLES = ['Administrador', 'Domiciliario'];
+import { auth } from '../api/client.js';
 
 /**
- * Pantalla de acceso SIMULADO de demostración.
- * No hay autenticación real: no se almacenan, envían ni validan
- * credenciales; cualquier usuario/contraseña no vacíos "entran".
+ * Inicio de sesión real. El rol lo decide el servidor según la cuenta;
+ * no hay registro público: el administrador crea las cuentas.
  */
-export function Login({ onLogin }) {
-  const [role, setRole] = useState(ROLES[0]);
+export function Login({ onLogin, connectionError }) {
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     const nextErrors = {};
     if (!usuario.trim()) {
@@ -24,11 +23,22 @@ export function Login({ onLogin }) {
       nextErrors.password = 'Escribe tu contraseña';
     }
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length === 0) {
-      // Acceso simulado: la credencial no se guarda en ningún lado.
-      onLogin({ role, usuario: usuario.trim() });
+    setServerError('');
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const result = await auth.login(usuario.trim(), password);
+      setPassword('');
+      onLogin(result.usuario);
+    } catch (error) {
+      setServerError(error.message);
+      setSubmitting(false);
     }
   }
+
+  const banner = serverError || connectionError;
 
   return (
     <div className="login-page">
@@ -45,38 +55,20 @@ export function Login({ onLogin }) {
       <form className="card login-card" onSubmit={handleSubmit} noValidate>
         <h1 className="login-title">Iniciar sesión</h1>
 
-        <p className="demo-notice">
-          Acceso simulado de demostración: cualquier usuario y contraseña
-          funcionan. No se almacenan ni transmiten credenciales reales.
-        </p>
-
-        <fieldset className="role-fieldset">
-          <legend>Rol</legend>
-          <div className="role-options" role="radiogroup" aria-label="Rol">
-            {ROLES.map((option) => (
-              <label
-                key={option}
-                className={`role-option${role === option ? ' role-option--active' : ''}`}
-              >
-                <input
-                  type="radio"
-                  name="role"
-                  value={option}
-                  checked={role === option}
-                  onChange={() => setRole(option)}
-                />
-                <span>{option}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        {banner && (
+          <p className="login-error" role="alert">
+            {banner}
+          </p>
+        )}
 
         <div className="field">
           <label htmlFor="usuario">Usuario</label>
           <input
             id="usuario"
             type="text"
-            autoComplete="off"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
             value={usuario}
             onChange={(event) => setUsuario(event.target.value)}
             aria-invalid={Boolean(errors.usuario)}
@@ -94,7 +86,7 @@ export function Login({ onLogin }) {
           <input
             id="password"
             type="password"
-            autoComplete="off"
+            autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             aria-invalid={Boolean(errors.password)}
@@ -107,8 +99,8 @@ export function Login({ onLogin }) {
           )}
         </div>
 
-        <button type="submit" className="btn-primary">
-          Entrar
+        <button type="submit" className="btn-primary" disabled={submitting} aria-busy={submitting}>
+          {submitting ? 'Entrando…' : 'Entrar'}
         </button>
 
         <button
@@ -121,8 +113,9 @@ export function Login({ onLogin }) {
         </button>
         {helpOpen && (
           <p className="help-text">
-            Esta es una demostración local. Escribe cualquier usuario y
-            contraseña y pulsa «Entrar». Nada de lo que escribas se guarda.
+            Pide tu usuario y contraseña al administrador. Si la olvidaste, el
+            administrador puede asignarte una nueva desde «Domicilios». La
+            primera vez el servidor puede tardar hasta un minuto en despertar.
           </p>
         )}
       </form>

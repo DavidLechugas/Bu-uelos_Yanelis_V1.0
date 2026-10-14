@@ -1,5 +1,9 @@
 package com.bunuelosyanelys.backend.dashboard;
 
+import org.springframework.security.test.context.support.WithMockUser;
+import com.bunuelosyanelys.backend.auth.SessionService;
+import com.bunuelosyanelys.backend.config.SecurityConfig;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -16,7 +20,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(DashboardController.class)
+@org.springframework.context.annotation.Import(SecurityConfig.class)
+@WithMockUser(roles = "ADMIN")
 class DashboardControllerTest {
+
+    /** La cadena de seguridad real necesita el servicio de sesiones. */
+    @MockitoBean
+    private SessionService sessionService;
 
     @Autowired
     private MockMvc mockMvc;

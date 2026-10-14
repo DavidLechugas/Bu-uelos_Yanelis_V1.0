@@ -1,5 +1,8 @@
 package com.bunuelosyanelys.backend.config;
 
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import com.bunuelosyanelys.backend.auth.SessionService;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -31,8 +34,12 @@ import com.bunuelosyanelys.backend.health.HealthController;
  * MongoDB y sin activar ningún perfil.
  */
 @WebMvcTest(HealthController.class)
-@Import(ApiCorsConfig.class)
+@Import({ApiCorsConfig.class, SecurityConfig.class})
 class ApiCorsConfigFailClosedTest {
+
+    /** La cadena de seguridad real necesita el servicio de sesiones. */
+    @MockitoBean
+    private SessionService sessionService;
 
     private static final String ORIGEN_CUALQUIERA =
             "https://cualquier-origen.example";
