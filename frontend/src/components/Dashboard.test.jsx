@@ -74,23 +74,27 @@ describe('Dashboard', () => {
     expect(chart).toBeInTheDocument();
   });
 
-  it('destaca el inventario bajo de Queso costeño', async () => {
+  it('ya no muestra inventario ni alertas de insumos', async () => {
     stubFetch(DASHBOARD_DATA);
     renderDashboard();
-    expect(await screen.findByText('Queso costeño')).toBeInTheDocument();
-    expect(screen.getByText('2 unidades')).toBeInTheDocument();
-    expect(screen.getByText('revisar')).toBeInTheDocument();
+    await screen.findByText('Buenos días, Ana');
+    expect(screen.queryByText('Inventario bajo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Queso costeño')).not.toBeInTheDocument();
+    expect(screen.queryByText('Alertas')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Inventario' })).not.toBeInTheDocument();
   });
 
   it('muestra el error sin silenciarlo y ofrece Reintentar', async () => {
     const fetchMock = vi
       .fn()
-      .mockRejectedValue(new Error('No se pudieron cargar los datos (HTTP 500).'));
+      .mockResolvedValue({ ok: false, status: 500 });
     vi.stubGlobal('fetch', fetchMock);
     renderDashboard();
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('No pudimos cargar el tablero');
     expect(screen.getByText(/HTTP 500/)).toBeInTheDocument();
+    expect(alert).not.toHaveTextContent('127.0.0.1');
+    expect(alert).toHaveTextContent(/servidor puede tardar/);
     await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });

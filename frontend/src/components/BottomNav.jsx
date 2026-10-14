@@ -1,8 +1,7 @@
 const NAV_ITEMS = [
   { id: 'inicio', label: 'Inicio', icon: '🏠' },
-  { id: 'ventas', label: 'Ventas', icon: '📈' },
+  { id: 'pedidos', label: 'Pedidos', icon: '📈' },
   { id: 'domicilios', label: 'Domicilios', icon: '🛵' },
-  { id: 'inventario', label: 'Inventario', icon: '📦' },
 ];
 
 /**

@@ -702,6 +702,7 @@ button {
 
 .bottom-nav-item {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -712,6 +713,11 @@ button {
   background: transparent;
   color: var(--muted);
   font-size: 0.9375rem;
+}
+
+.bottom-nav-label {
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .bottom-nav-item--active {
@@ -762,6 +768,14 @@ button {
        columna. */
     grid-column: 1 / -1;
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .stats-grid--orders {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dashboard-chart-card {
+    grid-column: 1 / -1;
   }
 
   .greeting,

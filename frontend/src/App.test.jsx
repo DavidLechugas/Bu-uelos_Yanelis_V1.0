@@ -61,7 +61,7 @@ describe('App — flujo completo del prototipo', () => {
     expect(await screen.findByText('Iniciar sesión')).toBeInTheDocument();
   });
 
-  it('las secciones del drawer avisan honestamente que no están implementadas', async () => {
+  it('las secciones pendientes del drawer avisan honestamente', async () => {
     vi.stubGlobal('fetch', () =>
       Promise.resolve({
         ok: true,
@@ -74,11 +74,11 @@ describe('App — flujo completo del prototipo', () => {
 
     await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
     await user.click(
-      await screen.findByRole('button', { name: 'Productos' }),
+      await screen.findByRole('button', { name: 'Configuración' }),
     );
     expect(
       await screen.findByText(
-        /La sección «Productos» no está implementada en este prototipo/,
+        /La sección «Configuración» no está implementada en este prototipo/,
       ),
     ).toBeInTheDocument();
   });
@@ -94,10 +94,10 @@ describe('App — flujo completo del prototipo', () => {
     render(<App />);
     await loginSimulado(user);
 
-    await user.click(screen.getByRole('button', { name: /Ventas/ }));
+    await user.click(screen.getByRole('button', { name: /Pedidos/ }));
     expect(
       await screen.findByText(
-        /La sección «Ventas» no está implementada en este prototipo/,
+        /La sección «Pedidos» no está implementada en este prototipo/,
       ),
     ).toBeInTheDocument();
   });
@@ -113,11 +113,38 @@ describe('App — flujo completo del prototipo', () => {
     render(<App />);
     await loginSimulado(user);
 
-    await user.click(screen.getByRole('button', { name: /Inventario/ }));
+    await user.click(screen.getByRole('button', { name: /Domicilios/ }));
     const toast = await screen.findByText(
-      /La sección «Inventario» no está implementada/,
+      /La sección «Domicilios» no está implementada/,
     );
     await user.click(screen.getByRole('button', { name: 'Cerrar aviso' }));
     expect(toast).not.toBeInTheDocument();
+  });
+
+  it('navega a Productos e Inicio, preserva demo entre vistas y la reinicia al salir', async () => {
+    vi.stubGlobal('fetch', () => Promise.resolve({ ok: true, json: () => Promise.resolve(DASHBOARD_DATA) }));
+    const user = userEvent.setup();
+    render(<App />);
+    await loginSimulado(user);
+    await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
+    await user.click(screen.getByRole('button', { name: 'Productos', exact: true }));
+    expect(screen.getByRole('heading', { name: 'Productos', level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Productos', level: 1 })).toHaveFocus();
+    await user.click(screen.getByRole('button', { name: 'Agregar producto' }));
+    await user.type(screen.getByLabelText('Nombre'), 'Producto sesión');
+    await user.type(screen.getByLabelText('Precio (COP)'), '1000');
+    await user.click(screen.getByRole('button', { name: 'Guardar producto demo' }));
+    expect(screen.queryByRole('button', { name: 'Inventario' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Inicio', exact: true }));
+    expect(screen.getByRole('heading', { name: 'Inicio', level: 1 })).toHaveFocus();
+    await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
+    await user.click(screen.getByRole('button', { name: 'Productos', exact: true }));
+    expect(screen.getByText('Producto sesión')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
+    await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+    await loginSimulado(user);
+    await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
+    await user.click(screen.getByRole('button', { name: 'Productos', exact: true }));
+    expect(screen.queryByText('Producto sesión')).not.toBeInTheDocument();
   });
 });

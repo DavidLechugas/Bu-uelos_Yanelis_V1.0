@@ -10,9 +10,18 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
  * aplica NetworkOnly a /api: doble garantía de no caché.
  */
 export async function fetchDashboard() {
-  const response = await fetch(`${API_BASE}/api/dashboard`, {
-    cache: 'no-store',
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE}/api/dashboard`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(90000),
+    });
+  } catch (error) {
+    if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+      throw new Error('El servidor tardó demasiado en responder. Espera un momento y pulsa Reintentar.');
+    }
+    throw new Error('No se pudo conectar con el servidor. Comprueba tu conexión y pulsa Reintentar.');
+  }
   if (!response.ok) {
     throw new Error(`No se pudieron cargar los datos (HTTP ${response.status}).`);
   }

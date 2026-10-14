@@ -36,9 +36,8 @@ function trapTabKey(event, container) {
  * oscuro. Se cierra con Escape, clic en overlay o su botón; atrapa el
  * foco, bloquea el scroll del fondo y restaura el foco al cerrar.
  *
- * Las secciones del menú NO están implementadas: avisan honestamente
- * en lugar de quedarse como controles muertos. «Cerrar sesión» sí
- * funciona.
+ * App decide qué secciones están implementadas. Las pendientes
+ * avisan honestamente. «Cerrar sesión» reinicia la demo.
  */
 export function Drawer({ open, role, onClose, onNavigate, onLogout }) {
   const drawerRef = useRef(null);

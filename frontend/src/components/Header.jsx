@@ -17,7 +17,7 @@ export function Header({ title, usuario, onOpenDrawer }) {
           ☰
         </span>
       </button>
-      <h1 className="header-title">{title}</h1>
+      <h1 className="header-title" tabIndex={-1}>{title}</h1>
       <span
         className="profile-circle"
         role="img"

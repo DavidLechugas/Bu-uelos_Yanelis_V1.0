@@ -15,6 +15,7 @@ function formatCurrency(value) {
 function DashboardSkeleton() {
   return (
     <div className="skeleton" aria-busy="true" aria-label="Cargando datos del tablero">
+      <p role="status">Conectando con el servidor… El primer arranque puede tardar hasta un minuto y medio.</p>
       <div className="skeleton-card" />
       <div className="skeleton-card" />
       <div className="skeleton-card" />
@@ -28,7 +29,7 @@ function DashboardError({ error, onRetry, onUseDemo }) {
     <section className="card error-card" role="alert">
       <h2>No pudimos cargar el tablero</h2>
       <p className="error-detail">{error}</p>
-      <p>Comprueba que el backend de demostración esté en ejecución en 127.0.0.1:8080.</p>
+      <p>Comprueba tu conexión a internet y vuelve a intentarlo. El servidor puede tardar en arrancar tras un periodo de inactividad. No necesitas ejecutar un servidor en tu teléfono.</p>
       <div className="error-actions">
         <button type="button" className="btn-primary" onClick={onRetry}>
           Reintentar
@@ -76,14 +77,13 @@ export function Dashboard({ session, onOpenDrawer, onSelectNav }) {
               />
             )}
 
-            <div className="stats-grid">
+            <div className="stats-grid stats-grid--orders">
               <StatCard
                 label="Ventas (7 días)"
                 value={formatCurrency(data.ventasTotales)}
                 tone="green"
               />
               <StatCard label="Pedidos" value={String(data.pedidos)} />
-              <StatCard label="Alertas" value={String(data.alertas)} tone="red" />
               <StatCard
                 label="Entregas activas"
                 value={String(data.entregasActivas)}
@@ -91,22 +91,7 @@ export function Dashboard({ session, onOpenDrawer, onSelectNav }) {
               />
             </div>
 
-            <section className="card" aria-labelledby="inventario-bajo">
-              <h2 id="inventario-bajo">Inventario bajo</h2>
-              <ul className="inventory-list">
-                {data.inventarioBajo.map((item) => (
-                  <li key={item.producto} className="inventory-item">
-                    <span className="inventory-product">{item.producto}</span>
-                    <span className="inventory-units">
-                      {item.unidades} unidades
-                    </span>
-                    <span className="inventory-note">{item.mensaje}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section className="card" aria-labelledby="ventas-7dias">
+            <section className="card dashboard-chart-card" aria-labelledby="ventas-7dias">
               <h2 id="ventas-7dias">Ventas · últimos 7 días</h2>
               <WeeklyChart data={data.ventasUltimos7Dias} />
             </section>

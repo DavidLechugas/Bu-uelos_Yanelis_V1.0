@@ -4,20 +4,21 @@ import userEvent from '@testing-library/user-event';
 import { BottomNav } from './BottomNav.jsx';
 
 describe('BottomNav', () => {
-  it('muestra Inicio, Ventas, Domicilios e Inventario', () => {
+  it('muestra Inicio, Pedidos y Domicilios, sin Inventario', () => {
     render(<BottomNav active="inicio" onSelect={() => {}} />);
     expect(
       screen.getByRole('button', { name: /Inicio/ }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /Ventas/ }),
+      screen.getByRole('button', { name: /Pedidos/ }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /Domicilios/ }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /Inventario/ }),
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: /Inventario/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(3);
   });
 
   it('marca la pestaña activa como página actual', () => {
@@ -31,10 +32,10 @@ describe('BottomNav', () => {
     const onSelect = vi.fn();
     const user = userEvent.setup();
     render(<BottomNav active="inicio" onSelect={onSelect} />);
-    await user.click(screen.getByRole('button', { name: /Ventas/ }));
+    await user.click(screen.getByRole('button', { name: /Pedidos/ }));
     expect(onSelect).toHaveBeenCalledWith({
-      id: 'ventas',
-      label: 'Ventas',
+      id: 'pedidos',
+      label: 'Pedidos',
       icon: '📈',
     });
   });
