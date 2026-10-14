@@ -30,7 +30,11 @@
   --shadow: 0 8px 24px rgba(90, 58, 20, 0.12);
   --radius: 16px;
   --radius-small: 10px;
-  --shell-width: 100%;
+  /* Ancho máximo del CONTENIDO. Encabezado y navegación
+     inferior ocupan siempre todo el ancho de la pantalla
+     y alinean su contenido interior con este ancho. */
+  --content-max: 100%;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 * {
@@ -285,8 +289,6 @@ button {
 /* ---------- Dashboard ---------- */
 
 .app-shell {
-  max-width: var(--shell-width);
-  margin: 0 auto;
   min-height: 100dvh;
   position: relative;
 }
@@ -329,6 +331,9 @@ button {
      el safe-area se suma para no tapar contenido en móviles
      con barra de gestos. */
   padding: 16px 16px calc(96px + env(safe-area-inset-bottom, 0px));
+  width: 100%;
+  max-width: var(--content-max);
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -537,7 +542,7 @@ button {
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 32px);
-  max-width: var(--shell-width);
+  max-width: var(--content-max);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -566,11 +571,12 @@ button {
    sin taparse (el de PWA queda ~64 px más arriba). */
 .pwa-toast {
   position: fixed;
-  bottom: calc(148px + env(safe-area-inset-bottom, 0px));
+  /* Sin navegación inferior (login): pegado abajo. */
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 32px);
-  max-width: var(--shell-width);
+  max-width: var(--content-max);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -580,6 +586,16 @@ button {
   box-shadow: var(--shadow);
   padding: 10px 12px;
   z-index: 60;
+}
+
+/* En el tablero: por encima de la navegación y del aviso. */
+.app-shell .pwa-toast {
+  bottom: calc(148px + env(safe-area-inset-bottom, 0px));
+}
+
+/* El login puede desplazarse por encima del aviso PWA. */
+.login-page:has(~ .pwa-toast) {
+  padding-bottom: 120px;
 }
 
 .pwa-toast p {
@@ -693,11 +709,12 @@ button {
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: var(--shell-width);
+  left: 0;
+  right: 0;
   display: flex;
+  /* Fondo a todo el ancho; los botones se alinean con el
+     contenido (mismo ancho máximo que el tablero). */
+  padding-inline: max(0px, calc((100% - var(--content-max)) / 2));
   background-color: var(--cream-surface);
   border-top: 1px solid var(--caramel-border);
   /* Safe area de móviles (barra de gestos): crece hacia arriba
@@ -751,14 +768,12 @@ button {
    la gráfica ~520 px, legibles sin rediseñar
    la paleta. */
 @media (min-width: 1025px) {
-  .app-shell,
-  .bottom-nav,
-  .notice-toast {
-    max-width: clamp(60rem, 90vw, 68rem);
+  :root {
+    --content-max: clamp(60rem, 90vw, 68rem);
   }
 
   .app-header {
-    padding: 0 24px;
+    padding: 0 max(24px, calc((100% - var(--content-max)) / 2 + 8px));
   }
 
   .dashboard-main {
@@ -805,11 +820,11 @@ button {
    (≥1025 px) conserva su rejilla de dos columnas. */
 @media (min-width: 600px) and (max-width: 1024px) {
   :root {
-    --shell-width: 720px;
+    --content-max: 720px;
   }
 
   .app-header {
-    padding: 0 24px;
+    padding: 0 max(24px, calc((100% - var(--content-max)) / 2 + 8px));
   }
 
   .dashboard-main {
@@ -834,10 +849,8 @@ button {
    columna (la rejilla de dos columnas es de
    escritorio, ≥1025 px). */
 @media (min-width: 900px) and (max-width: 1024px) {
-  .app-shell,
-  .bottom-nav,
-  .notice-toast {
-    max-width: 840px;
+  :root {
+    --content-max: 840px;
   }
 
   .stats-grid {
@@ -905,8 +918,111 @@ button {
 
 /* ---------- Movimiento reducido ---------- */
 
+/* ---------- Animaciones ---------- */
+
+/* Cortas (≤ 400 ms) y solo con transform/opacity. Se
+   desactivan con prefers-reduced-motion (abajo). */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes drawer-in {
+  from { transform: translateX(-100%); }
+  to { transform: none; }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, 16px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes bar-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes nav-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+/* Al cambiar de vista el panel pasa de display:none a
+   visible y la animación se reinicia sola. */
+.view-panel:not([hidden]) > main,
+.login-card {
+  animation: fade-up 320ms var(--ease-out) both;
+}
+
+.stats-grid > *,
+.dashboard-main > .card {
+  animation: fade-up 360ms var(--ease-out) both;
+}
+
+.stats-grid > :nth-child(2) { animation-delay: 50ms; }
+.stats-grid > :nth-child(3) { animation-delay: 100ms; }
+.stats-grid > :nth-child(4) { animation-delay: 150ms; }
+.dashboard-main > .card { animation-delay: 180ms; }
+
+.chart-bar {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: bar-grow 500ms var(--ease-out) both;
+}
+
+.weekly-chart g:nth-child(2) .chart-bar { animation-delay: 40ms; }
+.weekly-chart g:nth-child(3) .chart-bar { animation-delay: 80ms; }
+.weekly-chart g:nth-child(4) .chart-bar { animation-delay: 120ms; }
+.weekly-chart g:nth-child(5) .chart-bar { animation-delay: 160ms; }
+.weekly-chart g:nth-child(6) .chart-bar { animation-delay: 200ms; }
+.weekly-chart g:nth-child(7) .chart-bar { animation-delay: 240ms; }
+
+.drawer-overlay {
+  animation: fade-in 200ms ease-out both;
+}
+
+.drawer {
+  animation: drawer-in 260ms var(--ease-out) both;
+}
+
+.notice-toast,
+.pwa-toast {
+  animation: toast-in 260ms var(--ease-out) both;
+}
+
+.bottom-nav-item,
+.drawer-item,
+.btn-primary,
+.btn-secondary,
+.icon-btn {
+  transition: color 160ms ease, background-color 160ms ease,
+    box-shadow 200ms ease, transform 120ms ease;
+}
+
+.bottom-nav-item:active,
+.drawer-item:active,
+.btn-primary:active,
+.btn-secondary:active,
+.icon-btn:active {
+  transform: scale(0.96);
+}
+
+.bottom-nav-item--active .bottom-nav-icon {
+  display: inline-block;
+  animation: nav-pop 300ms var(--ease-out);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .skeleton-card {
-    animation: none;
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
   }
 }
