@@ -8,6 +8,7 @@ Proyecto: `D:\Proyectos personales\bunuelos-yanelys` con `frontend/` (Vite 7 + R
 - MongoDB local (`mongodb://127.0.0.1:27017/bunuelos_yanelys`); Compass es cliente, no servidor. Backend escucha solo `127.0.0.1:8080`.
 - Paleta crema/caramelo/marrón (no rediseñar). No replicar textos minúsculos ni el borde turquesa de las capturas.
 - Alcance primera etapa: solo login, tablero y drawer. Las demás secciones avisan honestamente que no están implementadas (nunca controles muertos).
+- Ampliación 2026-10-14 (local, aún sin publicar): vistas Productos e Inventario con estado demo en memoria, no APIs de escritura ni persistencia Atlas. Guía `docs/PRODUCTOS-INVENTARIO.md`. Productos vía drawer; Inventario vía barra inferior; búsqueda, crear/editar producto, disponibilidad y entradas/salidas con historial de sesión. Preservan estado al navegar; recarga/logout lo reinician. No sincronizan snapshot tablero ni descuentan recetas. Roles siguen simulados.
 - Drawer: cierre con overlay, Escape, restauración de foco; foco atrapado; scroll del fondo bloqueado.
 - PWA: `vite-plugin-pwa` solo en build; manifest e iconos PNG 192/512 maskable. `registerType: prompt`: nueva versión al pulsar Actualizar, nunca recargar formularios automáticamente.
 - No guardar secretos en el workspace. No instalar herramientas globales ni alterar servicios sin autorización.
@@ -77,6 +78,7 @@ Frontend en CMD: `cd /d "D:\Proyectos personales\bunuelos-yanelys\frontend"`; lo
 - Verificación remota: GET /api/dashboard 200 con datos correctos y cabecera CORS exacta; Chrome aislado + Playwright, login demo → tablero con $428.000, 36 pedidos, inventario y gráfica; sin errores de consola. Últimas suites locales aprobadas: frontend 36, backend 23 (no se repitieron por cambios solo documentales).
 - CI: primer run bloqueado antes de ejecutar por facturación de cuenta GitHub (NO fallo de código). No afirmar CI verde ni build Docker en Actions. Render sí construyó/ejecutó su contenedor. Auto-deploy real y eliminación de 0.0.0.0/0 en Atlas aún no confirmados; verificar antes de afirmarlo. Instalación Android sigue pendiente.
 - Diagnóstico resuelto: nombre de DB vacío → añadir DB en URI; Atlas error 8000/find → corregir privilegios de usuario sobre nombre exacto; 404 → falta snapshot; Failed to fetch → FRONTEND_ORIGIN. Texto de error del frontend aún menciona 127.0.0.1:8080 (pendiente contextualizar; no requiere backend local en hosting).
+- Verificación local 2026-10-14: frontend lint + 49 tests + build PWA aprobados; backend sin cambios, 23 tests aprobados. Playwright+Chrome focal para nuevas vistas en 320/375/768/1024/1280, forms/nav/Escape/foco, letra preferida32px y zoom CSS200%. Se simula GET dashboard para aislar la prueba, no afirmar nuevas vistas desplegadas. Intentos coder/fast fallaron por modelos no disponibles; implementación directa. `management.css` reutiliza tokens; pequeña corrección de wrap/min-width en nav inferior para zoom. No dependencias nuevas.
 
 ## Diseño responsive y tipografía (contrato actual)
 
@@ -96,6 +98,10 @@ Frontend en CMD: `cd /d "D:\Proyectos personales\bunuelos-yanelys\frontend"`; lo
 - Si los servidores del usuario ya corren (5173/8080), reusarlos; si no, arrancar los propios y cerrar **solo los propios** por puerto al terminar. No matar procesos ajenos.
 
 ## Pendientes
+
+- Cambio de alcance 2026-10-14: **Inventario NO necesario**; eliminado módulo frontend demo y navegación/resumen bajo stock; no borrar snapshot ni datos Atlas. Administrador crea domiciliarios directamente, SIN registro público; objetivo gestionar/asignar pedidos. Aún NO implementado login real ni pedidos/cuentas. Corrección móvil: error no exige backend en127.0.0.1, fetch timeout90s y aviso de arranque. Frontend73tests/lint/build/audit y Chrome focal320-1280/letra32px/zoom200% aprobados. Pruebas Inventario retiradas con funcionalidad, reemplazadas por ausencia en navegación/dashboard. Diagnóstico remoto: API frontend404 (proxy sin publicar), primer health Render timeout65s, luego dashboard200/CORS correcto/Chrome remoto funciona con navegación antigua. No afirmar causa exacta de captura ni deploy automático. Subagente coder falló por modelo indisponible.
+
+- 2026-10-14: usuario confirmó login real con objetivo **Atlas + hosting + teléfono**, no persistencia solo local. Autorizó proxy `/api` en Worker existente y primera cuenta admin sin registro público. Preparado `frontend/worker/` + `wrangler.jsonc`, NO desplegado. Guía `docs/AUTH.md`: etapas y organización por dominio. **Auth real y persistencia negocio aún NO implementadas**, no usar contraseñas reales en login actual. Proxy no sustituye permisos/CSRF backend. Para futuro deploy: quitar VITE_API_BASE_URL compilación y usar `npx wrangler deploy --config wrangler.jsonc`; no aplicar cambios cloud automáticamente. Subagente deep indisponible; no cambiar modelo.
 
 - **Iconos SVG en lugar de emojis** (pedido del usuario para DESPUÉS; NO reemplazar ahora): ☰/✕ del header/drawer y 🏠📈🛵📦 de la navegación inferior.
 - HTTPS público y tablero remoto verificados; validar instalación Android y offline en hosting, confirmar auto-deploy y restringir allowlist Atlas a rangos outbound de Render.

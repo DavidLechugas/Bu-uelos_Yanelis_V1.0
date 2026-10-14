@@ -1,5 +1,11 @@
 # Despliegue de la demo — Cloudflare Workers + Render + MongoDB Atlas
 
+> Trabajo en curso (2026-10-14): el usuario autorizó **login real y proxy
+> `/api` same-origin**. Código del proxy preparado, NO desplegado; login
+> todavía simulado. Ver **[AUTH.md](AUTH.md)** para los cambios posteriores
+> de build/deploy. Los comandos de abajo describen la demo remota anterior,
+> no el futuro despliegue autenticado.
+
 Guía para publicar la **demostración pública de solo lectura**
 (login simulado, tablero con snapshot de demo, drawer).
 **No es producción**: la demo no tiene autenticación real y

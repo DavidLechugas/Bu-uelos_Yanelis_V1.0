@@ -71,12 +71,16 @@ npm run dev
 
 ## Estado actual
 
-- Frontend: `lint` ✓, `test` 36/36 ✓, `build` PWA ✓; `npm audit` sin vulnerabilidades conocidas.
+- Alcance actualizado: **administrador crea domiciliarios, gestiona pedidos y los asigna**. Sin registro público. Inventario retirado de la interfaz; sin borrar datos de Atlas. Login real y gestión de pedidos/cuentas siguen pendientes. Correcciones móvil verificadas: frontend 73 pruebas, lint/build/audit y Chrome focal aprobados.
+
+- Login real autorizado, **todavía no implementado**. Primera etapa: proxy Cloudflare `/api` preparado con 25 pruebas; suite frontend actual 74/74, lint/build aprobados. Sin despliegue ni cambios de datos. Objetivo confirmado: Atlas + web + acceso desde teléfono. Guía **[docs/AUTH.md](docs/AUTH.md)**.
+
+- Frontend (2026-10-14): `lint` ✓, `test` 49/49 ✓, `build` PWA ✓. Última auditoría anterior sin vulnerabilidades conocidas; no se añadieron dependencias.
 - Backend: última verificación local `.\mvnw.cmd package` 23/23 pruebas ✓ y JAR generado. Contenedor construido y ejecutado en Render; Actions bloqueado por facturación de cuenta, no confirmado verde.
 - Demo remota verificada el 2026-10-13 en Chrome: login, tablero, inventario y gráfica; API 200 con CORS correcto. Atlas contiene solo datos de ejemplo.
 - Runtime verificado con Playwright + Chrome local (login, dashboard, drawer con overlay/Escape/foco, navegación inferior, avisos honestos).
 - Responsive y tipografía verificados en **320/375/768/1024/1280 px**: sin scroll horizontal; etiquetas en `rem` (15 px; heredan la preferencia de letra del navegador porque `html` no fija `font-size`); entradas 16 px; targets ≥44 px; tramos sin solapamiento (móvil / tableta 600-1024 / escritorio ≥1025 con shell `clamp(60rem, 90vw, 68rem)` y métricas 4 en fila a ancho completo); gráfica con etiquetas de días en HTML (14 px estables, alineadas con las barras); zoom CSS 200 % sin desbordamiento.
-- Alcance: login + tablero + drawer. El resto de secciones avisan honestamente que no están implementadas (no son controles muertos).
+- Alcance del código: login simulado + tablero + drawer + **Productos demo**. Inventario se retiró por decisión del usuario; la guía **[docs/PRODUCTOS-INVENTARIO.md](docs/PRODUCTOS-INVENTARIO.md)** es histórica. Catálogo solo de sesión, sin guardado Atlas. Pedidos y Domicilios aún avisan que no están implementados.
 
 ## PWA Android y HTTPS temporal
 
