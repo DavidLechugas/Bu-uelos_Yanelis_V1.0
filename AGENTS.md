@@ -82,6 +82,8 @@ Frontend en CMD: `cd /d "D:\Proyectos personales\bunuelos-yanelys\frontend"`; lo
 
 ## Diseño responsive y tipografía (contrato actual)
 
+- Ajuste 2026-10-14 confirmado para móvil: shell ocupa 100% del ancho (sin límite480px), métricas como filas completas por debajo de600px y tres columnas desde600px; gráfica ocupa ancho completo del contenido, conservando margen de lectura16px. Verificado en Chrome320/375/540/599/600/768/1024/1280, letra32px y zoomCSS200%, sin overflow, drawerEscape/foco. 17tests focales dashboard/nav/App, lint y build aprobados. Este ajuste reemplaza la descripción histórica de dos columnas móvil/cuatro métricas escritorio de abajo.
+
 - Tipografía en **rem**; NO se fija `font-size` en `html`, así que `rem` hereda el tamaño de letra preferido del navegador. (px y rem escalan igual con el zoom del navegador; lo que respeta la preferencia es no fijar px en la raíz.)
 - Escala de tokens: cuerpo `1rem` · etiquetas `.9375rem` (15 px con raíz 16) · mínimo `.875rem` (14 px: badges y eje de la gráfica) · entradas `≥1rem` · títulos/valores con `clamp` (rem + vw, acotados).
 - Rejillas con `minmax(0, 1fr)` para que valores largos ajusten en vez de desbordar; `.stat-value` con `overflow-wrap: break-word`.
@@ -98,6 +100,9 @@ Frontend en CMD: `cd /d "D:\Proyectos personales\bunuelos-yanelys\frontend"`; lo
 - Si los servidores del usuario ya corren (5173/8080), reusarlos; si no, arrancar los propios y cerrar **solo los propios** por puerto al terminar. No matar procesos ajenos.
 
 ## Pendientes
+
+- Proxy ya publicado tras commits `bcc378c`, `755686c`, `e2e1771`: web remota comprobada en Chrome375x812 con Inicio/Pedidos/Domicilios, dashboard Render200/Atlas y GETWorker/api/health200. Login aún simulado, no cuentas/pedidos reales. Frontend aún compila VITE_API_BASE_URL absoluto: antes de auth quitarlo y rebuild para usar proxy same-origin. Actions run38622997955 falló antes de iniciar jobs por billing GitHub, confirmado por anotaciones; no fallo de código ni CIverde.
+- Siguiente trabajo solicitado: Pedidos y Domicilios funcionales, administrador crea domiciliarios directamente y asigna pedidos; cada domiciliario solo ve los propios. Propuesta de campos del pedido cliente/teléfono/dirección/detalle/total/asignación; aún sin confirmar detalle del formulario. Implementar login/autorización primero, no nuevas escrituras públicas inseguras ni datos personales en demo. No inventar estados o campos como requisitos confirmados.
 
 - Cambio de alcance 2026-10-14: **Inventario NO necesario**; eliminado módulo frontend demo y navegación/resumen bajo stock; no borrar snapshot ni datos Atlas. Administrador crea domiciliarios directamente, SIN registro público; objetivo gestionar/asignar pedidos. Aún NO implementado login real ni pedidos/cuentas. Corrección móvil: error no exige backend en127.0.0.1, fetch timeout90s y aviso de arranque. Frontend73tests/lint/build/audit y Chrome focal320-1280/letra32px/zoom200% aprobados. Pruebas Inventario retiradas con funcionalidad, reemplazadas por ausencia en navegación/dashboard. Diagnóstico remoto: API frontend404 (proxy sin publicar), primer health Render timeout65s, luego dashboard200/CORS correcto/Chrome remoto funciona con navegación antigua. No afirmar causa exacta de captura ni deploy automático. Subagente coder falló por modelo indisponible.
 

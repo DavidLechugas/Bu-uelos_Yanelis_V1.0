@@ -30,7 +30,7 @@
   --shadow: 0 8px 24px rgba(90, 58, 20, 0.12);
   --radius: 16px;
   --radius-small: 10px;
-  --shell-width: 480px;
+  --shell-width: 100%;
 }
 
 * {
@@ -345,6 +345,12 @@ button {
      ajusta en lugar de desbordar la rejilla. */
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+/* En móvil, las tres métricas son filas de ancho completo:
+   ninguna tarjeta aislada ocupa solo media fila. */
+.stats-grid--orders {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .stat-card {
@@ -812,6 +818,10 @@ button {
 
   .stat-card {
     padding: 18px 20px;
+  }
+
+  .stats-grid.stats-grid--orders {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

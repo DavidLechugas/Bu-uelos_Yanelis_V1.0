@@ -17,7 +17,12 @@ de la interfaz y del alcance; conservar datos existentes de Atlas.
 usuarios reales, sesiones autenticadas ni escrituras de pedidos/domiciliarios
 todavía. No introducir contraseñas reales en la pantalla actual.
 
-## Etapa 1: proxy same-origin (código preparado, NO desplegado)
+## Etapa 1: proxy same-origin (publicado; login todavía pendiente)
+
+Comprobación posterior al envío de `e2e1771`: Worker `/api/health` responde
+200 y la interfaz nueva se ve en Chrome móvil. **React todavía llama al
+origen absoluto Render por la variable compilada anterior**; antes de
+activar autenticación hay que quitarla y recompilar para usar el proxy.
 
 `frontend/worker/index.js` recibe `/api` y `/api/*` en el dominio del
 frontend y llama exclusivamente al backend Render ya existente.
@@ -50,9 +55,11 @@ En **el Worker existente**, no crear otra aplicación:
 5. Comprobar `/api/health` y `/api/dashboard` **desde workers.dev** y que
    `/api/inexistente` devuelve respuesta del backend, no HTML de la SPA.
 
-Esta etapa no configura recursos remotos ni verifica Wrangler/runtime
-Cloudflare: pruebas del handler en Node con Fetch estándar. Wrangler no se
-instaló ni ejecutó. El despliegue y la prueba desde el teléfono están pendientes.
+Pruebas iniciales del handler en Node con Fetch estándar. Wrangler no se
+instaló ni ejecutó localmente. Posteriormente se envió a GitHub y se verificó
+el despliegue real con GET `/api/health` del dominio Worker y la nueva UI en
+Chrome aislado tamaño móvil. La instalación Android y sesiones reales siguen
+sin verificarse.
 
 Verificación local: 25 pruebas del proxy; suite completa frontend 74/74,
 lint y build PWA aprobados. Una inversión deliberada del guard de origen
