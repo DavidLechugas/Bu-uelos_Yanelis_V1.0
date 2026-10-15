@@ -30,18 +30,11 @@ import jakarta.validation.constraints.Size;
 public class OrderController {
 
     public record CreateOrderRequest(
-            @NotBlank(message = "Escribe el nombre del cliente.")
-            @Size(max = 80, message = "Máximo 80 caracteres.") String cliente,
-            @NotBlank(message = "Escribe el teléfono.")
-            @Pattern(regexp = "[0-9 +()-]{7,20}", message = "Usa de 7 a 20 dígitos (se permiten espacios, +, guiones y paréntesis).")
-            String telefono,
-            @NotBlank(message = "Escribe la dirección.")
-            @Size(max = 160, message = "Máximo 160 caracteres.") String direccion,
-            @NotBlank(message = "Describe el pedido.")
-            @Size(max = 500, message = "Máximo 500 caracteres.") String detalle,
-            @NotNull(message = "Escribe el total.")
-            @Min(value = 1, message = "El total debe ser mayor que 0.")
-            @Max(value = 100_000_000, message = "El total es demasiado alto.") Long totalCop,
+            @NotBlank(message = "Escribe el nombre del cliente.") @Size(max = 80, message = "Máximo 80 caracteres.") String cliente,
+            @NotBlank(message = "Escribe el teléfono.") @Pattern(regexp = "[0-9 +()-]{7,20}", message = "Usa de 7 a 20 dígitos (se permiten espacios, +, guiones y paréntesis).") String telefono,
+            @NotBlank(message = "Escribe la dirección.") @Size(max = 160, message = "Máximo 160 caracteres.") String direccion,
+            @NotBlank(message = "Describe el pedido.") @Size(max = 500, message = "Máximo 500 caracteres.") String detalle,
+            @NotNull(message = "Escribe el total.") @Min(value = 1, message = "El total debe ser mayor que 0.") @Max(value = 100_000_000, message = "El total es demasiado alto.") Long totalCop,
             @Size(max = 64) String domiciliarioId) {
     }
 
