@@ -1,8 +1,7 @@
 # Buñuelos Yanelys — contexto del proyecto
 
 Estado vigente, comandos y arquitectura: **`CLAUDE.md`** (válido para cualquier agente). Este archivo
-solo añade lo que no está allí. Historial completo de decisiones y verificaciones: `docs/HISTORIAL.md`
-(consultar solo si hace falta un detalle antiguo).
+solo añade lo que no está allí.
 
 ## Decisiones confirmadas (usuario)
 

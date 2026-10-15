@@ -40,6 +40,5 @@ npm run dev                # :5173, proxy /api -> 127.0.0.1:8080
 - `CLAUDE.md` y `AGENTS.md`: contexto, estado y reglas para agentes.
 - `docs/AUTH.md`: diseño de la autenticación.
 - `docs/DEPLOY.md`: despliegue en Cloudflare, Render y Atlas.
-- `docs/HISTORIAL.md`: archivo de notas antiguas.
 
 Las credenciales viven solo en los paneles de Render y Atlas, nunca en el repositorio.

@@ -230,13 +230,6 @@ Lo siguiente describe el plan inicial, no el formulario del Worker actual.
   a los **activos estáticos** (públicos, inofensivo); el
   CORS de la API lo controla el backend, no Pages.
 
-Para construir/inspeccionar `dist/` en local exactamente como
-Pages (sin desplegar ni instalar nada):
-
-```bat
-scripts\4-cloudflare-build.cmd https://<tu-servicio>.onrender.com
-```
-
 ## 5. Verificación de la demo desplegada
 
 1. `GET <backend>/api/health` → `{"status":"UP"}`
