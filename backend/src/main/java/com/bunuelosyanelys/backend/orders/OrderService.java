@@ -64,7 +64,7 @@ public class OrderService {
             throw new ApiException(HttpStatus.CONFLICT, "Solo se puede editar un pedido abierto (no entregado ni cancelado).");
         }
         applyDetails(order, request);
-        }
+        return save(order);
     }
 
     public Order assign(String orderId, String courierId) {
