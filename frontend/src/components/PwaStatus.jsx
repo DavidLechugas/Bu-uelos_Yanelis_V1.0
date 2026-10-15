@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { CloseIcon } from './icons.jsx';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 /**
@@ -19,6 +21,13 @@ export function PwaStatus() {
     updateServiceWorker,
   } = useRegisterSW();
 
+  // «Disponible sin conexión» es informativo: se retira solo a los 6 s.
+  useEffect(() => {
+    if (!offlineReady) return undefined;
+    const timer = setTimeout(() => setOfflineReady(false), 6000);
+    return () => clearTimeout(timer);
+  }, [offlineReady, setOfflineReady]);
+
   if (needRefresh) {
     return (
       <div className="pwa-toast" role="status">
@@ -36,7 +45,7 @@ export function PwaStatus() {
           aria-label="Cerrar aviso"
           onClick={() => setNeedRefresh(false)}
         >
-          ✕
+          <CloseIcon />
         </button>
       </div>
     );
@@ -52,7 +61,7 @@ export function PwaStatus() {
           aria-label="Cerrar aviso"
           onClick={() => setOfflineReady(false)}
         >
-          ✕
+          <CloseIcon />
         </button>
       </div>
     );

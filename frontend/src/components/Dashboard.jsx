@@ -4,6 +4,21 @@ import { Header } from './Header.jsx';
 import { BottomNav } from './BottomNav.jsx';
 import { Notice } from './Notice.jsx';
 import { useDashboard } from '../hooks/useDashboard.js';
+import { AlertIcon } from './icons.jsx';
+
+const clock = new Intl.DateTimeFormat('es-CO', { timeStyle: 'medium' });
+
+function LiveIndicator({ updatedAt, stale }) {
+  if (!updatedAt) return null;
+  return (
+    <p className={`live-indicator${stale ? ' live-indicator--stale' : ''}`}>
+      <span className="live-dot" aria-hidden="true" />
+      {stale
+        ? `Sin conexión · datos de las ${clock.format(updatedAt)}`
+        : `En vivo · actualizado ${clock.format(updatedAt)}`}
+    </p>
+  );
+}
 
 function formatCurrency(value) {
   // "$428.000" como en la referencia: símbolo + separador de miles es-CO.
@@ -47,12 +62,12 @@ function DashboardError({ error, onRetry, onUseDemo }) {
  * (MongoDB). Si la API falla, el usuario decide explícitamente
  * si reintentar o usar datos de demostración.
  */
-export function Dashboard({ session, onOpenDrawer, onSelectNav }) {
-  const { status, data, error, demoMode, retry, useDemoData } = useDashboard();
+export function Dashboard({ session, active = true, onOpenDrawer, onOpenProfile, onSelectNav }) {
+  const { status, data, error, demoMode, retry, useDemoData, updatedAt, stale } = useDashboard({ active });
 
   return (
     <div className="dashboard">
-      <Header title="Inicio" usuario={session.nombre} onOpenDrawer={onOpenDrawer} />
+      <Header title="Inicio" user={session} onOpenDrawer={onOpenDrawer} onOpenProfile={onOpenProfile} />
 
       <main className="dashboard-main">
         {status === 'loading' && <DashboardSkeleton />}
@@ -69,7 +84,21 @@ export function Dashboard({ session, onOpenDrawer, onSelectNav }) {
                 text="Datos de demostración: la API no está disponible. Pulsa «Reintentar» en el error anterior si vuelve a aparecer."
               />
             )}
-            <p className="greeting">{data.saludo}</p>
+            <div className="dashboard-greeting">
+              <p className="greeting">{data.saludo}</p>
+              <LiveIndicator updatedAt={updatedAt} stale={stale} />
+            </div>
+            {data.pendientesSinAsignar > 0 && (
+              <button type="button" className="alert-banner" onClick={() => onSelectNav({ id: 'pedidos', label: 'Pedidos' })}>
+                <AlertIcon />
+                <span>
+                  {data.pendientesSinAsignar === 1
+                    ? '1 pedido sin asignar'
+                    : `${data.pendientesSinAsignar} pedidos sin asignar`}
+                </span>
+                <span className="alert-banner-action">Asignar</span>
+              </button>
+            )}
 
             <div className="stats-grid stats-grid--orders">
               <StatCard
@@ -77,7 +106,7 @@ export function Dashboard({ session, onOpenDrawer, onSelectNav }) {
                 value={formatCurrency(data.ventasTotales)}
                 tone="green"
               />
-              <StatCard label="Pedidos" value={String(data.pedidos)} />
+              <StatCard label="Pedidos hoy" value={String(data.pedidos)} />
               <StatCard
                 label="Entregas activas"
                 value={String(data.entregasActivas)}

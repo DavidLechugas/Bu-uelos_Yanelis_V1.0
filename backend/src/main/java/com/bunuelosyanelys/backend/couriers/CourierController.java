@@ -39,7 +39,8 @@ import jakarta.validation.constraints.Size;
 @RequestMapping("/api/couriers")
 public class CourierController {
 
-    public record CourierView(String id, String nombre, String usuario, boolean activo, long pedidosActivos) {
+    public record CourierView(String id, String nombre, String usuario, boolean activo, long pedidosActivos,
+            String foto) {
     }
 
     public record CreateCourierRequest(
@@ -128,6 +129,6 @@ public class CourierController {
 
     private CourierView view(AppUser user) {
         return new CourierView(user.getId(), user.getNombre(), user.getUsername(), user.isActivo(),
-                orders.countByDomiciliarioIdAndEstadoIn(user.getId(), ACTIVE));
+                orders.countByDomiciliarioIdAndEstadoIn(user.getId(), ACTIVE), user.getFoto());
     }
 }

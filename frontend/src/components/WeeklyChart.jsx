@@ -20,6 +20,7 @@ export function WeeklyChart({ data }) {
       <svg
         viewBox={`0 0 ${width} ${height}`}
         className="weekly-chart"
+        preserveAspectRatio="none"
         role="img"
         aria-label={`Gráfica de ventas de los últimos 7 días. Total ${data
           .map((d) => d.ventas)

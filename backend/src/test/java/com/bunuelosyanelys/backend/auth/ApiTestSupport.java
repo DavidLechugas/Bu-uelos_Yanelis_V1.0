@@ -44,7 +44,7 @@ public abstract class ApiTestSupport {
     protected PasswordEncoder encoder;
 
     /** Navegador simulado: cookie CSRF y, tras el login, cookie de sesión. */
-    protected record Browser(Cookie csrf, Cookie session) {
+    public record Browser(Cookie csrf, Cookie session) {
 
         public MockHttpServletRequestBuilder with(MockHttpServletRequestBuilder request) {
             request.cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue());

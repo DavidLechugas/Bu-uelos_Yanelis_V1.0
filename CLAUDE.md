@@ -52,8 +52,8 @@ backend → suites completas. Los tests nunca deben tocar Atlas real. No silenci
 - `frontend/worker/index.js` — Cloudflare Worker: sirve `dist/` (binding `ASSETS`) y hace proxy de
   `/api` a Render (`wrangler.jsonc`). Tests en `worker/proxy.test.js`.
 - `backend/` Spring Boot 4, Java 21, paquete `com.bunuelosyanelys.backend`, organizado por dominio:
-  `auth/` (usuarios, sesiones, login, alta inicial), `orders/`, `couriers/`, `dashboard/` (snapshot
-  demo), `health/`, `common/` (errores JSON), `config/` (SecurityConfig, CORS fail-closed). Perfil dev escucha en loopback; perfil prod exige `SPRING_MONGODB_URI`, lee
+  `auth/` (usuarios, sesiones, login, perfil, alta inicial), `orders/`, `couriers/`, `dashboard/`
+  (métricas en vivo desde pedidos), `health/`, `common/` (errores JSON), `config/` (SecurityConfig, CORS fail-closed). Perfil dev escucha en loopback; perfil prod exige `SPRING_MONGODB_URI`, lee
   `PORT` y escucha en 0.0.0.0. React habla solo con el backend, nunca con MongoDB/Atlas.
 - Despliegue: frontend en **Cloudflare Workers Static Assets** (no Pages), backend en Render
   (`render.yaml`, `backend/Dockerfile`), datos en Atlas (`bunuelos_yanelys_demo.dashboard_snapshot`).
@@ -70,8 +70,13 @@ guardada en Mongo, CSRF, admin crea/activa/desactiva domiciliarios, pedidos con 
 Pendiente → Asignado → En camino → Entregado (+Cancelado). Admin cambia todo; el domiciliario
 solo ve los suyos y marca En camino/Entregado. El primer admin sale de `ADMIN_BOOTSTRAP_*` en Render.
 
-Pendiente: tablero con métricas reales de pedidos (hoy sigue siendo el snapshot demo), editar
-pedidos, Productos persistente, iconos SVG, validar instalación Android. Costo de domicilio
+Además (2026-10-14, tarde): tablero calculado en vivo desde los pedidos (hora de Bogotá, refresco
+cada 15 s y al volver a la pestaña), perfil propio (nombre, foto ≤160 px como data URL, cambio de
+contraseña), Configuración por dispositivo (tema claro/oscuro/sistema y animaciones reducidas,
+`features/settings/preferences.js` + script en `index.html`), iconos SVG propios
+(`components/icons.jsx`). El snapshot demo ya no se usa en código (datos de Atlas intactos).
+
+Pendiente: editar pedidos, Productos persistente, validar instalación Android. Costo de domicilio
 separado: no acordado.
 
 ## Reglas

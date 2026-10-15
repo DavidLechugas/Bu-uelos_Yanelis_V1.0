@@ -14,7 +14,8 @@ solo añade lo que no está allí. Historial completo de decisiones y verificaci
 - Login real implementado (ver `docs/AUTH.md`); datos personales solo con sesión y permisos en servidor.
 - PWA: `vite-plugin-pwa` solo en build, `registerType: prompt` (actualiza al pulsar, nunca recarga
   formularios sola). SW precachea solo la interfaz; `/api` NetworkOnly. Guía `docs/PWA.md`.
-- Iconos SVG en lugar de emojis: pedido para DESPUÉS, no ahora.
+- Iconos SVG propios en navegación, menú y cierres (hecho 2026-10-14).
+- Modo oscuro: tokens en `:root[data-theme="dark"]`; nuevos colores siempre como variables.
 
 ## Entorno
 

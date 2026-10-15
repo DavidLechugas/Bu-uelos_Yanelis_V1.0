@@ -13,4 +13,12 @@ public interface OrderRepository extends MongoRepository<Order, String> {
     List<Order> findByDomiciliarioIdOrderByCreadoEnDesc(String domiciliarioId, Pageable page);
 
     long countByDomiciliarioIdAndEstadoIn(String domiciliarioId, Collection<OrderStatus> estados);
+
+    List<Order> findByEstadoAndActualizadoEnGreaterThanEqual(OrderStatus estado, java.time.Instant desde);
+
+    long countByCreadoEnGreaterThanEqual(java.time.Instant desde);
+
+    long countByEstadoIn(Collection<OrderStatus> estados);
+
+    long countByEstado(OrderStatus estado);
 }

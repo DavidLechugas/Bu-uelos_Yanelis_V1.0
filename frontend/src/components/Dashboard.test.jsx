@@ -49,7 +49,7 @@ describe('Dashboard', () => {
     renderDashboard();
     expect(screen.getByRole('button', { name: 'Abrir menú' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Inicio' })).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: 'Perfil de Ana' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Perfil de Ana' })).toBeInTheDocument();
   });
 
   it('muestra estado de carga mientras consulta la API', () => {

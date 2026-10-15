@@ -54,7 +54,7 @@ describe('App — sesión real y navegación por rol', () => {
     const user = userEvent.setup();
     render(<App />);
     expect(await screen.findByText('Buenos días, Ana')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: 'Perfil de Yanelys' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Perfil de Yanelys' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
     expect(within(screen.getByRole('dialog')).getByText('Administrador')).toBeInTheDocument();
@@ -93,16 +93,42 @@ describe('App — sesión real y navegación por rol', () => {
     expect(calls.some((call) => call.path === '/api/dashboard' || call.path === '/api/couriers')).toBe(false);
   });
 
-  it('las secciones pendientes del drawer avisan y el aviso se puede cerrar', async () => {
-    mockApi(adminRoutes());
+  it('Configuración aplica el modo oscuro y el perfil permite cambiar el nombre', async () => {
+    const { calls } = mockApi(adminRoutes({
+      'PUT /api/auth/profile': ({ body }) => ({ body: { usuario: { ...ADMIN, nombre: body.nombre } } }),
+    }));
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText('Buenos días, Ana');
+
     await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
-    await user.click(screen.getByRole('button', { name: 'Estadísticas' }));
-    expect(screen.getByText('La sección «Estadísticas» todavía no está disponible.')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Cerrar aviso' }));
-    expect(screen.queryByText(/todavía no está disponible/)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Configuración' }));
+    await user.click(screen.getByLabelText('Oscuro'));
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    await user.click(screen.getByLabelText('Claro'));
+    expect(document.documentElement.dataset.theme).toBe('light');
+
+    await user.click(screen.getByRole('button', { name: 'Perfil de Yanelys' }));
+    const dialog = screen.getByRole('dialog', { name: 'Mi perfil' });
+    const name = within(dialog).getByLabelText('Nombre');
+    await user.clear(name);
+    await user.type(name, 'Yanelys Gómez');
+    await user.click(within(dialog).getByRole('button', { name: 'Guardar perfil' }));
+    expect(await within(dialog).findByText('Perfil guardado.')).toBeInTheDocument();
+    expect(calls.find((call) => call.path === '/api/auth/profile').body).toEqual({ nombre: 'Yanelys Gómez', foto: null });
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog', { name: 'Mi perfil' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Perfil de Yanelys Gómez' })).toHaveFocus();
+  });
+
+  it('el tablero muestra los pedidos sin asignar y lleva a Pedidos', async () => {
+    mockApi(adminRoutes({ 'GET /api/dashboard': { body: { ...DASHBOARD_DATA, pendientesSinAsignar: 2 } } }));
+    const user = userEvent.setup();
+    render(<App />);
+    expect(await screen.findByText(/En vivo · actualizado/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /2 pedidos sin asignar/ }));
+    expect(await screen.findByRole('heading', { name: 'Carmen' })).toBeInTheDocument();
   });
 
   it('una sesión caducada devuelve al login con un aviso', async () => {

@@ -89,6 +89,9 @@ export const auth = {
     return apiRequest('/api/auth/login', { method: 'POST', body: { usuario, password }, notifyExpired: false });
   },
   logout: () => apiRequest('/api/auth/logout', { method: 'POST', notifyExpired: false }),
+  updateProfile: (profile) => apiRequest('/api/auth/profile', { method: 'PUT', body: profile }),
+  changePassword: (actual, nueva) =>
+    apiRequest('/api/auth/password', { method: 'PUT', body: { actual, nueva } }),
 };
 
 export const ordersApi = {

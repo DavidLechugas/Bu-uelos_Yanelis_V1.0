@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
+import { CloseIcon } from './icons.jsx';
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 
-function trapTabKey(event, container) {
+export function trapTabKey(event, container) {
   // El selector ya excluye botones deshabilitados y tabindex="-1".
   const focusable = Array.from(
     container.querySelectorAll(FOCUSABLE_SELECTOR),
@@ -98,7 +99,7 @@ export function Drawer({ open, role, items = [], onClose, onNavigate, onLogout }
             aria-label="Cerrar menú"
             onClick={onClose}
           >
-            ✕
+            <CloseIcon />
           </button>
         </div>
 

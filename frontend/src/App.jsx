@@ -9,17 +9,24 @@ import { BottomNav } from './components/BottomNav.jsx';
 import { Products } from './features/products/Products.jsx';
 import { Orders } from './features/orders/Orders.jsx';
 import { Couriers } from './features/couriers/Couriers.jsx';
+import { ProfilePanel } from './features/profile/ProfilePanel.jsx';
+import { Settings } from './features/settings/Settings.jsx';
+import { applyPreferences, loadPreferences } from './features/settings/preferences.js';
+import { CloseIcon } from './components/icons.jsx';
 import './features/management.css';
 
 const ROLE_LABEL = { ADMIN: 'Administrador', COURIER: 'Domiciliario' };
-const TITLES = { inicio: 'Inicio', pedidos: 'Pedidos', domicilios: 'Domicilios', productos: 'Productos' };
+const TITLES = { inicio: 'Inicio', pedidos: 'Pedidos', domicilios: 'Domicilios', productos: 'Productos', configuracion: 'Configuración' };
 
 /** Entradas del drawer por rol: las que tienen vista navegan, el resto avisa. */
 const DRAWER_ITEMS = {
-  ADMIN: ['Pedidos', 'Domiciliarios', 'Productos', 'Estadísticas', 'Alertas', 'Perfil', 'Configuración'],
-  COURIER: ['Mis pedidos', 'Perfil'],
+  ADMIN: ['Inicio', 'Pedidos', 'Domiciliarios', 'Productos', 'Perfil', 'Configuración'],
+  COURIER: ['Mis pedidos', 'Perfil', 'Configuración'],
 };
-const DRAWER_VIEWS = { Pedidos: 'pedidos', 'Mis pedidos': 'pedidos', Domiciliarios: 'domicilios', Productos: 'productos' };
+const DRAWER_VIEWS = {
+  Inicio: 'inicio', Pedidos: 'pedidos', 'Mis pedidos': 'pedidos', Domiciliarios: 'domicilios',
+  Productos: 'productos', Configuración: 'configuracion',
+};
 
 /**
  * Buñuelos Yanelys: sesión real (cookie HttpOnly del servidor). El
@@ -33,6 +40,7 @@ export default function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [notice, setNotice] = useState(null);
   const [view, setView] = useState('inicio');
+  const [profileOpen, setProfileOpen] = useState(false);
   const shell = useRef(null);
 
   useEffect(() => {
@@ -47,7 +55,14 @@ export default function App() {
       setLoginMessage('Tu sesión terminó. Inicia sesión de nuevo.');
     }
     window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
-    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    // Tema «según el teléfono»: seguir los cambios del sistema en vivo.
+    const scheme = window.matchMedia?.('(prefers-color-scheme: dark)');
+    const onScheme = () => applyPreferences(loadPreferences());
+    scheme?.addEventListener?.('change', onScheme);
+    return () => {
+      window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+      scheme?.removeEventListener?.('change', onScheme);
+    };
   }, []);
 
   useEffect(() => {
@@ -62,6 +77,7 @@ export default function App() {
 
   function resetSession() {
     setDrawerOpen(false);
+    setProfileOpen(false);
     setUser(null);
     setNotice(null);
   }
@@ -90,7 +106,16 @@ export default function App() {
     navigate(item.id);
   }
 
+  function openProfile() {
+    setDrawerOpen(false);
+    setProfileOpen(true);
+  }
+
   function handleDrawerNav(section) {
+    if (section === 'Perfil') {
+      openProfile();
+      return;
+    }
     if (DRAWER_VIEWS[section]) {
       navigate(DRAWER_VIEWS[section]);
       return;
@@ -125,11 +150,17 @@ export default function App() {
     <div className="app-shell" ref={shell}>
       {isAdmin && (
         <div className="view-panel" hidden={view !== 'inicio'}>
-          <Dashboard session={user} onOpenDrawer={openDrawer} onSelectNav={handleBottomNav} />
+          <Dashboard
+            session={user}
+            active={view === 'inicio'}
+            onOpenDrawer={openDrawer}
+            onOpenProfile={openProfile}
+            onSelectNav={handleBottomNav}
+          />
         </div>
       )}
       <div className="view-panel" hidden={view === 'inicio'}>
-        <Header title={title} usuario={user.nombre} onOpenDrawer={openDrawer} />
+        <Header title={title} user={user} onOpenDrawer={openDrawer} onOpenProfile={openProfile} />
         <main className="management-main">
           <div className="view-panel" hidden={view !== 'pedidos'}>
             <Orders user={user} active={view === 'pedidos'} />
@@ -140,9 +171,11 @@ export default function App() {
               <div className="view-panel" hidden={view !== 'productos'}><Products /></div>
             </>
           )}
+          <div className="view-panel" hidden={view !== 'configuracion'}><Settings onOpenProfile={openProfile} /></div>
         </main>
         {isAdmin && <BottomNav active={view} onSelect={handleBottomNav} />}
       </div>
+      <ProfilePanel open={profileOpen} user={user} onClose={() => setProfileOpen(false)} onUpdated={setUser} />
       <Drawer
         open={drawerOpen}
         role={ROLE_LABEL[user.role]}
@@ -161,7 +194,7 @@ export default function App() {
             aria-label="Cerrar aviso"
             onClick={() => setNotice(null)}
           >
-            ✕
+            <CloseIcon />
           </button>
         </div>
       )}

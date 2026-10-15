@@ -36,7 +36,6 @@ describe('BottomNav', () => {
     expect(onSelect).toHaveBeenCalledWith({
       id: 'pedidos',
       label: 'Pedidos',
-      icon: '📈',
     });
   });
 
@@ -48,7 +47,6 @@ describe('BottomNav', () => {
     expect(onSelect).toHaveBeenCalledWith({
       id: 'inicio',
       label: 'Inicio',
-      icon: '🏠',
     });
   });
 });

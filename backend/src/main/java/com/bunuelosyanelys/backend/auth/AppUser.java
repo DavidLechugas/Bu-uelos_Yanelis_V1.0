@@ -17,6 +17,8 @@ public class AppUser {
     private Role role;
     private boolean activo;
     private Instant creadoEn;
+    /** Foto de perfil pequeña como data URL (≤ 100 KB), opcional. */
+    private String foto;
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -32,4 +34,6 @@ public class AppUser {
     public void setActivo(boolean activo) { this.activo = activo; }
     public Instant getCreadoEn() { return creadoEn; }
     public void setCreadoEn(Instant creadoEn) { this.creadoEn = creadoEn; }
+    public String getFoto() { return foto; }
+    public void setFoto(String foto) { this.foto = foto; }
 }

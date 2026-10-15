@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#a5631a" />
+    <script>
+      // Tema y animaciones antes de pintar (ver features/settings/preferences.js).
+      try {
+        var p = JSON.parse(localStorage.getItem('by-preferences') || '{}');
+        var dark = p.theme === 'dark' || (p.theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        document.documentElement.dataset.motion = p.motion || 'normal';
+      } catch (e) {}
+    </script>
     <meta
       name="description"
       content="Buñuelos Yanelys — prototipo de gestión local. Demo sin autenticación real."

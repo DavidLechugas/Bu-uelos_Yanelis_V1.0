@@ -1,9 +1,11 @@
+import { MenuIcon } from './icons.jsx';
+import { Avatar } from './Avatar.jsx';
+
 /**
- * Encabezado caramelo del tablero: menú (hamburguesa), título y
- * círculo de perfil con la inicial del usuario.
+ * Encabezado caramelo: menú, título y botón de perfil (foto o inicial),
+ * que abre el panel de perfil.
  */
-export function Header({ title, usuario, onOpenDrawer }) {
-  const initial = (usuario?.trim()?.[0] ?? 'A').toUpperCase();
+export function Header({ title, user, onOpenDrawer, onOpenProfile }) {
   return (
     <header className="app-header">
       <button
@@ -13,18 +15,18 @@ export function Header({ title, usuario, onOpenDrawer }) {
         aria-haspopup="dialog"
         onClick={onOpenDrawer}
       >
-        <span aria-hidden="true" className="hamburger-icon">
-          ☰
-        </span>
+        <MenuIcon />
       </button>
       <h1 className="header-title" tabIndex={-1}>{title}</h1>
-      <span
-        className="profile-circle"
-        role="img"
-        aria-label={`Perfil de ${usuario}`}
+      <button
+        type="button"
+        className="profile-button"
+        aria-label={`Perfil de ${user.nombre}`}
+        aria-haspopup="dialog"
+        onClick={onOpenProfile}
       >
-        {initial}
-      </span>
+        <Avatar user={user} />
+      </button>
     </header>
   );
 }
