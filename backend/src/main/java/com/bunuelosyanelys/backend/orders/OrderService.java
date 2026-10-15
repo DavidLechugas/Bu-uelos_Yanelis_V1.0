@@ -51,11 +51,7 @@ public class OrderService {
 
     public Order create(OrderController.CreateOrderRequest request) {
         Order order = new Order();
-        order.setCliente(request.cliente().trim());
-        order.setTelefono(request.telefono().trim());
-        order.setDireccion(request.direccion().trim());
-        order.setDetalle(request.detalle().trim());
-        order.setTotalCop(request.totalCop());
+        applyDetails(order, request);
         order.setCreadoEn(clock.instant());
         applyCourier(order, request.domiciliarioId());
         return save(order);
@@ -67,12 +63,8 @@ public class OrderService {
         if (!order.getEstado().isOpen()) {
             throw new ApiException(HttpStatus.CONFLICT, "Solo se puede editar un pedido abierto (no entregado ni cancelado).");
         }
-        order.setCliente(request.cliente().trim());
-        order.setTelefono(request.telefono().trim());
-        order.setDireccion(request.direccion().trim());
-        order.setDetalle(request.detalle().trim());
-        order.setTotalCop(request.totalCop());
-        return save(order);
+        applyDetails(order, request);
+        }
     }
 
     public Order assign(String orderId, String courierId) {
@@ -102,6 +94,14 @@ public class OrderService {
         }
         order.setEstado(target);
         return save(order);
+    }
+
+    private void applyDetails(Order order, OrderController.CreateOrderRequest request) {
+        order.setCliente(request.cliente().trim());
+        order.setTelefono(request.telefono().trim());
+        order.setDireccion(request.direccion().trim());
+        order.setDetalle(request.detalle().trim());
+        order.setTotalCop(request.totalCop());
     }
 
     private void applyCourier(Order order, String courierId) {
