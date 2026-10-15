@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 App **interna** (administrador y domiciliarios, sin clientes ni registro público). Proyecto existente:
 **no regenerar, no reinicializar Git ni MongoDB, no restaurar Inventario.** Decisiones extra en
-`AGENTS.md`, historial antiguo en `docs/HISTORIAL.md`; guías en `docs/` (`AUTH.md`, `DEPLOY.md`, `PWA.md`, `PRODUCTOS-INVENTARIO.md`).
+`AGENTS.md`, historial antiguo en `docs/HISTORIAL.md`; guías en `docs/` (`AUTH.md`, `DEPLOY.md`).
 Notas recientes reemplazan estados antiguos; código subido no implica funciones implementadas.
 
 ## Al retomar
@@ -61,7 +61,7 @@ backend → suites completas. Los tests nunca deben tocar Atlas real. No silenci
   - API: https://bu-uelos-yanelis-v1-0.onrender.com
   - Un push no equivale a despliegue verificado; CI de GitHub está bloqueada por billing (no es fallo
     de código ni CI verde).
-- `scripts/*.cmd` arrancan backend/PWA/túnel local; ver `INICIAR-SERVICIOS.md`.
+- `scripts/4-cloudflare-build.cmd` es el build de Cloudflare; `scripts/install-cloudflared.ps1` solo sirve para túneles locales.
 
 ## Estado y próximo trabajo
 
