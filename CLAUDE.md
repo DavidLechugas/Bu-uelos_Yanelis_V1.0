@@ -47,12 +47,12 @@ backend → suites completas. Los tests nunca deben tocar Atlas real. No silenci
 - `frontend/` Vite 7 + React 19 (JSX, CSS plano). `src/api/client.js` es el único punto de llamadas
   HTTP, siempre `/api` del mismo origen (cookies y CSRF); `hooks/useDashboard.js` alimenta el tablero.
   `components/` = shell (Header, Drawer, BottomNav, Login simulado, Dashboard/WeeklyChart).
-  `features/<dominio>/` = módulos de negocio: `orders/`, `couriers/` (API real) y `products/` (demo en
-  memoria). Tests de UI con `src/test/mockApi.js`.
+  `features/<dominio>/` = módulos de negocio: `orders/`, `couriers/`, `products/` (API real)
+  Tests de UI con `src/test/mockApi.js`.
 - `frontend/worker/index.js` — Cloudflare Worker: sirve `dist/` (binding `ASSETS`) y hace proxy de
   `/api` a Render (`wrangler.jsonc`). Tests en `worker/proxy.test.js`.
 - `backend/` Spring Boot 4, Java 21, paquete `com.bunuelosyanelys.backend`, organizado por dominio:
-  `auth/` (usuarios, sesiones, login, perfil, alta inicial), `orders/`, `couriers/`, `dashboard/`
+  `auth/` (usuarios, sesiones, login, perfil, alta inicial), `orders/`, `couriers/`, `products/`, `dashboard/`
   (métricas en vivo desde pedidos), `health/`, `common/` (errores JSON), `config/` (SecurityConfig, CORS fail-closed). Perfil dev escucha en loopback; perfil prod exige `SPRING_MONGODB_URI`, lee
   `PORT` y escucha en 0.0.0.0. React habla solo con el backend, nunca con MongoDB/Atlas.
 - Despliegue: frontend en **Cloudflare Workers Static Assets** (no Pages), backend en Render
@@ -76,7 +76,9 @@ contraseña), Configuración por dispositivo (tema claro/oscuro/sistema y animac
 `features/settings/preferences.js` + script en `index.html`), iconos SVG propios
 (`components/icons.jsx`). El snapshot demo ya no se usa en código (datos de Atlas intactos).
 
-Pendiente: editar pedidos, Productos persistente, validar instalación Android. Costo de domicilio
+Además: admin edita pedidos abiertos (`PUT /api/orders/{id}`) y Productos se guarda en Mongo (`products/`, solo admin).
+
+Pendiente: validar instalación Android. Costo de domicilio
 separado: no acordado.
 
 ## Reglas

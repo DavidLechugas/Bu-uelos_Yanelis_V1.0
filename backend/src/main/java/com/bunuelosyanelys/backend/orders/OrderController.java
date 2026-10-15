@@ -68,6 +68,11 @@ public class OrderController {
         return service.create(request);
     }
 
+    @PutMapping("/{id}")
+    public Order update(@PathVariable String id, @Valid @RequestBody CreateOrderRequest request) {
+        return service.update(id, request);
+    }
+
     @PutMapping("/{id}/domiciliario")
     public Order assign(@PathVariable String id, @Valid @RequestBody AssignRequest request) {
         return service.assign(id, request.domiciliarioId());

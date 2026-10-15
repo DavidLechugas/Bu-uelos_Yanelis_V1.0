@@ -111,18 +111,25 @@ export function Orders({ user, active = true }) {
     if (Object.keys(nextErrors).length) return;
     setSaving(true);
     try {
-      const created = await ordersApi.create({
+      const body = {
         cliente: draft.cliente.trim(),
         telefono: draft.telefono.trim(),
         direccion: draft.direccion.trim(),
         detalle: draft.detalle.trim(),
         totalCop: total,
         domiciliarioId: draft.domiciliarioId || null,
-      });
-      setOrders((previous) => [created, ...(previous ?? [])]);
+      };
+      if (draft.id) {
+        const updated = await ordersApi.update(draft.id, body);
+        setOrders((previous) => previous.map((order) => (order.id === updated.id ? updated : order)));
+        setNotice(`Pedido de ${updated.cliente} actualizado.`);
+      } else {
+        const created = await ordersApi.create(body);
+        setOrders((previous) => [created, ...(previous ?? [])]);
+        setFilter('activos');
+        setNotice(`Pedido de ${created.cliente} creado (${STATUS[created.estado].label.toLowerCase()}).`);
+      }
       setDraft(null);
-      setFilter('activos');
-      setNotice(`Pedido de ${created.cliente} creado (${STATUS[created.estado].label.toLowerCase()}).`);
     } catch (error) {
       setErrors(error.fields ?? {});
       setNotice(error.message);
@@ -158,7 +165,7 @@ export function Orders({ user, active = true }) {
 
       {draft && (
         <form className="card management-form" onSubmit={save} noValidate aria-labelledby={formTitleId}>
-          <h3 id={formTitleId}>Nuevo pedido</h3>
+          <h3 id={formTitleId}>{draft.id ? 'Editar pedido' : 'Nuevo pedido'}</h3>
           <ManagementField label="Cliente" autoFocus maxLength={80} autoComplete="off" value={draft.cliente} onChange={change('cliente')} error={errors.cliente} />
           <ManagementField label="Teléfono" type="tel" inputMode="tel" maxLength={20} autoComplete="off" value={draft.telefono} onChange={change('telefono')} error={errors.telefono} />
           <ManagementField label="Dirección" maxLength={160} autoComplete="off" value={draft.direccion} onChange={change('direccion')} error={errors.direccion} />
@@ -172,7 +179,7 @@ export function Orders({ user, active = true }) {
             error={errors.totalCop}
             hint={totalPreview ? `$${currency.format(totalPreview)}` : 'Solo números, sin puntos.'}
           />
-          <div className="management-field">
+          {!draft.id && <div className="management-field">
             <label htmlFor="order-courier">Domiciliario (opcional)</label>
             <select id="order-courier" value={draft.domiciliarioId} onChange={change('domiciliarioId')}>
               <option value="">Sin asignar por ahora</option>
@@ -183,7 +190,7 @@ export function Orders({ user, active = true }) {
             {isAdmin && !activeCouriers.length && (
               <p className="management-hint">Aún no hay domiciliarios activos. Créalos en «Domicilios».</p>
             )}
-          </div>
+          </div>}
           <div className="management-actions">
             <button className="btn-primary" type="submit" disabled={saving} aria-busy={saving}>
               {saving ? 'Guardando…' : 'Guardar pedido'}
@@ -292,6 +299,29 @@ export function Orders({ user, active = true }) {
                     )}
                   >
                     {isAdmin ? next.admin : next.courier}
+                  </button>
+                )}
+                {isAdmin && OPEN.has(order.estado) && (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    disabled={busy}
+                    aria-label={`Editar pedido de ${order.cliente}`}
+                    onClick={() => {
+                      setDraft({
+                        id: order.id,
+                        cliente: order.cliente,
+                        telefono: order.telefono,
+                        direccion: order.direccion,
+                        detalle: order.detalle,
+                        totalCop: String(order.totalCop),
+                        domiciliarioId: order.domiciliarioId ?? '',
+                      });
+                      setErrors({});
+                      setNotice('');
+                    }}
+                  >
+                    Editar
                   </button>
                 )}
                 {isAdmin && OPEN.has(order.estado) && (confirmCancel === order.id ? (

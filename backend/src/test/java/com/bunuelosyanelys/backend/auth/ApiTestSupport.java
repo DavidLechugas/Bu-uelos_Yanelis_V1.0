@@ -63,6 +63,7 @@ public abstract class ApiTestSupport {
         mongo.dropCollection(AppUser.class);
         mongo.dropCollection(AuthSession.class);
         mongo.dropCollection(Order.class);
+        mongo.dropCollection(com.bunuelosyanelys.backend.products.Product.class);
     }
 
     protected AppUser createUser(String username, String nombre, Role role, boolean activo) {

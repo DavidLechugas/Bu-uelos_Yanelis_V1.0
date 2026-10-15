@@ -61,6 +61,20 @@ public class OrderService {
         return save(order);
     }
 
+    /** Corrige los datos de un pedido abierto; el domiciliario y el estado no cambian. */
+    public Order update(String orderId, OrderController.CreateOrderRequest request) {
+        Order order = find(orderId);
+        if (!order.getEstado().isOpen()) {
+            throw new ApiException(HttpStatus.CONFLICT, "Solo se puede editar un pedido abierto (no entregado ni cancelado).");
+        }
+        order.setCliente(request.cliente().trim());
+        order.setTelefono(request.telefono().trim());
+        order.setDireccion(request.direccion().trim());
+        order.setDetalle(request.detalle().trim());
+        order.setTotalCop(request.totalCop());
+        return save(order);
+    }
+
     public Order assign(String orderId, String courierId) {
         Order order = find(orderId);
         if (!ASSIGNABLE.contains(order.getEstado())) {

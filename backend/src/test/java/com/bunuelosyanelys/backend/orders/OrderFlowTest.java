@@ -154,4 +154,32 @@ class OrderFlowTest extends ApiTestSupport {
                 .andExpect(jsonPath("$[0].pedidosActivos").value(1))
                 .andExpect(jsonPath("$[0].password").doesNotExist());
     }
+
+    @Test
+    void elAdminEditaUnPedidoAbiertoSinCambiarEstadoNiDomiciliario() throws Exception {
+        String id = createOrder(luis.getId());
+        mvc.perform(admin.with(put("/api/orders/" + id))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json("cliente", "Carmen R.", "telefono", "3001112233", "direccion", "Calle 9 #1-2",
+                        "detalle", "24 buñuelos", "totalCop", 48000)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cliente").value("Carmen R."))
+                .andExpect(jsonPath("$.totalCop").value(48000))
+                .andExpect(jsonPath("$.estado").value("ASIGNADO"))
+                .andExpect(jsonPath("$.domiciliarioNombre").value("Luis"));
+    }
+
+    @Test
+    void noSeEditaUnPedidoCerradoNiLoEditaUnDomiciliario() throws Exception {
+        String id = createOrder(luis.getId());
+        String body = json("cliente", "X", "telefono", "3001112233", "direccion", "Calle 9",
+                "detalle", "y", "totalCop", 1000);
+        mvc.perform(login("luis").with(put("/api/orders/" + id))
+                .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isForbidden());
+        setStatus(admin, id, "CANCELADO").andExpect(status().isOk());
+        mvc.perform(admin.with(put("/api/orders/" + id))
+                .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isConflict());
+    }
 }

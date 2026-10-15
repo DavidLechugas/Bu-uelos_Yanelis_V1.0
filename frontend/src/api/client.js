@@ -97,6 +97,7 @@ export const auth = {
 export const ordersApi = {
   list: () => apiRequest('/api/orders'),
   create: (order) => apiRequest('/api/orders', { method: 'POST', body: order }),
+  update: (id, order) => apiRequest(`/api/orders/${encodeURIComponent(id)}`, { method: 'PUT', body: order }),
   assign: (id, domiciliarioId) =>
     apiRequest(`/api/orders/${encodeURIComponent(id)}/domiciliario`, { method: 'PUT', body: { domiciliarioId } }),
   setStatus: (id, estado) =>
@@ -110,4 +111,10 @@ export const couriersApi = {
     apiRequest(`/api/couriers/${encodeURIComponent(id)}/activo`, { method: 'PATCH', body: { activo } }),
   resetPassword: (id, password) =>
     apiRequest(`/api/couriers/${encodeURIComponent(id)}/password`, { method: 'PUT', body: { password } }),
+};
+
+export const productsApi = {
+  list: () => apiRequest('/api/products'),
+  create: (product) => apiRequest('/api/products', { method: 'POST', body: product }),
+  update: (id, product) => apiRequest(`/api/products/${encodeURIComponent(id)}`, { method: 'PUT', body: product }),
 };

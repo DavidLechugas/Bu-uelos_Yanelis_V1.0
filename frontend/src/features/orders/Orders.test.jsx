@@ -44,6 +44,26 @@ describe('Orders — administrador', () => {
     });
   });
 
+  it('edita un pedido abierto con los datos precargados', async () => {
+    const { calls } = mockApi({
+      'GET /api/orders': { body: [order({ id: 'o-3', estado: 'ASIGNADO', domiciliarioId: 'u-luis', domiciliarioNombre: 'Luis' })] },
+      'GET /api/couriers': { body: [LUIS] },
+      'PUT /api/orders/o-3': ({ body }) => ({ body: order({ ...body, id: 'o-3', estado: 'ASIGNADO', domiciliarioNombre: 'Luis' }) }),
+    });
+    const user = userEvent.setup();
+    render(<Orders user={ADMIN} />);
+    await user.click(await screen.findByRole('button', { name: 'Editar pedido de Carmen' }));
+    expect(screen.getByRole('heading', { name: 'Editar pedido' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Cliente')).toHaveValue('Carmen');
+    expect(screen.queryByLabelText('Domiciliario (opcional)')).not.toBeInTheDocument();
+    await user.clear(screen.getByLabelText('Total (COP)'));
+    await user.type(screen.getByLabelText('Total (COP)'), '30000');
+    await user.click(screen.getByRole('button', { name: 'Guardar pedido' }));
+    expect(await screen.findByText('Pedido de Carmen actualizado.')).toBeInTheDocument();
+    expect(screen.getByText('$30.000')).toBeInTheDocument();
+    expect(calls.find((call) => call.method === 'PUT').body.totalCop).toBe(30000);
+  });
+
   it('valida el formulario antes de enviarlo', async () => {
     const { calls } = mockApi({ 'GET /api/orders': { body: [] }, 'GET /api/couriers': { body: [] } });
     const user = userEvent.setup();

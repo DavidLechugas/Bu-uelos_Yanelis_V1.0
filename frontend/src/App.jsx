@@ -168,7 +168,7 @@ export default function App() {
           {isAdmin && (
             <>
               <div className="view-panel" hidden={view !== 'domicilios'}><Couriers active={view === 'domicilios'} /></div>
-              <div className="view-panel" hidden={view !== 'productos'}><Products /></div>
+              <div className="view-panel" hidden={view !== 'productos'}><Products active={view === 'productos'} /></div>
             </>
           )}
           <div className="view-panel" hidden={view !== 'configuracion'}><Settings onOpenProfile={openProfile} /></div>
