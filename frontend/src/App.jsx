@@ -127,7 +127,9 @@ export default function App() {
   if (user === undefined) {
     return (
       <div className="app-loading" role="status">
-        <span className="brand-circle" aria-hidden="true">BY</span>
+        <span className="brand-circle" aria-hidden="true">
+          <img src="/icons/logo.svg" alt="" />
+        </span>
         <p>Conectando con el servidor…</p>
       </div>
     );

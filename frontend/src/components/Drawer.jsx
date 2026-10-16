@@ -87,7 +87,7 @@ export function Drawer({ open, role, items = [], onClose, onNavigate, onLogout }
       >
         <div className="drawer-header">
           <span className="brand-circle brand-circle--small" aria-hidden="true">
-            BY
+            <img src="/icons/logo.svg" alt="" />
           </span>
           <div className="drawer-brand-text">
             <p className="drawer-brand-name">Buñuelos Yanelys</p>

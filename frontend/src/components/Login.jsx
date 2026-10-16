@@ -44,7 +44,7 @@ export function Login({ onLogin, connectionError }) {
     <div className="login-page">
       <div className="brand">
         <span className="brand-circle" aria-hidden="true">
-          BY
+          <img src="/icons/logo.svg" alt="" />
         </span>
         <div className="brand-text">
           <p className="brand-name">Buñuelos Yanelys</p>

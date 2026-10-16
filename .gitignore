@@ -37,3 +37,8 @@ tools/bin/
 *.pem
 *.key
 *.log
+
+# Material de marca pesado (solo local; el SVG y el ico sí van al repo)
+docs/buñuelo_4k.png
+docs/buñuelo_FHD.png
+docs/Buñuelo.rar

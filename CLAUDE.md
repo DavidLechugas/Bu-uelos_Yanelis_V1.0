@@ -46,8 +46,9 @@ backend → suites completas. Los tests nunca deben tocar Atlas real. No silenci
 
 - `frontend/` Vite 7 + React 19 (JSX, CSS plano). `src/api/client.js` es el único punto de llamadas
   HTTP, siempre `/api` del mismo origen (cookies y CSRF); `hooks/useDashboard.js` alimenta el tablero.
-  `components/` = shell (Header, Drawer, BottomNav, Login simulado, Dashboard/WeeklyChart).
-  `features/<dominio>/` = módulos de negocio: `orders/`, `couriers/`, `products/` (API real)
+  `components/` = shell (Header, Drawer, BottomNav, Login, Dashboard/WeeklyChart).
+  `features/<dominio>/` = módulos de negocio: `orders/`, `couriers/`, `products/`, `profile/`,
+  `settings/` (todos contra la API real; `features/inventory/` está vacío, Inventario retirado).
   Tests de UI con `src/test/mockApi.js`.
 - `frontend/worker/index.js` — Cloudflare Worker: sirve `dist/` (binding `ASSETS`) y hace proxy de
   `/api` a Render (`wrangler.jsonc`). Tests en `worker/proxy.test.js`.
@@ -84,6 +85,7 @@ separado: no acordado.
 
 - Secretos nunca en chat/repo; URI de Atlas solo en Render. `VITE_*` es público.
 - No borrar ni migrar datos de Atlas (conservar campos históricos de Inventario).
+- Marca: la fuente es `docs/buñuelo.svg` (canasta de buñuelos, `#c37029`); `frontend/public/icons/logo.svg` es su recorte y de ahí salen los PNG de `public/icons/` (incluye `icon-maskable-*`). Los PNG 4K/FHD y el .rar de `docs/` son locales (ignorados).
 - Mantener paleta crema/caramelo/marrón y accesibilidad (drawer: overlay, Escape, foco); no rediseñar.
 - Sin microservicios ni refactors masivos junto con auth.
 - Commit/push de trabajo verificado autorizado (solo archivos necesarios); cambios de recursos cloud,

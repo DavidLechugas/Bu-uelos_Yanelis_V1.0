@@ -142,18 +142,20 @@ button {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background-color: var(--header-bg);
-  color: #fff;
-  font-weight: 700;
-  font-size: 1.5rem;
-  letter-spacing: 0.5px;
+  background-color: var(--cream-surface);
+  border: 2px solid var(--caramel-border);
   flex-shrink: 0;
+}
+
+.brand-circle img {
+  width: 68%;
+  height: 68%;
+  display: block;
 }
 
 .brand-circle--small {
   width: 40px;
   height: 40px;
-  font-size: 0.875rem;
 }
 
 .brand-name {

@@ -18,12 +18,17 @@ export default defineConfig({
       // Aviso en la UI ante nueva versión (sin recarga automática:
       // no interrumpe formularios).
       registerType: 'prompt',
-      includeAssets: ['icons/icon-48.png'],
+      includeAssets: [
+        'icons/icon-48.png',
+        'icons/icon-32.png',
+        'icons/apple-touch-icon.png',
+        'icons/logo.svg',
+      ],
       manifest: {
         name: 'Buñuelos Yanelys',
         short_name: 'Buñuelos Yanelys',
         description:
-          'Prototipo de gestión local. Demo sin autenticación real.',
+          'Gestión de pedidos y entregas de Buñuelos Yanelys.',
         lang: 'es',
         // Relativos: funcionan en cualquier origen (localhost o URL
         // del tunnel, que cambia en cada sesión).
@@ -46,13 +51,13 @@ export default defineConfig({
             purpose: 'any',
           },
           {
-            src: 'icons/icon-192.png',
+            src: 'icons/icon-maskable-192.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'maskable',
           },
           {
-            src: 'icons/icon-512.png',
+            src: 'icons/icon-maskable-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
