@@ -87,6 +87,7 @@ separado: no acordado.
 - No borrar ni migrar datos de Atlas (conservar campos históricos de Inventario).
 - Marca: la fuente es `docs/buñuelo.svg` (canasta de buñuelos, `#c37029`); `frontend/public/icons/logo.svg` es su recorte y de ahí salen los PNG de `public/icons/` (incluye `icon-maskable-*`). Los PNG 4K/FHD y el .rar de `docs/` son locales (ignorados).
 - Toda la app lleva de fondo (montado en `main.jsx`) `components/BunueloRain.jsx` (buñuelos a línea que caen lento; trazo `currentColor`, quieto con animaciones reducidas).
+- Esperas: `components/Spinner.jsx` (anillo que gira; con `done`, círculo con chulito verde que se dibuja). Pausas de confirmación en `features/feedback/timing.js` (0 en pruebas, cortas con animaciones reducidas). Botones con `aria-busy` muestran un anillo por CSS.
 - Mantener paleta crema/caramelo/marrón y accesibilidad (drawer: overlay, Escape, foco); no rediseñar.
 - Sin microservicios ni refactors masivos junto con auth.
 - Commit/push de trabajo verificado autorizado (solo archivos necesarios); cambios de recursos cloud,

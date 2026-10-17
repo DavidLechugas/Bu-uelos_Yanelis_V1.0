@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Spinner } from '../../components/Spinner.jsx';
 import { productsApi } from '../../api/client.js';
 import { ManagementField } from '../ManagementField.jsx';
+import { SAVE_DONE_MS, pause } from '../feedback/timing.js';
 
 const currency = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
 const EMPTY_DRAFT = { nombre: '', descripcion: '', precio: '', disponible: true };
@@ -13,6 +15,7 @@ export function Products({ active = true }) {
   const [draft, setDraft] = useState(null);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const [confirmed, setConfirmed] = useState('');
   const [notice, setNotice] = useState('');
   const trigger = useRef(null);
   const nameInput = useRef(null);
@@ -69,6 +72,9 @@ export function Products({ active = true }) {
         : [...previous, saved]));
       setSearch('');
       setNotice(`Producto «${saved.nombre}» guardado.`);
+      setConfirmed('¡Producto guardado!');
+      await pause(SAVE_DONE_MS);
+      setConfirmed('');
       closeForm();
     } catch (error) {
       setErrors(error.fields ?? {});
@@ -87,7 +93,13 @@ export function Products({ active = true }) {
       </div>
       <ManagementField label="Buscar productos" type="search" value={search} onChange={(event) => setSearch(event.target.value)} />
       <p role="status" className="management-notice">{notice}</p>
-      {draft && (
+      {draft && confirmed && (
+        <div className="card management-form management-form--done">
+          <Spinner size="md" done label={confirmed} />
+        </div>
+      )}
+
+      {draft && !confirmed && (
         <form className="card management-form" onSubmit={save} noValidate aria-labelledby="product-form-title">
           <h3 id="product-form-title">{draft.id ? 'Editar producto' : 'Nuevo producto'}</h3>
           <ManagementField label="Nombre" ref={nameInput} autoFocus maxLength={100} value={draft.nombre} onChange={(event) => change('nombre', event.target.value)} error={errors.nombre} />
@@ -106,7 +118,7 @@ export function Products({ active = true }) {
           <div className="error-actions"><button className="btn-primary" type="button" onClick={load}>Reintentar</button></div>
         </div>
       )}
-      {!products && !loadError && <div className="skeleton" aria-busy="true" aria-label="Cargando productos"><div className="skeleton-card" /></div>}
+      {!products && !loadError && <div className="skeleton" aria-busy="true" aria-label="Cargando productos"><Spinner size="md" /><div className="skeleton-card" /></div>}
       {products && !filtered.length && (
         <p className="card management-empty" role="status">
           {products.length ? 'No hay productos que coincidan.' : 'Aún no hay productos. Pulsa «Agregar producto».'}

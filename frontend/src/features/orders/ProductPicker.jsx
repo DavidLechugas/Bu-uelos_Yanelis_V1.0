@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from 'react';
+import { Spinner } from '../../components/Spinner.jsx';
 import { productsApi } from '../../api/client.js';
 import { addItem, changeQuantity, itemsTotal, removeItem } from './orderItems.js';
 
@@ -31,7 +32,7 @@ export function ProductPicker({ items, onChange, active = true }) {
       <h4 id={titleId}>Productos</h4>
 
       {error && <p className="management-hint">No se pudo cargar el catálogo ({error}). Escribe el detalle y el total a mano.</p>}
-      {!error && !products && <p className="management-hint">Cargando productos…</p>}
+      {!error && !products && <Spinner size="sm" label="Cargando productos…" />}
       {products && !products.length && (
         <p className="management-hint">No hay productos disponibles. Escribe el detalle y el total a mano.</p>
       )}

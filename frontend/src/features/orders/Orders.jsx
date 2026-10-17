@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useId, useState } from 'react';
+import { Spinner } from '../../components/Spinner.jsx';
 import { couriersApi, ordersApi } from '../../api/client.js';
 import { ManagementField } from '../ManagementField.jsx';
+import { SAVE_DONE_MS, pause } from '../feedback/timing.js';
 import { composeDetail, itemsTotal } from './orderItems.js';
 import { ProductPicker } from './ProductPicker.jsx';
 
@@ -63,6 +65,7 @@ export function Orders({ user, active = true }) {
   const [loadError, setLoadError] = useState('');
   const [filter, setFilter] = useState('activos');
   const [draft, setDraft] = useState(null);
+  const [saved, setSaved] = useState('');
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState(null);
@@ -134,6 +137,9 @@ export function Orders({ user, active = true }) {
         setFilter('activos');
         setNotice(`Pedido de ${created.cliente} creado (${STATUS[created.estado].label.toLowerCase()}).`);
       }
+      setSaved(draft.id ? '¡Pedido actualizado!' : '¡Pedido enviado!');
+      await pause(SAVE_DONE_MS);
+      setSaved('');
       setDraft(null);
     } catch (error) {
       setErrors(error.fields ?? {});
@@ -173,7 +179,13 @@ export function Orders({ user, active = true }) {
 
       <p role="status" className="management-notice">{notice}</p>
 
-      {draft && (
+      {draft && saved && (
+        <div className="card management-form management-form--done">
+          <Spinner size="md" done label={saved} />
+        </div>
+      )}
+
+      {draft && !saved && (
         <form className="card management-form" onSubmit={save} noValidate aria-labelledby={formTitleId}>
           <h3 id={formTitleId}>{draft.id ? 'Editar pedido' : 'Nuevo pedido'}</h3>
           <ManagementField label="Cliente" autoFocus maxLength={80} autoComplete="off" value={draft.cliente} onChange={change('cliente')} error={errors.cliente} />
@@ -242,7 +254,7 @@ export function Orders({ user, active = true }) {
         </div>
       )}
 
-      {!orders && !loadError && <div className="skeleton" aria-busy="true" aria-label="Cargando pedidos"><div className="skeleton-card" /><div className="skeleton-card" /></div>}
+      {!orders && !loadError && <div className="skeleton" aria-busy="true" aria-label="Cargando pedidos"><Spinner size="md" /><div className="skeleton-card" /><div className="skeleton-card" /></div>}
 
       {orders && !visible.length && (
         <p className="card management-empty">

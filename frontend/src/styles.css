@@ -601,6 +601,97 @@ button {
   animation: pulse 1.4s ease-in-out infinite;
 }
 
+/* Spinner de espera y chulito de confirmación (Spinner.jsx). */
+.spinner-box {
+  --spin: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  grid-column: 1 / -1;
+  color: var(--caramel-strong);
+}
+
+.spinner-box--lg { --spin: 56px; }
+.spinner-box--sm { --spin: 22px; flex-direction: row; justify-content: flex-start; gap: 12px; }
+
+.spinner {
+  box-sizing: border-box;
+  width: var(--spin);
+  height: var(--spin);
+  border: 3px solid var(--caramel-border);
+  border-top-color: var(--caramel-strong);
+  border-radius: 50%;
+  animation: spinner-turn 0.9s linear infinite;
+}
+
+.spinner-check {
+  width: var(--spin);
+  height: var(--spin);
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: spinner-pop 450ms ease-out both;
+}
+
+.spinner-check-circle,
+.spinner-check-mark {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.spinner-check-circle { animation: spinner-draw 450ms ease-out forwards; }
+.spinner-check-mark { stroke-width: 4; animation: spinner-draw 350ms ease-out 400ms forwards; }
+
+.spinner-label {
+  margin: 0;
+  color: var(--muted);
+}
+
+@keyframes spinner-turn {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spinner-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes spinner-pop {
+  0% { transform: scale(0.85); }
+  70% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* Sin animación (sistema o Configuración): chulito ya dibujado. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner-check-circle,
+  .spinner-check-mark { stroke-dashoffset: 0; }
+}
+
+:root[data-motion="reduce"] .spinner-check-circle,
+:root[data-motion="reduce"] .spinner-check-mark { stroke-dashoffset: 0; }
+
+/* Botones ocupados: anillo que gira. */
+.btn-primary[aria-busy="true"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-primary[aria-busy="true"]::before {
+  content: "";
+  box-sizing: border-box;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spinner-turn 0.8s linear infinite;
+}
+
 @keyframes pulse {
   0%,
   100% {

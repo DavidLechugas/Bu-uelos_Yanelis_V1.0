@@ -18,7 +18,7 @@ y Chrome (Playwright `channel: 'chrome'`) a 375 y 1280 px, en tema claro y oscur
 ## 3. Pulido de formularios
 - [ ] Campo **Dirección** a todo el ancho en el formulario de pedidos (hoy queda solo en una columna).
 - [ ] Aviso de guardado más visible (toast) en vez del texto `role="status"` en línea.
-- [ ] Estados de carga tipo esqueleto en lugar de «Cargando…».
+- [x] Estados de carga: spinner en carga inicial, listas, tablero, selector de productos y botones; chulito al entrar y al guardar pedidos, productos y domiciliarios.
 - [ ] Mantener la accesibilidad: foco, `aria-live`, `prefers-reduced-motion`.
 
 ## 4. Más información en pedidos

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useId, useState } from 'react';
+import { Spinner } from '../../components/Spinner.jsx';
 import { couriersApi } from '../../api/client.js';
 import { ManagementField } from '../ManagementField.jsx';
+import { SAVE_DONE_MS, pause } from '../feedback/timing.js';
 
 const EMPTY_DRAFT = { nombre: '', usuario: '', password: '' };
 const USERNAME = /^[a-z0-9._-]{3,30}$/;
@@ -24,6 +26,7 @@ function validate(draft, { withProfile }) {
  */
 export function Couriers({ active = true }) {
   const [couriers, setCouriers] = useState(null);
+  const [confirmed, setConfirmed] = useState('');
   const [loadError, setLoadError] = useState('');
   const [draft, setDraft] = useState(null);
   const [errors, setErrors] = useState({});
@@ -60,8 +63,11 @@ export function Couriers({ active = true }) {
     try {
       const created = await couriersApi.create({ ...draft, nombre: draft.nombre.trim() });
       setCouriers((previous) => [...(previous ?? []), created].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')));
-      setDraft(null);
       setNotice(`Cuenta de ${created.nombre} creada. Entrégale su usuario «${created.usuario}» y la contraseña en persona.`);
+      setConfirmed('¡Cuenta creada!');
+      await pause(SAVE_DONE_MS);
+      setConfirmed('');
+      setDraft(null);
     } catch (error) {
       setErrors(error.fields ?? {});
       setNotice(error.message);
@@ -121,7 +127,13 @@ export function Couriers({ active = true }) {
 
       <p role="status" className="management-notice">{notice}</p>
 
-      {draft && (
+      {draft && confirmed && (
+        <div className="card management-form management-form--done">
+          <Spinner size="md" done label={confirmed} />
+        </div>
+      )}
+
+      {draft && !confirmed && (
         <form className="card management-form" onSubmit={create} noValidate aria-labelledby={formTitleId}>
           <h3 id={formTitleId}>Nuevo domiciliario</h3>
           <ManagementField label="Nombre" autoFocus maxLength={60} autoComplete="off" value={draft.nombre} onChange={(event) => setDraft({ ...draft, nombre: event.target.value })} error={errors.nombre} />
@@ -162,7 +174,7 @@ export function Couriers({ active = true }) {
         </div>
       )}
 
-      {!couriers && !loadError && <div className="skeleton" aria-busy="true" aria-label="Cargando domiciliarios"><div className="skeleton-card" /><div className="skeleton-card" /></div>}
+      {!couriers && !loadError && <div className="skeleton" aria-busy="true" aria-label="Cargando domiciliarios"><Spinner size="md" /><div className="skeleton-card" /><div className="skeleton-card" /></div>}
 
       {couriers && !couriers.length && (
         <p className="card management-empty">Todavía no hay domiciliarios. Crea el primero con «Nuevo domiciliario».</p>

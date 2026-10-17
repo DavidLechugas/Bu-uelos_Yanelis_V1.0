@@ -91,6 +91,7 @@
 .order-confirm button { flex: 1 1 8rem; }
 .courier-password { flex: 1 1 100%; display: flex; flex-direction: column; gap: .75rem; }
 
+.management-form--done { align-items: center; justify-content: center; min-height: 12rem; }
 .app-loading { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; color: var(--muted); }
 .app-loading .brand-circle { animation: pulse 1.4s ease-in-out infinite; }
 .login-error { padding: .75rem 1rem; border-radius: var(--radius-small); background: var(--danger-soft); border-left: 3px solid var(--red); color: var(--danger-text); font-size: .9375rem; }

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { auth, SESSION_EXPIRED_EVENT } from './api/client.js';
+import { Spinner } from './components/Spinner.jsx';
+import { BOOT_DONE_MS, pause } from './features/feedback/timing.js';
 import { Login } from './components/Login.jsx';
 import { Dashboard } from './components/Dashboard.jsx';
 import { Drawer } from './components/Drawer.jsx';
@@ -41,11 +43,20 @@ export default function App() {
   const [notice, setNotice] = useState(null);
   const [view, setView] = useState('inicio');
   const [profileOpen, setProfileOpen] = useState(false);
+  const [bootDone, setBootDone] = useState(false);
   const shell = useRef(null);
 
   useEffect(() => {
+    const startedAt = Date.now();
     auth.session()
-      .then((result) => startSession(result.usuario ?? null))
+      .then(async (result) => {
+        // Si la carga se notó, un rebotito con chulito antes de entrar.
+        if (result.usuario && Date.now() - startedAt > 300) {
+          setBootDone(true);
+          await pause(BOOT_DONE_MS);
+        }
+        startSession(result.usuario ?? null);
+      })
       .catch((error) => {
         setUser(null);
         setLoginMessage(error.message);
@@ -127,10 +138,7 @@ export default function App() {
   if (user === undefined) {
     return (
       <div className="app-loading" role="status">
-        <span className="brand-circle" aria-hidden="true">
-          <img src="/icons/logo.svg" alt="" />
-        </span>
-        <p>Conectando con el servidor…</p>
+        <Spinner size="lg" done={bootDone} label={bootDone ? '¡Listo!' : 'Conectando con el servidor…'} />
       </div>
     );
   }

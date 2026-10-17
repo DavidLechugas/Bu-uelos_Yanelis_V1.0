@@ -1,4 +1,5 @@
 import { StatCard } from './StatCard.jsx';
+import { Spinner } from './Spinner.jsx';
 import { WeeklyChart } from './WeeklyChart.jsx';
 import { Header } from './Header.jsx';
 import { BottomNav } from './BottomNav.jsx';
@@ -30,6 +31,7 @@ function formatCurrency(value) {
 function DashboardSkeleton() {
   return (
     <div className="skeleton" aria-busy="true" aria-label="Cargando datos del tablero">
+      <Spinner size="md" />
       <p role="status">Conectando con el servidor… El primer arranque puede tardar hasta un minuto y medio.</p>
       <div className="skeleton-card" />
       <div className="skeleton-card" />
