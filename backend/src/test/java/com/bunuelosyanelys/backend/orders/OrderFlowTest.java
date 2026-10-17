@@ -76,9 +76,73 @@ class OrderFlowTest extends ApiTestSupport {
         createOrder(luis.getId());
         createOrder(marta.getId());
         createOrder(null);
+        // Ve el suyo y el que nadie ha tomado (sin teléfono), pero no el de Marta.
+        mvc.perform(login("luis").with(get("/api/orders")))
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[?(@.domiciliarioId == '" + marta.getId() + "')]").isEmpty());
+    }
+
+    @Test
+    void losDisponiblesSeVenSinTelefonoYElPrimeroQueLosTomaSeQuedaConEl() throws Exception {
+        String libre = createOrder(null);
         mvc.perform(login("luis").with(get("/api/orders")))
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].domiciliarioId").value(luis.getId()));
+                .andExpect(jsonPath("$[0].estado").value("PENDIENTE"))
+                .andExpect(jsonPath("$[0].telefono").value(""))
+                .andExpect(jsonPath("$[0].direccion").value("Cra 5 #10-20"));
+
+        Browser luisBrowser = login("luis");
+        mvc.perform(luisBrowser.with(post("/api/orders/" + libre + "/tomar")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("ASIGNADO"))
+                .andExpect(jsonPath("$.domiciliarioNombre").value("Luis"));
+        // Ya es suyo: ahora sí ve el teléfono.
+        mvc.perform(luisBrowser.with(get("/api/orders")))
+                .andExpect(jsonPath("$[0].telefono").value("300 123 4567"));
+        // Marta llega tarde: 409, y ya no lo ve disponible.
+        Browser martaBrowser = login("marta");
+        mvc.perform(martaBrowser.with(post("/api/orders/" + libre + "/tomar")))
+                .andExpect(status().isConflict());
+        mvc.perform(martaBrowser.with(get("/api/orders")))
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void soloUnDomiciliarioPuedeTomarYNoUnPedidoYaAsignadoNiInexistente() throws Exception {
+        String asignado = createOrder(marta.getId());
+        mvc.perform(login("luis").with(post("/api/orders/" + asignado + "/tomar")))
+                .andExpect(status().isConflict());
+        mvc.perform(login("luis").with(post("/api/orders/no-existe/tomar")))
+                .andExpect(status().isNotFound());
+        String libre = createOrder(null);
+        mvc.perform(admin.with(post("/api/orders/" + libre + "/tomar")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void laVentaEnLocalSeCierraAlCrearseSinDatosDelClienteYNadieLaToma() throws Exception {
+        String body = mvc.perform(admin.with(post("/api/orders"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json("tipo", "LOCAL", "detalle", "2 × Buñuelo", "totalCop", 5000)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.tipo").value("LOCAL"))
+                .andExpect(jsonPath("$.estado").value("ENTREGADO"))
+                .andExpect(jsonPath("$.cliente").value("Venta en local"))
+                .andReturn().getResponse().getContentAsString();
+        String id = JsonPath.read(body, "$.id");
+        // No aparece a los domiciliarios ni se puede tomar.
+        mvc.perform(login("luis").with(get("/api/orders")))
+                .andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(login("luis").with(post("/api/orders/" + id + "/tomar")))
+                .andExpect(status().isConflict());
+        // A domicilio sigue exigiendo los datos del cliente.
+        mvc.perform(admin.with(post("/api/orders"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json("tipo", "DOMICILIO", "detalle", "x", "totalCop", 1000)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.campos.cliente").exists())
+                .andExpect(jsonPath("$.campos.telefono").exists())
+                .andExpect(jsonPath("$.campos.direccion").exists());
     }
 
     @Test

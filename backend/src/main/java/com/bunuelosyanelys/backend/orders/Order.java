@@ -22,6 +22,8 @@ public class Order {
     private OrderStatus estado;
     private String domiciliarioId;
     private String domiciliarioNombre;
+    /** Pedidos anteriores no lo tienen: se leen como DOMICILIO. */
+    private OrderType tipo;
     private Instant creadoEn;
     private Instant actualizadoEn;
 
@@ -95,6 +97,14 @@ public class Order {
 
     public void setDomiciliarioNombre(String domiciliarioNombre) {
         this.domiciliarioNombre = domiciliarioNombre;
+    }
+
+    public OrderType getTipo() {
+        return tipo == null ? OrderType.DOMICILIO : tipo;
+    }
+
+    public void setTipo(OrderType tipo) {
+        this.tipo = tipo;
     }
 
     public Instant getCreadoEn() {

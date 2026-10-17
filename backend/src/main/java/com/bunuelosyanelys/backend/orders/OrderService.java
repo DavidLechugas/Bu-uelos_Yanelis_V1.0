@@ -1,11 +1,18 @@
 package com.bunuelosyanelys.backend.orders;
 
 import java.time.Clock;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +31,7 @@ import com.bunuelosyanelys.backend.common.ApiException;
 public class OrderService {
 
     static final int LIST_LIMIT = 200;
+    static final String LOCAL_CLIENT = "Venta en local";
 
     /** Transiciones que puede hacer el domiciliario asignado. */
     private static final Map<OrderStatus, OrderStatus> COURIER_TRANSITIONS = Map.of(
@@ -35,25 +43,65 @@ public class OrderService {
     private final OrderRepository orders;
     private final AppUserRepository users;
     private final Clock clock;
+    private final MongoTemplate mongo;
 
-    public OrderService(OrderRepository orders, AppUserRepository users, Clock clock) {
+    public OrderService(OrderRepository orders, AppUserRepository users, Clock clock, MongoTemplate mongo) {
         this.orders = orders;
         this.users = users;
         this.clock = clock;
+        this.mongo = mongo;
     }
 
     public List<Order> list(AuthUser user) {
         PageRequest page = PageRequest.of(0, LIST_LIMIT);
-        return user.isAdmin()
-                ? orders.findAllByOrderByCreadoEnDesc(page)
-                : orders.findByDomiciliarioIdOrderByCreadoEnDesc(user.id(), page);
+        if (user.isAdmin()) {
+            return orders.findAllByOrderByCreadoEnDesc(page);
+        }
+        List<Order> result = new ArrayList<>(orders.findByDomiciliarioIdOrderByCreadoEnDesc(user.id(), page));
+        // Disponibles: se ven para decidir si tomarlos, pero sin el teléfono hasta que sean suyos.
+        for (Order available : orders.findByEstadoAndDomiciliarioIdIsNullAndTipoNotOrderByCreadoEnDesc(
+                OrderStatus.PENDIENTE, OrderType.LOCAL, page)) {
+            available.setTelefono("");
+            result.add(available);
+        }
+        result.sort(Comparator.comparing(Order::getCreadoEn).reversed());
+        return result.size() > LIST_LIMIT ? result.subList(0, LIST_LIMIT) : result;
+    }
+
+    /** Toma atómica: solo uno gana si varios lo intentan a la vez. */
+    public Order claim(String orderId, AuthUser user) {
+        Query query = new Query(new Criteria().andOperator(
+                Criteria.where("_id").is(orderId),
+                Criteria.where("estado").is(OrderStatus.PENDIENTE),
+                Criteria.where("domiciliarioId").is(null),
+                Criteria.where("tipo").ne(OrderType.LOCAL)));
+        Update update = new Update()
+                .set("domiciliarioId", user.id())
+                .set("domiciliarioNombre", user.nombre())
+                .set("estado", OrderStatus.ASIGNADO)
+                .set("actualizadoEn", clock.instant());
+        Order taken = mongo.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Order.class);
+        if (taken == null) {
+            if (!orders.existsById(orderId)) {
+                throw new ApiException(HttpStatus.NOT_FOUND, "Pedido no encontrado.");
+            }
+            throw new ApiException(HttpStatus.CONFLICT, "Otro domiciliario ya tomó este pedido.");
+        }
+        return taken;
     }
 
     public Order create(OrderController.CreateOrderRequest request) {
         Order order = new Order();
         applyDetails(order, request);
         order.setCreadoEn(clock.instant());
-        applyCourier(order, request.domiciliarioId());
+        if (request.tipo() == OrderType.LOCAL) {
+            // Venta en el local: sin domiciliario y cerrada desde el principio.
+            order.setTipo(OrderType.LOCAL);
+            order.setEstado(OrderStatus.ENTREGADO);
+        } else {
+            order.setTipo(OrderType.DOMICILIO);
+            applyCourier(order, request.domiciliarioId());
+        }
         return save(order);
     }
 
@@ -97,9 +145,10 @@ public class OrderService {
     }
 
     private void applyDetails(Order order, OrderController.CreateOrderRequest request) {
-        order.setCliente(request.cliente().trim());
-        order.setTelefono(request.telefono().trim());
-        order.setDireccion(request.direccion().trim());
+        boolean local = request.tipo() == OrderType.LOCAL;
+        order.setCliente(local ? LOCAL_CLIENT : request.cliente().trim());
+        order.setTelefono(local ? "" : request.telefono().trim());
+        order.setDireccion(local ? "" : request.direccion().trim());
         order.setDetalle(request.detalle().trim());
         order.setTotalCop(request.totalCop());
     }
