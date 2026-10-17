@@ -4,6 +4,7 @@ import { Avatar } from '../../components/Avatar.jsx';
 import { trapTabKey } from '../../components/Drawer.jsx';
 import { CameraIcon, CloseIcon } from '../../components/icons.jsx';
 import { ManagementField } from '../ManagementField.jsx';
+import { Toast, useNotice } from '../feedback/Toast.jsx';
 import { Choice, MOTION, THEMES } from '../settings/Settings.jsx';
 import { loadPreferences, savePreferences } from '../settings/preferences.js';
 
@@ -60,7 +61,7 @@ export function ProfilePanel({ open, user, onClose, onUpdated, onLogout }) {
   const [stats, setStats] = useState(null);
   const [preferences, setPreferences] = useState(loadPreferences);
   const [errors, setErrors] = useState({});
-  const [notice, setNotice] = useState('');
+  const [notice, setNotice] = useNotice();
   const [saving, setSaving] = useState(false);
   const [passwords, setPasswords] = useState(null);
 
@@ -112,7 +113,7 @@ export function ProfilePanel({ open, user, onClose, onUpdated, onLogout }) {
       setDraft((current) => ({ ...current, foto }));
       setNotice('Foto lista. Pulsa «Guardar perfil».');
     } catch (error) {
-      setNotice(error.message);
+      setNotice(error.message, 'error');
     }
   }
 
@@ -136,7 +137,7 @@ export function ProfilePanel({ open, user, onClose, onUpdated, onLogout }) {
       setNotice('Perfil guardado.');
     } catch (error) {
       setErrors(error.fields ?? {});
-      setNotice(error.message);
+      setNotice(error.message, 'error');
     } finally {
       setSaving(false);
     }
@@ -162,13 +163,14 @@ export function ProfilePanel({ open, user, onClose, onUpdated, onLogout }) {
       setNotice('Contraseña cambiada. Se cerraron tus sesiones en otros dispositivos.');
     } catch (error) {
       setErrors(error.fields ?? {});
-      setNotice(error.message);
+      setNotice(error.message, 'error');
     } finally {
       setSaving(false);
     }
   }
 
   return (
+    <>
     <div className="panel-overlay" onClick={onClose} data-testid="profile-overlay">
       <div
         ref={panelRef}
@@ -226,7 +228,6 @@ export function ProfilePanel({ open, user, onClose, onUpdated, onLogout }) {
           <button type="submit" className="btn-primary" disabled={saving} aria-busy={saving}>Guardar perfil</button>
         </form>
 
-        <p role="status" className="management-notice">{notice}</p>
 
         {passwords ? (
           <form className="profile-form" onSubmit={savePassword} noValidate>
@@ -251,5 +252,8 @@ export function ProfilePanel({ open, user, onClose, onUpdated, onLogout }) {
         <button type="button" className="btn-secondary profile-logout" onClick={onLogout}>Cerrar sesión</button>
       </div>
     </div>
+    {/* Fuera del panel animado: así `fixed` se ancla a la pantalla. */}
+    <Toast notice={notice} onClose={() => setNotice('')} />
+    </>
   );
 }

@@ -26,7 +26,7 @@
   --brown-700: #6b4226;
   --brown-800: #57351d;
   --text: #3d2b1a;
-  --muted: #7a6350;
+  --muted: #6d5744;
   --green: #1e7a34;
   --red: #b3261e;
   --shadow: 0 8px 24px rgba(90, 58, 20, 0.12);
@@ -331,6 +331,24 @@ button {
   color: var(--text);
 }
 
+.password-wrap {
+  position: relative;
+}
+
+.password-wrap input {
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 52px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  color: var(--brown-700);
+}
+
 .field input[aria-invalid="true"] {
   border-color: var(--red);
 }
@@ -603,7 +621,7 @@ button {
 
 /* Spinner de espera y chulito de confirmación (Spinner.jsx). */
 .spinner-box {
-  --spin: 40px;
+  --spin: 52px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -612,14 +630,14 @@ button {
   color: var(--caramel-strong);
 }
 
-.spinner-box--lg { --spin: 56px; }
-.spinner-box--sm { --spin: 22px; flex-direction: row; justify-content: flex-start; gap: 12px; }
+.spinner-box--lg { --spin: 64px; }
+.spinner-box--sm { --spin: 24px; flex-direction: row; justify-content: flex-start; gap: 12px; }
 
 .spinner {
   box-sizing: border-box;
   width: var(--spin);
   height: var(--spin);
-  border: 3px solid var(--caramel-border);
+  border: 5px solid var(--caramel-border);
   border-top-color: var(--caramel-strong);
   border-radius: 50%;
   animation: spinner-turn 0.9s linear infinite;
@@ -644,6 +662,21 @@ button {
 
 .spinner-check-circle { animation: spinner-draw 450ms ease-out forwards; }
 .spinner-check-mark { stroke-width: 4; animation: spinner-draw 350ms ease-out 400ms forwards; }
+
+.skeleton > .spinner-box,
+.skeleton > p {
+  grid-column: 1 / -1;
+}
+
+.skeleton > .spinner-box {
+  padding: 24px 0 8px;
+}
+
+.skeleton > p {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+}
 
 .spinner-label {
   margin: 0;

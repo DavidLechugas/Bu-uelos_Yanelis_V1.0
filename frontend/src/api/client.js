@@ -98,6 +98,7 @@ export const ordersApi = {
   list: () => apiRequest('/api/orders'),
   create: (order) => apiRequest('/api/orders', { method: 'POST', body: order }),
   update: (id, order) => apiRequest(`/api/orders/${encodeURIComponent(id)}`, { method: 'PUT', body: order }),
+  claim: (id) => apiRequest(`/api/orders/${encodeURIComponent(id)}/tomar`, { method: 'POST' }),
   assign: (id, domiciliarioId) =>
     apiRequest(`/api/orders/${encodeURIComponent(id)}/domiciliario`, { method: 'PUT', body: { domiciliarioId } }),
   setStatus: (id, estado) =>

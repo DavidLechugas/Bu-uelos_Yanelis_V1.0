@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { auth } from '../api/client.js';
+import { EyeIcon, EyeOffIcon } from './icons.jsx';
 
 /**
  * Inicio de sesión real. El rol lo decide el servidor según la cuenta;
@@ -8,6 +9,7 @@ import { auth } from '../api/client.js';
 export function Login({ onLogin, connectionError }) {
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -41,7 +43,7 @@ export function Login({ onLogin, connectionError }) {
   const banner = serverError || connectionError;
 
   return (
-    <div className="login-page">
+    <main className="login-page">
       <div className="brand">
         <span className="brand-circle" aria-hidden="true">
           <img src="/icons/logo.svg" alt="" />
@@ -83,15 +85,26 @@ export function Login({ onLogin, connectionError }) {
 
         <div className="field">
           <label htmlFor="password">Contraseña</label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            aria-invalid={Boolean(errors.password)}
-            aria-describedby={errors.password ? 'password-error' : undefined}
-          />
+          <div className="password-wrap">
+            <input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              aria-invalid={Boolean(errors.password)}
+              aria-describedby={errors.password ? 'password-error' : undefined}
+            />
+            <button
+              type="button"
+              className="icon-btn password-toggle"
+              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              aria-pressed={showPassword}
+              onClick={() => setShowPassword((current) => !current)}
+            >
+              {showPassword ? <EyeOffIcon size={22} /> : <EyeIcon size={22} />}
+            </button>
+          </div>
           {errors.password && (
             <p id="password-error" className="field-error" role="alert">
               {errors.password}
@@ -119,6 +132,6 @@ export function Login({ onLogin, connectionError }) {
           </p>
         )}
       </form>
-    </div>
+    </main>
   );
 }

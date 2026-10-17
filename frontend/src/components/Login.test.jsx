@@ -87,4 +87,19 @@ describe('Login', () => {
     expect(help).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByText(/Pide tu usuario y contraseña al administrador/)).toBeInTheDocument();
   });
+
+  it('el ojito muestra y oculta la contraseña', async () => {
+    render(<Login onLogin={() => {}} />);
+    const user = userEvent.setup();
+    const field = screen.getByLabelText('Contraseña');
+    await user.type(field, 'mi-clave');
+    expect(field).toHaveAttribute('type', 'password');
+
+    await user.click(screen.getByRole('button', { name: 'Mostrar contraseña' }));
+    expect(field).toHaveAttribute('type', 'text');
+    expect(field).toHaveValue('mi-clave');
+
+    await user.click(screen.getByRole('button', { name: 'Ocultar contraseña' }));
+    expect(field).toHaveAttribute('type', 'password');
+  });
 });

@@ -78,7 +78,9 @@ contraseña), Configuración por dispositivo (tema claro/oscuro/sistema y animac
 
 Además: admin edita pedidos abiertos (`PUT /api/orders/{id}`) y Productos se guarda en Mongo (`products/`, solo admin).
 
-Pendiente: validar instalación Android. Costo de domicilio
+Además (2026-10-17): pedidos de tipo `DOMICILIO` o `LOCAL` (venta en local: nace Entregado, sin cliente ni domiciliario). Un domiciliario ve los pedidos pendientes sin asignar en «Disponibles» (sin teléfono) y los toma con `POST /api/orders/{id}/tomar` (atómico: el primero gana, el resto recibe 409). El formulario de pedido es una ventana flotante (`components/Modal.jsx`, con portal). Refresco de pedidos cada 10 s.
+
+La PWA ya está instalada en Android (confirmado por el usuario). Costo de domicilio
 separado: no acordado.
 
 ## Reglas

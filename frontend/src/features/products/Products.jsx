@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Spinner } from '../../components/Spinner.jsx';
 import { productsApi } from '../../api/client.js';
 import { ManagementField } from '../ManagementField.jsx';
+import { Toast, useNotice } from '../feedback/Toast.jsx';
 import { SAVE_DONE_MS, pause } from '../feedback/timing.js';
 
 const currency = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
@@ -16,7 +17,7 @@ export function Products({ active = true }) {
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [confirmed, setConfirmed] = useState('');
-  const [notice, setNotice] = useState('');
+  const [notice, setNotice] = useNotice();
   const trigger = useRef(null);
   const nameInput = useRef(null);
 
@@ -71,14 +72,14 @@ export function Products({ active = true }) {
         ? previous.map((item) => (item.id === saved.id ? saved : item))
         : [...previous, saved]));
       setSearch('');
-      setNotice(`Producto «${saved.nombre}» guardado.`);
+      setNotice('Producto guardado.');
       setConfirmed('¡Producto guardado!');
       await pause(SAVE_DONE_MS);
       setConfirmed('');
       closeForm();
     } catch (error) {
       setErrors(error.fields ?? {});
-      setNotice(error.message);
+      setNotice(error.message, 'error');
     } finally {
       setSaving(false);
     }
@@ -92,7 +93,7 @@ export function Products({ active = true }) {
         <button className="btn-primary" type="button" onClick={(event) => openForm(null, event)}>Agregar producto</button>
       </div>
       <ManagementField label="Buscar productos" type="search" value={search} onChange={(event) => setSearch(event.target.value)} />
-      <p role="status" className="management-notice">{notice}</p>
+      <Toast notice={notice} onClose={() => setNotice('')} />
       {draft && confirmed && (
         <div className="card management-form management-form--done">
           <Spinner size="md" done label={confirmed} />
@@ -118,9 +119,10 @@ export function Products({ active = true }) {
           <div className="error-actions"><button className="btn-primary" type="button" onClick={load}>Reintentar</button></div>
         </div>
       )}
-      {!products && !loadError && <div className="skeleton" aria-busy="true" aria-label="Cargando productos"><Spinner size="md" /><div className="skeleton-card" /></div>}
+      {!products && !loadError && <div className="skeleton" aria-busy="true" aria-label="Cargando productos"><Spinner size="lg" label="Cargando productos…" /><div className="skeleton-card" /></div>}
       {products && !filtered.length && (
         <p className="card management-empty" role="status">
+          <img className="empty-logo" src="/icons/logo.svg" alt="" />
           {products.length ? 'No hay productos que coincidan.' : 'Aún no hay productos. Pulsa «Agregar producto».'}
         </p>
       )}

@@ -31,8 +31,8 @@ function formatCurrency(value) {
 function DashboardSkeleton() {
   return (
     <div className="skeleton" aria-busy="true" aria-label="Cargando datos del tablero">
-      <Spinner size="md" />
-      <p role="status">Conectando con el servidor… El primer arranque puede tardar hasta un minuto y medio.</p>
+      <Spinner size="lg" label="Conectando con el servidor…" />
+      <p>El primer arranque puede tardar hasta un minuto y medio.</p>
       <div className="skeleton-card" />
       <div className="skeleton-card" />
       <div className="skeleton-card" />
@@ -44,6 +44,7 @@ function DashboardSkeleton() {
 function DashboardError({ error, onRetry, onUseDemo }) {
   return (
     <section className="card error-card" role="alert">
+      <img className="empty-logo" src="/icons/logo.svg" alt="" />
       <h2>No pudimos cargar el tablero</h2>
       <p className="error-detail">{error}</p>
       <p>Comprueba tu conexión a internet y vuelve a intentarlo. El servidor puede tardar en arrancar tras un periodo de inactividad. No necesitas ejecutar un servidor en tu teléfono.</p>

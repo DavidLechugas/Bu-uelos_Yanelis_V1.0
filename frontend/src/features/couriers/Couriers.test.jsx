@@ -38,7 +38,7 @@ describe('Couriers', () => {
     await user.type(screen.getByLabelText('Contraseña'), '-segura');
     await user.click(screen.getByRole('button', { name: 'Crear cuenta' }));
     expect(await screen.findByRole('heading', { name: 'Ana María' })).toBeInTheDocument();
-    expect(screen.getByText(/Entrégale su usuario «anamaria»/)).toBeInTheDocument();
+    expect(screen.getByText('Domiciliario creado.')).toBeInTheDocument();
     expect(calls.find((call) => call.method === 'POST').body).toEqual({
       nombre: 'Ana María',
       usuario: 'anamaria',
@@ -70,13 +70,13 @@ describe('Couriers', () => {
     const user = userEvent.setup();
     render(<Couriers />);
     await user.click(await screen.findByRole('button', { name: 'Desactivar' }));
-    expect(await screen.findByText('Luis ya no puede entrar y se cerraron sus sesiones.')).toBeInTheDocument();
+    expect(await screen.findByText('Domiciliario desactivado.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Activar' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Cambiar contraseña' }));
     await user.type(screen.getByLabelText('Nueva contraseña para Luis'), 'nueva-clave-1');
     await user.click(screen.getByRole('button', { name: 'Guardar contraseña' }));
-    expect(await screen.findByText(/Contraseña de Luis actualizada/)).toBeInTheDocument();
+    expect(await screen.findByText('Contraseña actualizada.')).toBeInTheDocument();
     expect(calls.at(-1).body).toEqual({ password: 'nueva-clave-1' });
   });
 });

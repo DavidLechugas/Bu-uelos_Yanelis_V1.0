@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Orders } from './Orders.jsx';
+import { Orders, whatsappUrl } from './Orders.jsx';
 import { ADMIN, COURIER, mockApi, order } from '../../test/mockApi.js';
 
 const LUIS = { id: 'u-luis', nombre: 'Luis', usuario: 'luis', activo: true, pedidosActivos: 0 };
@@ -37,8 +37,9 @@ describe('Orders — administrador', () => {
     await user.click(screen.getByRole('button', { name: 'Guardar pedido' }));
 
     expect(await screen.findByRole('heading', { name: 'Marta' })).toBeInTheDocument();
-    expect(screen.getByText('Pedido de Marta creado (asignado).')).toBeInTheDocument();
+    expect(screen.getByText('Pedido hecho correctamente.')).toBeInTheDocument();
     expect(calls.find((call) => call.method === 'POST').body).toEqual({
+      tipo: 'DOMICILIO',
       cliente: 'Marta',
       telefono: '3001234567',
       direccion: 'Calle 8 #3-10',
@@ -64,7 +65,7 @@ describe('Orders — administrador', () => {
     await user.clear(screen.getByLabelText('Total (COP)'));
     await user.type(screen.getByLabelText('Total (COP)'), '30000');
     await user.click(screen.getByRole('button', { name: 'Guardar pedido' }));
-    expect(await screen.findByText('Pedido de Carmen actualizado.')).toBeInTheDocument();
+    expect(await screen.findByText('Pedido actualizado.')).toBeInTheDocument();
     expect(screen.getByText('$30.000')).toBeInTheDocument();
     expect(calls.find((call) => call.method === 'PUT').body.totalCop).toBe(30000);
   });
@@ -135,7 +136,7 @@ describe('Orders — administrador', () => {
     await user.click(await screen.findByRole('button', { name: 'Añadir Buñuelo' }));
     expect(screen.getByLabelText('Total (COP)')).toHaveValue('26500');
     await user.click(screen.getByRole('button', { name: 'Guardar pedido' }));
-    await screen.findByText('Pedido de Carmen actualizado.');
+    await screen.findByText('Pedido actualizado.');
     expect(calls.find((call) => call.method === 'PUT').body).toMatchObject({ detalle: '1 × Buñuelo — 12 buñuelos', totalCop: 26500 });
   });
 
@@ -164,7 +165,7 @@ describe('Orders — administrador', () => {
     const user = userEvent.setup();
     render(<Orders user={ADMIN} />);
     await user.selectOptions(await screen.findByLabelText('Asignar a'), 'u-luis');
-    expect(await screen.findByText('Pedido de Carmen asignado a Luis.')).toBeInTheDocument();
+    expect(await screen.findByText('Pedido asignado.')).toBeInTheDocument();
     expect(screen.getByText('Asignado', { selector: '.status-badge' })).toBeInTheDocument();
     expect(calls.at(-1).body).toEqual({ domiciliarioId: 'u-luis' });
   });
@@ -183,7 +184,7 @@ describe('Orders — administrador', () => {
     await user.click(screen.getByRole('button', { name: 'Cancelar pedido' }));
     const confirm = screen.getByRole('group', { name: /Confirmar cancelación/ });
     await user.click(within(confirm).getByRole('button', { name: 'Sí, cancelar' }));
-    expect(await screen.findByText('Pedido de Carmen cancelado.')).toBeInTheDocument();
+    expect(await screen.findByText('Pedido cancelado.')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Carmen' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /Entregados/ }));
@@ -204,8 +205,9 @@ describe('Orders — domiciliario', () => {
     render(<Orders user={COURIER} />);
 
     expect(await screen.findByRole('heading', { name: 'Mis pedidos' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '300 123 4567' })).toHaveAttribute('href', 'tel:3001234567');
-    expect(screen.getByRole('link', { name: 'Ver en mapa' })).toHaveAttribute('href', expect.stringContaining('google.com/maps'));
+    expect(screen.getByRole('link', { name: 'Llamar a Carmen' })).toHaveAttribute('href', 'tel:3001234567');
+    expect(screen.getByRole('link', { name: 'WhatsApp a Carmen' })).toHaveAttribute('href', 'https://wa.me/573001234567');
+    expect(screen.getByRole('link', { name: 'Abrir la dirección de Carmen en Maps' })).toHaveAttribute('href', expect.stringContaining('google.com/maps'));
     expect(screen.queryByRole('button', { name: 'Nuevo pedido' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cancelar pedido' })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Asignar a')).not.toBeInTheDocument();
@@ -213,7 +215,7 @@ describe('Orders — domiciliario', () => {
     await user.click(screen.getByRole('button', { name: 'Voy en camino' }));
     expect(await screen.findByRole('button', { name: 'Marcar entregado' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Marcar entregado' }));
-    expect(await screen.findByText('Pedido de Carmen: entregado.')).toBeInTheDocument();
+    expect(await screen.findByText('Pedido entregado.')).toBeInTheDocument();
     expect(calls.filter((call) => call.method === 'PATCH').map((call) => call.body.estado)).toEqual(['EN_CAMINO', 'ENTREGADO']);
     expect(calls.some((call) => call.path === '/api/couriers')).toBe(false);
   });
@@ -229,5 +231,99 @@ describe('Orders — domiciliario', () => {
     await user.click(await screen.findByRole('button', { name: 'Voy en camino' }));
     expect(await screen.findByText('Ese cambio de estado no está permitido.')).toBeInTheDocument();
     expect(calls.filter((call) => call.path === '/api/orders' && call.method === 'GET')).toHaveLength(2);
+  });
+});
+
+describe('whatsappUrl', () => {
+  it('deja solo dígitos y añade el prefijo de Colombia a los de 10 cifras', () => {
+    expect(whatsappUrl('300 123 4567')).toBe('https://wa.me/573001234567');
+    expect(whatsappUrl('+57 (300) 123-4567')).toBe('https://wa.me/573001234567');
+    expect(whatsappUrl('6012345678')).toBe('https://wa.me/576012345678');
+  });
+});
+
+describe('Orders — búsqueda y fecha', () => {
+  it('filtra por texto y por fecha, y avisa cuando no hay coincidencias', async () => {
+    const now = new Date().toISOString();
+    const old = new Date(Date.now() - 20 * 24 * 3600 * 1000).toISOString();
+    mockApi({
+      'GET /api/orders': {
+        body: [
+          order({ id: 'o-1', cliente: 'Carmen', direccion: 'Cra 5', telefono: '300 111 2222', creadoEn: now }),
+          order({ id: 'o-2', cliente: 'José Pérez', direccion: 'Calle 9', telefono: '311 333 4444', creadoEn: old }),
+        ],
+      },
+      'GET /api/couriers': { body: [LUIS] },
+    });
+    const user = userEvent.setup();
+    render(<Orders user={ADMIN} />);
+    await screen.findByRole('heading', { name: 'Carmen' });
+    expect(screen.getByRole('heading', { name: 'José Pérez' })).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Buscar pedidos'), 'jose');
+    expect(screen.queryByRole('heading', { name: 'Carmen' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'José Pérez' })).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText('Buscar pedidos'));
+    await user.selectOptions(screen.getByLabelText('Fecha'), 'hoy');
+    expect(screen.getByRole('heading', { name: 'Carmen' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'José Pérez' })).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Buscar pedidos'), 'zzz');
+    expect(screen.getByText('Ningún pedido coincide con la búsqueda o la fecha.')).toBeInTheDocument();
+  });
+});
+
+describe('Orders — venta en local y pedidos disponibles', () => {
+  it('la casilla de venta en local oculta los datos del cliente y la registra cerrada', async () => {
+    const { calls } = mockApi({
+      'GET /api/orders': { body: [] },
+      'GET /api/couriers': { body: [LUIS] },
+      'GET /api/products': { body: [] },
+      'POST /api/orders': ({ body }) => ({
+        status: 201,
+        body: order({ ...body, id: 'o-5', tipo: 'LOCAL', cliente: 'Venta en local', telefono: '', direccion: '', estado: 'ENTREGADO' }),
+      }),
+    });
+    const user = userEvent.setup();
+    render(<Orders user={ADMIN} />);
+    await screen.findByText(/No hay pedidos en «Activos»/);
+    await user.click(screen.getByRole('button', { name: 'Nuevo pedido' }));
+    const dialog = screen.getByRole('dialog', { name: 'Nuevo pedido' });
+    expect(within(dialog).getByLabelText('Cliente')).toBeInTheDocument();
+
+    await user.click(within(dialog).getByLabelText(/Venta en local/));
+    expect(screen.getByRole('dialog', { name: 'Venta en local' })).toBeInTheDocument();
+    expect(within(dialog).queryByLabelText('Cliente')).not.toBeInTheDocument();
+    expect(within(dialog).queryByLabelText('Dirección')).not.toBeInTheDocument();
+    expect(within(dialog).queryByLabelText('Domiciliario (opcional)')).not.toBeInTheDocument();
+
+    await user.type(within(dialog).getByLabelText('Notas o detalle del pedido'), '2 buñuelos');
+    await user.type(within(dialog).getByLabelText('Total (COP)'), '5000');
+    await user.click(within(dialog).getByRole('button', { name: 'Registrar venta' }));
+
+    expect(await screen.findByText('Venta registrada.')).toBeInTheDocument();
+    expect(calls.find((call) => call.method === 'POST').body).toEqual({
+      tipo: 'LOCAL', cliente: null, telefono: null, direccion: null, detalle: '2 buñuelos', totalCop: 5000, domiciliarioId: null,
+    });
+  });
+
+  it('el domiciliario ve «Disponibles» y toma un pedido', async () => {
+    const free = order({ id: 'o-7', cliente: 'Rosa', telefono: '', direccion: 'Calle 1', estado: 'PENDIENTE', domiciliarioId: null, tipo: 'DOMICILIO' });
+    const { calls } = mockApi({
+      'GET /api/orders': { body: [free] },
+      'POST /api/orders/o-7/tomar': () => ({ body: { ...free, estado: 'ASIGNADO', domiciliarioId: COURIER.id, domiciliarioNombre: 'Luis', telefono: '300 123 4567' } }),
+    });
+    const user = userEvent.setup();
+    render(<Orders user={COURIER} />);
+    const available = await screen.findByRole('region', { name: /Disponibles/ });
+    expect(within(available).getByRole('heading', { name: 'Rosa' })).toBeInTheDocument();
+    expect(within(available).queryByText(/300/)).not.toBeInTheDocument();
+
+    await user.click(within(available).getByRole('button', { name: 'Tomar pedido' }));
+    expect(await screen.findByText('Pedido tomado.')).toBeInTheDocument();
+    expect(calls.some((call) => call.method === 'POST' && call.path === '/api/orders/o-7/tomar')).toBe(true);
+    expect(screen.queryByRole('region', { name: /Disponibles/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Llamar a Rosa' })).toBeInTheDocument();
   });
 });

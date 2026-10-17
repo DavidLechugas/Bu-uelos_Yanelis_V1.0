@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useState } from 'react';
 import { Spinner } from '../../components/Spinner.jsx';
 import { couriersApi } from '../../api/client.js';
 import { ManagementField } from '../ManagementField.jsx';
+import { Toast, useNotice } from '../feedback/Toast.jsx';
 import { SAVE_DONE_MS, pause } from '../feedback/timing.js';
 
 const EMPTY_DRAFT = { nombre: '', usuario: '', password: '' };
@@ -34,7 +35,7 @@ export function Couriers({ active = true }) {
   const [passwordFor, setPasswordFor] = useState(null);
   const [newPassword, setNewPassword] = useState('');
   const [busyId, setBusyId] = useState(null);
-  const [notice, setNotice] = useState('');
+  const [notice, setNotice] = useNotice();
   const formTitleId = useId();
 
   const load = useCallback(async () => {
@@ -63,14 +64,14 @@ export function Couriers({ active = true }) {
     try {
       const created = await couriersApi.create({ ...draft, nombre: draft.nombre.trim() });
       setCouriers((previous) => [...(previous ?? []), created].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')));
-      setNotice(`Cuenta de ${created.nombre} creada. Entrégale su usuario «${created.usuario}» y la contraseña en persona.`);
+      setNotice('Domiciliario creado.');
       setConfirmed('¡Cuenta creada!');
       await pause(SAVE_DONE_MS);
       setConfirmed('');
       setDraft(null);
     } catch (error) {
       setErrors(error.fields ?? {});
-      setNotice(error.message);
+      setNotice(error.message, 'error');
     } finally {
       setSaving(false);
     }
@@ -83,10 +84,10 @@ export function Couriers({ active = true }) {
       const updated = await couriersApi.setActive(courier.id, !courier.activo);
       replace(updated);
       setNotice(updated.activo
-        ? `${updated.nombre} puede volver a entrar.`
-        : `${updated.nombre} ya no puede entrar y se cerraron sus sesiones.`);
+        ? 'Domiciliario activado.'
+        : 'Domiciliario desactivado.');
     } catch (error) {
-      setNotice(error.message);
+      setNotice(error.message, 'error');
     } finally {
       setBusyId(null);
     }
@@ -102,10 +103,10 @@ export function Couriers({ active = true }) {
       replace(await couriersApi.resetPassword(courier.id, newPassword));
       setPasswordFor(null);
       setNewPassword('');
-      setNotice(`Contraseña de ${courier.nombre} actualizada. Sus sesiones abiertas se cerraron.`);
+      setNotice('Contraseña actualizada.');
     } catch (error) {
       setErrors(error.fields ?? {});
-      setNotice(error.message);
+      setNotice(error.message, 'error');
     } finally {
       setBusyId(null);
     }
@@ -125,7 +126,7 @@ export function Couriers({ active = true }) {
         )}
       </div>
 
-      <p role="status" className="management-notice">{notice}</p>
+      <Toast notice={notice} onClose={() => setNotice('')} />
 
       {draft && confirmed && (
         <div className="card management-form management-form--done">
@@ -174,10 +175,10 @@ export function Couriers({ active = true }) {
         </div>
       )}
 
-      {!couriers && !loadError && <div className="skeleton" aria-busy="true" aria-label="Cargando domiciliarios"><Spinner size="md" /><div className="skeleton-card" /><div className="skeleton-card" /></div>}
+      {!couriers && !loadError && <div className="skeleton" aria-busy="true" aria-label="Cargando domiciliarios"><Spinner size="lg" label="Cargando domiciliarios…" /><div className="skeleton-card" /><div className="skeleton-card" /></div>}
 
       {couriers && !couriers.length && (
-        <p className="card management-empty">Todavía no hay domiciliarios. Crea el primero con «Nuevo domiciliario».</p>
+        <p className="card management-empty"><img className="empty-logo" src="/icons/logo.svg" alt="" />Todavía no hay domiciliarios. Crea el primero con «Nuevo domiciliario».</p>
       )}
 
       <ul className="management-list">

@@ -29,7 +29,7 @@ export function ProductPicker({ items, onChange, active = true }) {
 
   return (
     <div className="order-picker" role="group" aria-labelledby={titleId}>
-      <h4 id={titleId}>Productos</h4>
+      <h3 id={titleId}>Productos</h3>
 
       {error && <p className="management-hint">No se pudo cargar el catálogo ({error}). Escribe el detalle y el total a mano.</p>}
       {!error && !products && <Spinner size="sm" label="Cargando productos…" />}
@@ -56,7 +56,7 @@ export function ProductPicker({ items, onChange, active = true }) {
 
       {Boolean(products?.length) && (
         <div className="picker-summary">
-          <h5>Tu pedido</h5>
+          <h4>Tu pedido</h4>
           {!items.length && <p className="management-hint">Toca un producto para añadirlo.</p>}
           {Boolean(items.length) && (
             <>
