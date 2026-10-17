@@ -122,7 +122,74 @@ button {
 
 /* ---------- Login ---------- */
 
+/* Fondo decorativo de toda la app: buñuelos a línea que caen despacio
+   (BunueloRain.jsx, montado en main.jsx). Va detrás del contenido: se ve
+   donde se ve el fondo. */
+.bunuelo-rain {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bunuelo-item {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  width: var(--size);
+  height: var(--size);
+  animation: bunuelo-fall var(--dur) linear var(--delay) infinite;
+  will-change: transform, opacity;
+}
+
+.bunuelo-sketch {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: var(--caramel-strong);
+  opacity: 0.24;
+  animation: bunuelo-spin var(--dur) ease-in-out var(--delay) infinite alternate;
+}
+
+:root[data-theme="dark"] .bunuelo-sketch {
+  opacity: 0.16;
+}
+
+.sketch-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sketch-line--main { stroke-width: 1.6; }
+.sketch-line--thin { stroke-width: 0.8; }
+
+@keyframes bunuelo-fall {
+  0% { transform: translate3d(0, -25vh, 0); opacity: 0; }
+  8%, 88% { opacity: 1; }
+  100% { transform: translate3d(0, 115vh, 0); opacity: 0; }
+}
+
+@keyframes bunuelo-spin {
+  from { transform: rotate(calc(var(--spin) * -0.5)); }
+  to { transform: rotate(var(--spin)); }
+}
+
+/* Sin animación (preferencia del sistema o de Configuración): quedan quietos. */
+@media (prefers-reduced-motion: reduce) {
+  .bunuelo-item { top: var(--top); }
+}
+
+:root[data-motion="reduce"] .bunuelo-item { top: var(--top); }
+
+@media (max-width: 599px) {
+  .bunuelo-item:nth-child(n + 10) { display: none; }
+}
+
 .login-page {
+  position: relative;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
