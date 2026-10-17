@@ -1,12 +1,33 @@
 import { useEffect, useRef, useState } from 'react';
-import { auth } from '../../api/client.js';
+import { auth, ordersApi } from '../../api/client.js';
 import { Avatar } from '../../components/Avatar.jsx';
 import { trapTabKey } from '../../components/Drawer.jsx';
 import { CameraIcon, CloseIcon } from '../../components/icons.jsx';
 import { ManagementField } from '../ManagementField.jsx';
+import { Choice, MOTION, THEMES } from '../settings/Settings.jsx';
+import { loadPreferences, savePreferences } from '../settings/preferences.js';
 
 const ROLE_LABEL = { ADMIN: 'Administrador', COURIER: 'Domiciliario' };
 const PHOTO_SIZE = 160;
+const SEXO = [
+  { value: '', label: 'Prefiero no decirlo' },
+  { value: 'femenino', label: 'Femenino' },
+  { value: 'masculino', label: 'Masculino' },
+  { value: 'otro', label: 'Otro' },
+];
+const currency = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
+const bogotaDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' });
+
+/** Resumen de hoy (hora de Bogotá) a partir de los pedidos que ve este usuario. */
+export function dayStats(orders) {
+  const today = bogotaDay.format(new Date());
+  const delivered = orders.filter((order) => order.estado === 'ENTREGADO' && bogotaDay.format(new Date(order.actualizadoEn)) === today);
+  return {
+    entregados: delivered.length,
+    total: delivered.reduce((sum, order) => sum + order.totalCop, 0),
+    porEntregar: orders.filter((order) => ['PENDIENTE', 'ASIGNADO', 'EN_CAMINO'].includes(order.estado)).length,
+  };
+}
 
 /** Recorta al centro y reduce a 160×160 JPEG (~10 KB) en el propio teléfono. */
 export async function resizePhoto(file) {
@@ -28,14 +49,16 @@ export async function resizePhoto(file) {
 }
 
 /**
- * Panel lateral de perfil (diálogo modal): nombre, foto pequeña y
+ * Ventana centrada de perfil (diálogo modal): nombre, foto pequeña y
  * cambio de contraseña. Escape u overlay lo cierran; el foco vuelve
  * al botón del perfil.
  */
-export function ProfilePanel({ open, user, onClose, onUpdated }) {
+export function ProfilePanel({ open, user, onClose, onUpdated, onLogout }) {
   const panelRef = useRef(null);
   const previousFocus = useRef(null);
-  const [draft, setDraft] = useState({ nombre: '', foto: null });
+  const [draft, setDraft] = useState({ nombre: '', foto: null, telefono: '', correo: '', sexo: '' });
+  const [stats, setStats] = useState(null);
+  const [preferences, setPreferences] = useState(loadPreferences);
   const [errors, setErrors] = useState({});
   const [notice, setNotice] = useState('');
   const [saving, setSaving] = useState(false);
@@ -44,7 +67,19 @@ export function ProfilePanel({ open, user, onClose, onUpdated }) {
   useEffect(() => {
     if (!open) return undefined;
     previousFocus.current = document.activeElement;
-    setDraft({ nombre: user.nombre, foto: user.foto ?? null });
+    setDraft({
+      nombre: user.nombre,
+      foto: user.foto ?? null,
+      telefono: user.telefono ?? '',
+      correo: user.correo ?? '',
+      sexo: user.sexo ?? '',
+    });
+    setStats(null);
+    let cancelled = false;
+    ordersApi.list().then(
+      (orders) => { if (!cancelled) setStats(dayStats(orders)); },
+      () => {},
+    );
     setErrors({});
     setNotice('');
     setPasswords(null);
@@ -57,6 +92,7 @@ export function ProfilePanel({ open, user, onClose, onUpdated }) {
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
+      cancelled = true;
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = overflow;
       previousFocus.current?.focus?.();
@@ -88,7 +124,13 @@ export function ProfilePanel({ open, user, onClose, onUpdated }) {
     }
     setSaving(true);
     try {
-      const result = await auth.updateProfile({ nombre: draft.nombre.trim(), foto: draft.foto });
+      const result = await auth.updateProfile({
+        nombre: draft.nombre.trim(),
+        foto: draft.foto,
+        telefono: draft.telefono.trim() || null,
+        correo: draft.correo.trim() || null,
+        sexo: draft.sexo || null,
+      });
       onUpdated(result.usuario);
       setErrors({});
       setNotice('Perfil guardado.');
@@ -98,6 +140,12 @@ export function ProfilePanel({ open, user, onClose, onUpdated }) {
     } finally {
       setSaving(false);
     }
+  }
+
+  function updatePreference(key, value) {
+    const next = { ...preferences, [key]: value };
+    setPreferences(next);
+    savePreferences(next);
   }
 
   async function savePassword(event) {
@@ -122,7 +170,7 @@ export function ProfilePanel({ open, user, onClose, onUpdated }) {
 
   return (
     <div className="panel-overlay" onClick={onClose} data-testid="profile-overlay">
-      <aside
+      <div
         ref={panelRef}
         className="profile-panel"
         role="dialog"
@@ -136,6 +184,14 @@ export function ProfilePanel({ open, user, onClose, onUpdated }) {
             <CloseIcon />
           </button>
         </div>
+
+        {stats && (
+          <dl className="profile-stats" aria-label="Mi día">
+            <div><dt>Entregados hoy</dt><dd>{stats.entregados}</dd></div>
+            <div><dt>Total de hoy</dt><dd>${currency.format(stats.total)}</dd></div>
+            <div><dt>Por entregar</dt><dd>{stats.porEntregar}</dd></div>
+          </dl>
+        )}
 
         <form className="profile-form" onSubmit={saveProfile} noValidate>
           <div className="profile-photo">
@@ -152,12 +208,21 @@ export function ProfilePanel({ open, user, onClose, onUpdated }) {
                 </button>
               )}
             </div>
+            <dl className="profile-facts">
+              <div><dt>Usuario</dt><dd>@{user.usuario}</dd></div>
+              <div><dt>Rol</dt><dd>{ROLE_LABEL[user.role]}</dd></div>
+            </dl>
           </div>
           <ManagementField label="Nombre" maxLength={60} value={draft.nombre} onChange={(event) => setDraft({ ...draft, nombre: event.target.value })} error={errors.nombre} />
-          <dl className="profile-facts">
-            <div><dt>Usuario</dt><dd>@{user.usuario}</dd></div>
-            <div><dt>Rol</dt><dd>{ROLE_LABEL[user.role]}</dd></div>
-          </dl>
+          <ManagementField label="Teléfono (opcional)" type="tel" inputMode="tel" maxLength={20} autoComplete="tel" value={draft.telefono} onChange={(event) => setDraft({ ...draft, telefono: event.target.value })} error={errors.telefono} />
+          <ManagementField label="Correo electrónico (opcional)" type="email" inputMode="email" maxLength={100} autoComplete="email" value={draft.correo} onChange={(event) => setDraft({ ...draft, correo: event.target.value })} error={errors.correo} />
+          <div className="management-field">
+            <label htmlFor="profile-sexo">Sexo (opcional)</label>
+            <select id="profile-sexo" value={draft.sexo} onChange={(event) => setDraft({ ...draft, sexo: event.target.value })} aria-invalid={Boolean(errors.sexo)}>
+              {SEXO.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+            {errors.sexo && <p className="field-error">{errors.sexo}</p>}
+          </div>
           <button type="submit" className="btn-primary" disabled={saving} aria-busy={saving}>Guardar perfil</button>
         </form>
 
@@ -178,7 +243,13 @@ export function ProfilePanel({ open, user, onClose, onUpdated }) {
             Cambiar contraseña
           </button>
         )}
-      </aside>
+        <div className="profile-prefs">
+        <Choice legend="Apariencia" name="profile-theme" options={THEMES} value={preferences.theme} onChange={(value) => updatePreference('theme', value)} />
+        <Choice legend="Animaciones" name="profile-motion" options={MOTION} value={preferences.motion} onChange={(value) => updatePreference('motion', value)} />
+        </div>
+
+        <button type="button" className="btn-secondary profile-logout" onClick={onLogout}>Cerrar sesión</button>
+      </div>
     </div>
   );
 }

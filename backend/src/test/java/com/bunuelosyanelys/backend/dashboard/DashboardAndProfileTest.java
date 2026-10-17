@@ -88,6 +88,33 @@ class DashboardAndProfileTest extends ApiTestSupport {
     }
 
     @Test
+    void elPerfilGuardaTelefonoCorreoYSexoOpcionales() throws Exception {
+        createUser("luis", "Luis", Role.COURIER, true);
+        Browser luis = login("luis");
+        mvc.perform(luis.with(put("/api/auth/profile"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json("nombre", "Luis", "telefono", "300 123 4567", "correo", "luis@correo.com", "sexo", "masculino")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.usuario.telefono").value("300 123 4567"))
+                .andExpect(jsonPath("$.usuario.correo").value("luis@correo.com"))
+                .andExpect(jsonPath("$.usuario.sexo").value("masculino"));
+
+        mvc.perform(luis.with(put("/api/auth/profile"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json("nombre", "Luis", "telefono", "abc", "correo", "no-es-correo", "sexo", "x")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.campos.telefono").exists())
+                .andExpect(jsonPath("$.campos.correo").exists())
+                .andExpect(jsonPath("$.campos.sexo").exists());
+
+        mvc.perform(luis.with(put("/api/auth/profile"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json("nombre", "Luis")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.usuario.telefono").doesNotExist());
+    }
+
+    @Test
     void cambiarLaPropiaContrasenaExigeLaActualYCierraOtrasSesiones() throws Exception {
         createUser("admin", "Yanelys", Role.ADMIN, true);
         Browser phone = login("admin");

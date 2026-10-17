@@ -19,6 +19,11 @@ public class AppUser {
     private Instant creadoEn;
     /** Foto de perfil pequeña como data URL (≤ 100 KB), opcional. */
     private String foto;
+    /** Datos de contacto opcionales del propio usuario. */
+    private String telefono;
+    private String correo;
+    /** femenino | masculino | otro (opcional). */
+    private String sexo;
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -36,4 +41,10 @@ public class AppUser {
     public void setCreadoEn(Instant creadoEn) { this.creadoEn = creadoEn; }
     public String getFoto() { return foto; }
     public void setFoto(String foto) { this.foto = foto; }
+    public String getTelefono() { return telefono; }
+    public void setTelefono(String telefono) { this.telefono = telefono; }
+    public String getCorreo() { return correo; }
+    public void setCorreo(String correo) { this.correo = correo; }
+    public String getSexo() { return sexo; }
+    public void setSexo(String sexo) { this.sexo = sexo; }
 }

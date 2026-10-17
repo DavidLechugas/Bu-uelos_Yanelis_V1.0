@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { loadPreferences, savePreferences } from './preferences.js';
 
-const THEMES = [
+export const THEMES = [
   { value: 'system', label: 'Según el teléfono' },
   { value: 'light', label: 'Claro' },
   { value: 'dark', label: 'Oscuro' },
 ];
-const MOTION = [
+export const MOTION = [
   { value: 'normal', label: 'Normales' },
   { value: 'reduce', label: 'Reducidas' },
 ];
 
-function Choice({ legend, name, options, value, onChange }) {
+export function Choice({ legend, name, options, value, onChange }) {
   return (
     <fieldset className="card settings-group">
       <legend>{legend}</legend>

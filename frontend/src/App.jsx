@@ -177,7 +177,7 @@ export default function App() {
         </main>
         {isAdmin && <BottomNav active={view} onSelect={handleBottomNav} />}
       </div>
-      <ProfilePanel open={profileOpen} user={user} onClose={() => setProfileOpen(false)} onUpdated={setUser} />
+      <ProfilePanel open={profileOpen} user={user} onClose={() => setProfileOpen(false)} onUpdated={setUser} onLogout={handleLogout} />
       <Drawer
         open={drawerOpen}
         role={ROLE_LABEL[user.role]}

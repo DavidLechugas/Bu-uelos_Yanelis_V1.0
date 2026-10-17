@@ -115,7 +115,7 @@ describe('App — sesión real y navegación por rol', () => {
     await user.type(name, 'Yanelys Gómez');
     await user.click(within(dialog).getByRole('button', { name: 'Guardar perfil' }));
     expect(await within(dialog).findByText('Perfil guardado.')).toBeInTheDocument();
-    expect(calls.find((call) => call.path === '/api/auth/profile').body).toEqual({ nombre: 'Yanelys Gómez', foto: null });
+    expect(calls.find((call) => call.path === '/api/auth/profile').body).toEqual({ nombre: 'Yanelys Gómez', foto: null, telefono: null, correo: null, sexo: null });
 
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('dialog', { name: 'Mi perfil' })).not.toBeInTheDocument();

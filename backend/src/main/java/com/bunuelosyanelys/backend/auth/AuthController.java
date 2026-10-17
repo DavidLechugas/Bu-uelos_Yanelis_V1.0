@@ -89,7 +89,17 @@ public class AuthController {
             @NotBlank(message = "Escribe tu nombre.") @Size(max = 60, message = "Máximo 60 caracteres.") String nombre,
             @Size(max = PHOTO_MAX, message = "La foto es demasiado grande.")
             @jakarta.validation.constraints.Pattern(regexp = PHOTO_PATTERN, message = "Formato de foto no válido.")
-            String foto) {
+            String foto,
+            @jakarta.validation.constraints.Pattern(regexp = "[0-9 +()-]{7,20}", message = "Teléfono no válido (7 a 20 dígitos).")
+            String telefono,
+            @Size(max = 100, message = "Máximo 100 caracteres.")
+            @jakarta.validation.constraints.Email(message = "Correo no válido.") String correo,
+            @jakarta.validation.constraints.Pattern(regexp = "femenino|masculino|otro", message = "Opción no válida.")
+            String sexo) {
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     public record PasswordChangeRequest(
@@ -106,6 +116,9 @@ public class AuthController {
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Tu sesión no está activa."));
         user.setNombre(request.nombre().trim());
         user.setFoto(request.foto());
+        user.setTelefono(blankToNull(request.telefono()));
+        user.setCorreo(blankToNull(request.correo()));
+        user.setSexo(request.sexo());
         return Map.of("usuario", AuthUser.of(users.save(user)));
     }
 
