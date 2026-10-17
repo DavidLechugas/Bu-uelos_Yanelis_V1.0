@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useId, useState } from 'react';
 import { couriersApi, ordersApi } from '../../api/client.js';
 import { ManagementField } from '../ManagementField.jsx';
+import { composeDetail, itemsTotal } from './orderItems.js';
+import { ProductPicker } from './ProductPicker.jsx';
 
 export const STATUS = {
   PENDIENTE: { label: 'Pendiente', tone: 'pending' },
@@ -26,7 +28,8 @@ const NEXT = {
   EN_CAMINO: { estado: 'ENTREGADO', admin: 'Marcar entregado', courier: 'Marcar entregado' },
 };
 
-const EMPTY_DRAFT = { cliente: '', telefono: '', direccion: '', detalle: '', totalCop: '', domiciliarioId: '' };
+const EMPTY_DRAFT = { cliente: '', telefono: '', direccion: '', detalle: '', totalCop: '', domiciliarioId: '', items: [], baseTotal: 0 };
+const MAX_DETAIL = 500;
 const POLL_MS = 30000;
 const currency = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
 const dateTime = new Intl.DateTimeFormat('es-CO', { dateStyle: 'short', timeStyle: 'short' });
@@ -40,10 +43,12 @@ function validate(draft) {
   if (!draft.cliente.trim()) errors.cliente = 'Escribe el nombre del cliente.';
   if (!/^[0-9 +()-]{7,20}$/.test(draft.telefono.trim())) errors.telefono = 'Usa de 7 a 20 dígitos.';
   if (!draft.direccion.trim()) errors.direccion = 'Escribe la dirección.';
-  if (!draft.detalle.trim()) errors.detalle = 'Describe el pedido.';
+  const detalle = composeDetail(draft.items, draft.detalle);
+  if (!detalle) errors.detalle = 'Añade productos o describe el pedido.';
+  else if (detalle.length > MAX_DETAIL) errors.detalle = `El detalle es demasiado largo (máximo ${MAX_DETAIL} caracteres).`;
   const total = Number(draft.totalCop.replace(/\D/g, ''));
   if (!total) errors.totalCop = 'Escribe el total en pesos (mayor que 0).';
-  return { errors, total };
+  return { errors, total, detalle };
 }
 
 /**
@@ -106,7 +111,7 @@ export function Orders({ user, active = true }) {
 
   async function save(event) {
     event.preventDefault();
-    const { errors: nextErrors, total } = validate(draft);
+    const { errors: nextErrors, total, detalle } = validate(draft);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
     setSaving(true);
@@ -115,7 +120,7 @@ export function Orders({ user, active = true }) {
         cliente: draft.cliente.trim(),
         telefono: draft.telefono.trim(),
         direccion: draft.direccion.trim(),
-        detalle: draft.detalle.trim(),
+        detalle,
         totalCop: total,
         domiciliarioId: draft.domiciliarioId || null,
       };
@@ -139,6 +144,11 @@ export function Orders({ user, active = true }) {
   }
 
   const change = (key) => (event) => setDraft({ ...draft, [key]: event.target.value });
+  /** El total sigue a los productos; al editar un pedido viejo se suma al total que ya tenía. */
+  const changeItems = (items) => {
+    const total = draft.baseTotal + itemsTotal(items);
+    setDraft({ ...draft, items, totalCop: total ? String(total) : '' });
+  };
   const activeCouriers = couriers.filter((courier) => courier.activo);
   const current = FILTERS.find((item) => item.id === filter);
   const visible = (orders ?? []).filter(current.match);
@@ -169,7 +179,17 @@ export function Orders({ user, active = true }) {
           <ManagementField label="Cliente" autoFocus maxLength={80} autoComplete="off" value={draft.cliente} onChange={change('cliente')} error={errors.cliente} />
           <ManagementField label="Teléfono" type="tel" inputMode="tel" maxLength={20} autoComplete="off" value={draft.telefono} onChange={change('telefono')} error={errors.telefono} />
           <ManagementField label="Dirección" maxLength={160} autoComplete="off" value={draft.direccion} onChange={change('direccion')} error={errors.direccion} />
-          <ManagementField label="Detalle del pedido" multiline rows={3} maxLength={500} value={draft.detalle} onChange={change('detalle')} error={errors.detalle} />
+          <ProductPicker items={draft.items} onChange={changeItems} active={active} />
+          <ManagementField
+            label="Notas o detalle del pedido"
+            multiline
+            rows={3}
+            maxLength={MAX_DETAIL}
+            value={draft.detalle}
+            onChange={change('detalle')}
+            error={errors.detalle}
+            hint="Opcional si añadiste productos (ej. «sin azúcar»)."
+          />
           <ManagementField
             label="Total (COP)"
             inputMode="numeric"
@@ -177,7 +197,7 @@ export function Orders({ user, active = true }) {
             value={draft.totalCop}
             onChange={change('totalCop')}
             error={errors.totalCop}
-            hint={totalPreview ? `$${currency.format(totalPreview)}` : 'Solo números, sin puntos.'}
+            hint={totalPreview ? `$${currency.format(totalPreview)}` : 'Se calcula con los productos; también puedes escribirlo.'}
           />
           {!draft.id && <div className="management-field">
             <label htmlFor="order-courier">Domiciliario (opcional)</label>
@@ -316,6 +336,8 @@ export function Orders({ user, active = true }) {
                         detalle: order.detalle,
                         totalCop: String(order.totalCop),
                         domiciliarioId: order.domiciliarioId ?? '',
+                        items: [],
+                        baseTotal: order.totalCop,
                       });
                       setErrors({});
                       setNotice('');

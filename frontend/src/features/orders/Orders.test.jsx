@@ -5,6 +5,9 @@ import { Orders } from './Orders.jsx';
 import { ADMIN, COURIER, mockApi, order } from '../../test/mockApi.js';
 
 const LUIS = { id: 'u-luis', nombre: 'Luis', usuario: 'luis', activo: true, pedidosActivos: 0 };
+const BUNUELO = { id: 'p-1', nombre: 'Buñuelo', descripcion: '', precio: 2500, disponible: true };
+const NATILLA = { id: 'p-2', nombre: 'Natilla', descripcion: '', precio: 4000, disponible: true };
+const AGOTADO = { id: 'p-3', nombre: 'Empanada', descripcion: '', precio: 3000, disponible: false };
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -13,6 +16,7 @@ describe('Orders — administrador', () => {
     const { calls } = mockApi({
       'GET /api/orders': { body: [] },
       'GET /api/couriers': { body: [LUIS] },
+      'GET /api/products': { body: [] },
       'POST /api/orders': ({ body }) => ({
         status: 201,
         body: order({ ...body, id: 'o-9', estado: 'ASIGNADO', domiciliarioNombre: 'Luis' }),
@@ -26,7 +30,7 @@ describe('Orders — administrador', () => {
     await user.type(screen.getByLabelText('Cliente'), 'Marta');
     await user.type(screen.getByLabelText('Teléfono'), '3001234567');
     await user.type(screen.getByLabelText('Dirección'), 'Calle 8 #3-10');
-    await user.type(screen.getByLabelText('Detalle del pedido'), '6 buñuelos');
+    await user.type(screen.getByLabelText('Notas o detalle del pedido'), '6 buñuelos');
     await user.type(screen.getByLabelText('Total (COP)'), '15000');
     expect(screen.getByText('$15.000')).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText('Domiciliario (opcional)'), 'u-luis');
@@ -48,6 +52,7 @@ describe('Orders — administrador', () => {
     const { calls } = mockApi({
       'GET /api/orders': { body: [order({ id: 'o-3', estado: 'ASIGNADO', domiciliarioId: 'u-luis', domiciliarioNombre: 'Luis' })] },
       'GET /api/couriers': { body: [LUIS] },
+      'GET /api/products': { body: [] },
       'PUT /api/orders/o-3': ({ body }) => ({ body: order({ ...body, id: 'o-3', estado: 'ASIGNADO', domiciliarioNombre: 'Luis' }) }),
     });
     const user = userEvent.setup();
@@ -65,15 +70,87 @@ describe('Orders — administrador', () => {
   });
 
   it('valida el formulario antes de enviarlo', async () => {
-    const { calls } = mockApi({ 'GET /api/orders': { body: [] }, 'GET /api/couriers': { body: [] } });
+    const { calls } = mockApi({ 'GET /api/orders': { body: [] }, 'GET /api/couriers': { body: [] }, 'GET /api/products': { body: [] } });
     const user = userEvent.setup();
     render(<Orders user={ADMIN} />);
     await user.click(await screen.findByRole('button', { name: 'Nuevo pedido' }));
     await user.click(screen.getByRole('button', { name: 'Guardar pedido' }));
     expect(screen.getByText('Escribe el nombre del cliente.')).toBeInTheDocument();
+    expect(screen.getByText('Añade productos o describe el pedido.')).toBeInTheDocument();
     expect(screen.getByText('Escribe el total en pesos (mayor que 0).')).toBeInTheDocument();
     expect(screen.getByText(/Aún no hay domiciliarios activos/)).toBeInTheDocument();
     expect(calls.some((call) => call.method === 'POST')).toBe(false);
+  });
+
+  it('arma el pedido con productos, cantidades y total automático', async () => {
+    const { calls } = mockApi({
+      'GET /api/orders': { body: [] },
+      'GET /api/couriers': { body: [] },
+      'GET /api/products': { body: [BUNUELO, NATILLA, AGOTADO] },
+      'POST /api/orders': ({ body }) => ({ status: 201, body: order({ ...body, id: 'o-9' }) }),
+    });
+    const user = userEvent.setup();
+    render(<Orders user={ADMIN} />);
+    await user.click(await screen.findByRole('button', { name: 'Nuevo pedido' }));
+    await user.type(screen.getByLabelText('Cliente'), 'Marta');
+    await user.type(screen.getByLabelText('Teléfono'), '3001234567');
+    await user.type(screen.getByLabelText('Dirección'), 'Calle 8 #3-10');
+
+    expect(await screen.findByRole('button', { name: 'Añadir Buñuelo' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Añadir Empanada' })).not.toBeInTheDocument();
+    expect(screen.getByText('Toca un producto para añadirlo.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Añadir Buñuelo' }));
+    await user.click(screen.getByRole('button', { name: 'Añadir Buñuelo' }));
+    await user.click(screen.getByRole('button', { name: 'Añadir Natilla' }));
+    expect(screen.getByLabelText('Cantidad de Buñuelo')).toHaveTextContent('2');
+    expect(screen.getByLabelText('Total (COP)')).toHaveValue('9000');
+
+    await user.click(screen.getByRole('button', { name: 'Sumar una unidad de Natilla' }));
+    expect(screen.getByLabelText('Total (COP)')).toHaveValue('13000');
+    await user.click(screen.getByRole('button', { name: 'Quitar Natilla del pedido' }));
+    expect(screen.getByLabelText('Total (COP)')).toHaveValue('5000');
+    await user.click(screen.getByRole('button', { name: 'Quitar una unidad de Buñuelo' }));
+    expect(screen.getByLabelText('Total (COP)')).toHaveValue('2500');
+
+    await user.type(screen.getByLabelText('Notas o detalle del pedido'), 'sin azúcar');
+    await user.click(screen.getByRole('button', { name: 'Guardar pedido' }));
+    expect(await screen.findByRole('heading', { name: 'Marta' })).toBeInTheDocument();
+    const body = calls.find((call) => call.method === 'POST').body;
+    expect(body.detalle).toBe('1 × Buñuelo — sin azúcar');
+    expect(body.totalCop).toBe(2500);
+  });
+
+  it('al editar un pedido anterior conserva su texto y suma los productos nuevos', async () => {
+    const { calls } = mockApi({
+      'GET /api/orders': { body: [order({ id: 'o-3', estado: 'ASIGNADO' })] },
+      'GET /api/couriers': { body: [] },
+      'GET /api/products': { body: [BUNUELO] },
+      'PUT /api/orders/o-3': ({ body }) => ({ body: order({ ...body, id: 'o-3', estado: 'ASIGNADO' }) }),
+    });
+    const user = userEvent.setup();
+    render(<Orders user={ADMIN} />);
+    await user.click(await screen.findByRole('button', { name: 'Editar pedido de Carmen' }));
+    expect(screen.getByLabelText('Notas o detalle del pedido')).toHaveValue('12 buñuelos');
+    await user.click(await screen.findByRole('button', { name: 'Añadir Buñuelo' }));
+    expect(screen.getByLabelText('Total (COP)')).toHaveValue('26500');
+    await user.click(screen.getByRole('button', { name: 'Guardar pedido' }));
+    await screen.findByText('Pedido de Carmen actualizado.');
+    expect(calls.find((call) => call.method === 'PUT').body).toMatchObject({ detalle: '1 × Buñuelo — 12 buñuelos', totalCop: 26500 });
+  });
+
+  it('sigue permitiendo escribir a mano si el catálogo no carga', async () => {
+    mockApi({
+      'GET /api/orders': { body: [] },
+      'GET /api/couriers': { body: [] },
+      'GET /api/products': { status: 500, body: { error: 'Servidor caído' } },
+    });
+    const user = userEvent.setup();
+    render(<Orders user={ADMIN} />);
+    await user.click(await screen.findByRole('button', { name: 'Nuevo pedido' }));
+    expect(await screen.findByText(/No se pudo cargar el catálogo/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Notas o detalle del pedido')).toBeEnabled();
+    expect(screen.getByLabelText('Total (COP)')).toBeEnabled();
   });
 
   it('asigna un pedido pendiente desde la lista', async () => {
