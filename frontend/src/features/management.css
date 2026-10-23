@@ -55,8 +55,6 @@
 .btn-primary:disabled, .btn-secondary:disabled, .btn-danger:disabled { opacity: .6; cursor: progress; }
 .btn-danger { min-height: 48px; border: 0; border-radius: var(--radius-small); background: var(--red); color: var(--on-primary); font-size: .9375rem; font-weight: 700; padding: 0 16px; }
 
-.order-search { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: .75rem; }
-@media (max-width: 599px) { .order-search { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: .5rem; } }
 .filter-chips { display: flex; gap: .5rem; overflow-x: auto; padding-bottom: .25rem; scrollbar-width: thin; }
 .filter-chip { flex: 0 0 auto; display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; padding: 0 1rem; border: 1px solid var(--caramel-border); border-radius: 2rem; background: var(--cream-surface); color: var(--brown-700); font-size: .9375rem; font-weight: 600; transition: background-color 160ms ease, color 160ms ease; }
 .filter-chip[aria-pressed="true"] { background: var(--brown-700); border-color: var(--brown-700); color: var(--on-primary); }
@@ -166,8 +164,6 @@
 .order-available h3 { margin: 0; font-size: 1.125rem; display: flex; align-items: center; gap: .5rem; }
 
 /* Conmutador de vista de pedidos: tarjetas (por defecto), lista compacta y mosaico. */
-.orders-toolbar { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
-.orders-toolbar .filter-chips { flex: 1 1 auto; min-width: 0; }
 .view-switch { flex: 0 0 auto; display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--caramel-border); border-radius: 2rem; background: var(--cream-surface); }
 .view-switch button { display: inline-grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--brown-700); transition: background-color 160ms ease, color 160ms ease; }
 .view-switch button[aria-pressed="true"] { background: var(--brown-700); color: var(--on-primary); }
@@ -187,29 +183,42 @@
   .orders-view--mosaico .order-card { padding: .625rem; }
 }
 
-/* Vista «Lista compacta»: tabla tipo conjunto de datos (la lista de tarjetas se oculta). */
+/* Controles compactos: filtros arriba; debajo búsqueda, fecha y vista en una sola fila (dos en el celular). */
+.orders-controls { display: flex; flex-direction: column; gap: .5rem; min-width: 0; }
+.order-find { display: grid; grid-template-columns: minmax(0, 1fr) 11rem auto; gap: .5rem; align-items: center; }
+.order-find .management-field { gap: 0; }
+.order-find .management-field > label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.order-find input, .order-find select { min-height: 44px; padding-block: .375rem; }
+@media (max-width: 599px) {
+  .order-find { grid-template-columns: minmax(0, 1fr) auto; }
+  .order-find > :first-child { grid-column: 1 / -1; }
+}
+.filter-chip:focus-visible { outline-width: 2px; outline-offset: 1px; }
+.view-switch button:focus-visible { outline-width: 2px; outline-offset: -2px; }
 
+/* Vista «Lista compacta»: tabla dentro de un cuadro con encabezado fijo y desplazamiento propio. */
+.orders-table-wrap { overflow: auto; max-height: calc(100dvh - 19rem); min-height: 12rem; border: 1px solid var(--caramel-border); border-radius: var(--radius); background: var(--cream-surface); box-shadow: var(--shadow); overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--caramel-border) transparent; }
+.orders-table { width: 100%; min-width: 50rem; border-collapse: separate; border-spacing: 0; font-size: .9375rem; }
+.orders-table thead th { position: sticky; top: 0; z-index: 1; padding: .625rem .875rem; text-align: left; background: var(--cream-deep); color: var(--brown-800); font-size: .8125rem; font-weight: 700; letter-spacing: .02em; white-space: nowrap; border-bottom: 1px solid var(--caramel-border); }
+.orders-table thead th.num { text-align: right; }
+.orders-table tbody th, .orders-table tbody td { padding: .75rem .875rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--caramel-border); }
+.orders-table tbody tr:last-child > * { border-bottom: 0; }
+.orders-table tbody th { font-weight: 700; }
+.orders-table tbody tr:hover > * { background: var(--cream-deep); }
+.orders-table tbody tr > :first-child { box-shadow: inset 5px 0 0 var(--muted); padding-left: 1.125rem; }
+.orders-table .order-row--assigned > :first-child { box-shadow: inset 5px 0 0 var(--caramel); }
+.orders-table .order-row--transit > :first-child { box-shadow: inset 5px 0 0 var(--caramel-strong); }
+.orders-table .order-row--done > :first-child { box-shadow: inset 5px 0 0 var(--green); }
+.orders-table .order-row--cancelled > :first-child { box-shadow: inset 5px 0 0 var(--red); }
+.orders-table .order-row--cancelled > * { opacity: .85; }
+.orders-table .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 700; }
+.orders-table .mono { font-family: ui-monospace, Consolas, monospace; color: var(--muted); font-weight: 400; white-space: nowrap; }
+.orders-table td.wide { min-width: 11rem; max-width: 18rem; }
 .orders-table td.actions { min-width: 13.5rem; }
 .orders-table .order-actions { gap: .5rem; }
 .orders-table .order-actions > button { flex: 1 1 auto; min-height: 44px; padding: 0 .75rem; }
 .orders-table .order-assign { flex: 1 1 100%; }
-
-/* Tabla de pedidos con el mismo lenguaje que las tarjetas: filas redondeadas, borde de estado a la izquierda. */
-.orders-table-wrap { overflow-x: auto; margin: 0 -2px; padding: 2px 2px 6px; }
-.orders-table { width: 100%; min-width: 56rem; border-collapse: separate; border-spacing: 0 .625rem; font-size: .9375rem; }
-.orders-table thead th { padding: 0 .875rem .125rem; text-align: left; color: var(--muted); font-size: .8125rem; font-weight: 700; letter-spacing: .02em; white-space: nowrap; }
-.orders-table thead th.num { text-align: right; }
-.orders-table tbody th, .orders-table tbody td { padding: .875rem; text-align: left; vertical-align: top; background: var(--cream-surface); border-top: 1px solid var(--caramel-border); border-bottom: 1px solid var(--caramel-border); }
-.orders-table tbody th { font-weight: 700; }
-.orders-table tbody tr > :first-child { border-left: 5px solid var(--muted); border-radius: var(--radius) 0 0 var(--radius); }
-.orders-table tbody tr > :last-child { border-right: 1px solid var(--caramel-border); border-radius: 0 var(--radius) var(--radius) 0; }
-.orders-table tbody tr:hover > * { background: var(--cream-deep); }
-.orders-table .order-row--assigned > :first-child { border-left-color: var(--caramel); }
-.orders-table .order-row--transit > :first-child { border-left-color: var(--caramel-strong); }
-.orders-table .order-row--done > :first-child { border-left-color: var(--green); }
-.orders-table .order-row--cancelled > * { opacity: .85; }
-.orders-table .order-row--cancelled > :first-child { border-left-color: var(--red); }
-.orders-table .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 700; }
-.orders-table .mono { font-family: ui-monospace, Consolas, monospace; color: var(--muted); font-weight: 400; white-space: nowrap; }
-.orders-table td.wide { min-width: 11rem; max-width: 16rem; }
-.orders-table tbody tr { animation: fade-up 300ms var(--ease-out) both; }
+@media (max-width: 599px) {
+  .filter-chips { flex-wrap: wrap; overflow: visible; gap: .375rem; }
+  .filter-chip { min-height: 40px; padding: 0 .75rem; gap: .375rem; font-size: .9rem; }
+}

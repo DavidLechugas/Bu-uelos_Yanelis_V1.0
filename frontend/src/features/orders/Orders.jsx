@@ -239,97 +239,98 @@ export function Orders({ user, active = true }) {
   const visible = mine
     .filter(current.match)
     .filter((order) => matchesDate(order, range, now) && matchesSearch(order, search));
+  const showActions = visible.some((order) => NEXT[order.estado] || (isAdmin && OPEN.has(order.estado)));
   const narrowed = search.trim() !== '' || range !== 'todas';
   const totalPreview = Number((draft?.totalCop ?? '').replace(/\D/g, ''));
 
   const renderActions = (order, busy, next) => (
     <div className="order-actions">
-        {isAdmin && ASSIGNABLE.has(order.estado) && (
-          <div className="management-field order-assign">
-            <label htmlFor={`assign-${order.id}`}>Asignar a</label>
-            <select
-              id={`assign-${order.id}`}
-              value={order.domiciliarioId ?? ''}
-              disabled={busy}
-              onChange={(event) => run(
-                order.id,
-                () => ordersApi.assign(order.id, event.target.value || null),
-                (updated) => updated.domiciliarioNombre
-                  ? 'Pedido asignado.'
-                  : 'Pedido sin asignar.',
-              )}
-            >
-              <option value="">Sin asignar</option>
-              {activeCouriers.map((courier) => (
-                <option key={courier.id} value={courier.id}>{courier.nombre}</option>
-              ))}
-              {order.domiciliarioId && !activeCouriers.some((courier) => courier.id === order.domiciliarioId) && (
-                <option value={order.domiciliarioId} disabled>{order.domiciliarioNombre} (inactivo)</option>
-              )}
-            </select>
-          </div>
-        )}
-        {next && (
+      {isAdmin && ASSIGNABLE.has(order.estado) && (
+        <div className="management-field order-assign">
+          <label htmlFor={`assign-${order.id}`}>Asignar a</label>
+          <select
+            id={`assign-${order.id}`}
+            value={order.domiciliarioId ?? ''}
+            disabled={busy}
+            onChange={(event) => run(
+              order.id,
+              () => ordersApi.assign(order.id, event.target.value || null),
+              (updated) => updated.domiciliarioNombre
+                ? 'Pedido asignado.'
+                : 'Pedido sin asignar.',
+            )}
+          >
+            <option value="">Sin asignar</option>
+            {activeCouriers.map((courier) => (
+              <option key={courier.id} value={courier.id}>{courier.nombre}</option>
+            ))}
+            {order.domiciliarioId && !activeCouriers.some((courier) => courier.id === order.domiciliarioId) && (
+              <option value={order.domiciliarioId} disabled>{order.domiciliarioNombre} (inactivo)</option>
+            )}
+          </select>
+        </div>
+      )}
+      {next && (
+        <button
+          type="button"
+          className="btn-primary"
+          disabled={busy}
+          onClick={() => run(
+            order.id,
+            () => ordersApi.setStatus(order.id, next.estado),
+            (updated) => `Pedido ${STATUS[updated.estado].label.toLowerCase()}.`,
+          )}
+        >
+          {isAdmin ? next.admin : next.courier}
+        </button>
+      )}
+      {isAdmin && OPEN.has(order.estado) && (
+        <button
+          type="button"
+          className="btn-secondary"
+          disabled={busy}
+          aria-label={`Editar pedido de ${order.cliente}`}
+          onClick={() => {
+            setDraft({
+              id: order.id,
+              cliente: order.cliente,
+              telefono: order.telefono,
+              direccion: order.direccion,
+              detalle: order.detalle,
+              totalCop: String(order.totalCop),
+              domiciliarioId: order.domiciliarioId ?? '',
+              items: [],
+              baseTotal: order.totalCop,
+            });
+            setErrors({});
+            setNotice('');
+          }}
+        >
+          Editar
+        </button>
+      )}
+      {isAdmin && OPEN.has(order.estado) && (confirmCancel === order.id ? (
+        <div className="order-confirm" role="group" aria-label={`Confirmar cancelación del pedido de ${order.cliente}`}>
+          <span>¿Cancelar este pedido?</span>
           <button
             type="button"
-            className="btn-primary"
+            className="btn-danger"
             disabled={busy}
             onClick={() => run(
               order.id,
-              () => ordersApi.setStatus(order.id, next.estado),
-              (updated) => `Pedido ${STATUS[updated.estado].label.toLowerCase()}.`,
+              () => ordersApi.setStatus(order.id, 'CANCELADO'),
+              () => 'Pedido cancelado.',
             )}
           >
-            {isAdmin ? next.admin : next.courier}
+            Sí, cancelar
           </button>
-        )}
-        {isAdmin && OPEN.has(order.estado) && (
-          <button
-            type="button"
-            className="btn-secondary"
-            disabled={busy}
-            aria-label={`Editar pedido de ${order.cliente}`}
-            onClick={() => {
-              setDraft({
-                id: order.id,
-                cliente: order.cliente,
-                telefono: order.telefono,
-                direccion: order.direccion,
-                detalle: order.detalle,
-                totalCop: String(order.totalCop),
-                domiciliarioId: order.domiciliarioId ?? '',
-                items: [],
-                baseTotal: order.totalCop,
-              });
-              setErrors({});
-              setNotice('');
-            }}
-          >
-            Editar
-          </button>
-        )}
-        {isAdmin && OPEN.has(order.estado) && (confirmCancel === order.id ? (
-          <div className="order-confirm" role="group" aria-label={`Confirmar cancelación del pedido de ${order.cliente}`}>
-            <span>¿Cancelar este pedido?</span>
-            <button
-              type="button"
-              className="btn-danger"
-              disabled={busy}
-              onClick={() => run(
-                order.id,
-                () => ordersApi.setStatus(order.id, 'CANCELADO'),
-                () => 'Pedido cancelado.',
-              )}
-            >
-              Sí, cancelar
-            </button>
-            <button type="button" className="btn-secondary" onClick={() => setConfirmCancel(null)}>No</button>
-          </div>
-        ) : (
-          <button type="button" className="btn-secondary" disabled={busy} onClick={() => setConfirmCancel(order.id)}>
-            Cancelar pedido
-          </button>
-        ))}
+          <button type="button" className="btn-secondary" onClick={() => setConfirmCancel(null)}>No</button>
+        </div>
+      ) : (
+        <button type="button" className="btn-secondary" disabled={busy} onClick={() => setConfirmCancel(order.id)}>
+          Cancelar pedido
+        </button>
+      ))}
     </div>
   );
 
@@ -457,8 +458,8 @@ export function Orders({ user, active = true }) {
         </section>
       )}
 
-      <div className="orders-toolbar">
-      <div className="filter-chips" role="group" aria-label="Filtrar pedidos">
+      <div className="orders-controls">
+        <div className="filter-chips" role="group" aria-label="Filtrar pedidos">
         {FILTERS.map((item) => (
           <button
             key={item.id}
@@ -472,30 +473,29 @@ export function Orders({ user, active = true }) {
           </button>
         ))}
       </div>
-      <div className="view-switch" role="group" aria-label="Vista de los pedidos">
-        {VIEWS.map(({ id, label, Icon }) => (
-          <button key={id} type="button" aria-pressed={view === id} aria-label={label} title={label} onClick={() => changeView(id)}>
-            <Icon size={20} />
-          </button>
-        ))}
-      </div>
-      </div>
-
-      <div className="order-search">
-        <ManagementField
-          label="Buscar pedidos"
-          type="search"
-          inputMode="search"
-          autoComplete="off"
-          placeholder="Cliente, teléfono o dirección"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-        <div className="management-field">
-          <label htmlFor="order-range">Fecha</label>
-          <select id="order-range" value={range} onChange={(event) => setRange(event.target.value)}>
-            {DATE_RANGES.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
-          </select>
+        <div className="order-find">
+          <ManagementField
+            label="Buscar pedidos"
+            type="search"
+            inputMode="search"
+            autoComplete="off"
+            placeholder="Buscar por cliente, teléfono o dirección"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          <div className="management-field order-find-date">
+            <label htmlFor="order-range">Fecha</label>
+            <select id="order-range" value={range} onChange={(event) => setRange(event.target.value)}>
+              {DATE_RANGES.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+            </select>
+          </div>
+          <div className="view-switch" role="group" aria-label="Vista de los pedidos">
+            {VIEWS.map(({ id, label, Icon }) => (
+              <button key={id} type="button" aria-pressed={view === id} aria-label={label} title={label} onClick={() => changeView(id)}>
+                <Icon size={20} />
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -532,7 +532,7 @@ export function Orders({ user, active = true }) {
                 <th scope="col">Fecha</th>
                 <th scope="col">Domicilio</th>
                 <th scope="col">Estado</th>
-                <th scope="col">Acciones</th>
+                {showActions && <th scope="col">Acciones</th>}
               </tr>
             </thead>
             <tbody>
@@ -547,7 +547,7 @@ export function Orders({ user, active = true }) {
                     <td><time dateTime={order.creadoEn}>{dateTime.format(new Date(order.creadoEn))}</time></td>
                     <td>{courierCell(order)}</td>
                     <td><span className={`status-badge status-badge--${status.tone}`}>{isLocal(order) ? 'Local' : status.label}</span></td>
-                    <td className="actions">{renderActions(order, busyId === order.id, NEXT[order.estado])}</td>
+                    {showActions && <td className="actions">{renderActions(order, busyId === order.id, NEXT[order.estado])}</td>}
                   </tr>
                 );
               })}
