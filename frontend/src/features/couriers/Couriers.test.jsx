@@ -64,7 +64,7 @@ describe('Couriers', () => {
   it('desactiva y cambia la contraseña', async () => {
     const { calls } = mockApi({
       'GET /api/couriers': { body: [LUIS] },
-      'PATCH /api/couriers/u-luis/activo': { body: { ...LUIS, activo: false } },
+      'PATCH /api/couriers/u-luis/activo': { body: { ...LUIS, activo: false, pedidosActivos: 0 } },
       'PUT /api/couriers/u-luis/password': { body: { ...LUIS, activo: false } },
     });
     const user = userEvent.setup();
@@ -78,5 +78,21 @@ describe('Couriers', () => {
     await user.click(screen.getByRole('button', { name: 'Guardar contraseña' }));
     expect(await screen.findByText('Contraseña actualizada.')).toBeInTheDocument();
     expect(calls.at(-1).body).toEqual({ password: 'nueva-clave-1' });
+  });
+
+  it('al desactivar avisa de los pedidos liberados y de los que siguen en camino', async () => {
+    mockApi({
+      'GET /api/couriers': { body: [LUIS] },
+      'PATCH /api/couriers/u-luis/activo': {
+        body: { ...LUIS, activo: false, pedidosActivos: 1, pedidosLiberados: 2 },
+      },
+    });
+    const user = userEvent.setup();
+    render(<Couriers />);
+    await user.click(await screen.findByRole('button', { name: 'Desactivar' }));
+    expect(await screen.findByText(
+      'Domiciliario desactivado. 2 pedidos asignados volvieron a Pendientes. '
+      + 'Aún tiene 1 pedido en camino: ciérralo desde Pedidos.',
+    )).toBeInTheDocument();
   });
 });

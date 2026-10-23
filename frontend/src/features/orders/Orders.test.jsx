@@ -327,3 +327,40 @@ describe('Orders — venta en local y pedidos disponibles', () => {
     expect(screen.getByRole('link', { name: 'Llamar a Rosa' })).toBeInTheDocument();
   });
 });
+
+describe('Orders — vista', () => {
+  it('cambia entre tarjetas, lista y mosaico y recuerda la elección', async () => {
+    localStorage.removeItem('bunuelos.orders.view');
+    mockApi({
+      'GET /api/orders': { body: [order({ id: 'o-1', estado: 'ASIGNADO' })] },
+      'GET /api/couriers': { body: [] },
+    });
+    const user = userEvent.setup();
+    const { unmount } = render(<Orders user={ADMIN} />);
+    await screen.findByRole('heading', { name: 'Carmen' });
+    const list = screen.getByRole('list');
+    expect(list).toHaveClass('orders-view--tarjetas');
+    expect(screen.getByRole('button', { name: 'Tarjetas' })).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(screen.getByRole('button', { name: 'Lista compacta' }));
+    const table = screen.getByRole('table');
+    expect(within(table).getAllByRole('columnheader').map((cell) => cell.textContent))
+      .toEqual(['ID', 'Cliente', 'Productos', 'Total', 'Fecha', 'Domicilio', 'Estado', 'Acciones']);
+    expect(within(table).getByRole('rowheader', { name: 'Carmen' })).toBeInTheDocument();
+    expect(within(table).getByRole('cell', { name: 'Sin asignar' })).toBeInTheDocument();
+    // La tabla también permite editar y cancelar (no se dibujan las tarjetas a la vez).
+    expect(within(table).getByRole('button', { name: 'Editar pedido de Carmen' })).toBeInTheDocument();
+    expect(within(table).getByRole('button', { name: 'Cancelar pedido' })).toBeInTheDocument();
+    expect(screen.queryByRole('list')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Mosaico' }));
+    expect(screen.getByRole('list')).toHaveClass('orders-view--mosaico');
+    expect(screen.getByRole('button', { name: 'Mosaico' })).toHaveAttribute('aria-pressed', 'true');
+
+    unmount();
+    render(<Orders user={ADMIN} />);
+    await screen.findByRole('heading', { name: 'Carmen' });
+    expect(screen.getByRole('list')).toHaveClass('orders-view--mosaico');
+    localStorage.removeItem('bunuelos.orders.view');
+  });
+});

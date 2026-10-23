@@ -114,3 +114,26 @@ export const EyeOffIcon = (props) => (
     <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
   </Svg>
 );
+
+export const CardsViewIcon = (props) => (
+  <Svg {...props}>
+    <rect x="3" y="3.5" width="18" height="7" rx="1.5" />
+    <rect x="3" y="13.5" width="18" height="7" rx="1.5" />
+  </Svg>
+);
+
+export const ListViewIcon = (props) => (
+  <Svg {...props}>
+    <path d="M8 6h13M8 12h13M8 18h13" />
+    <path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
+  </Svg>
+);
+
+export const GridViewIcon = (props) => (
+  <Svg {...props}>
+    <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
+    <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
+    <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
+    <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
+  </Svg>
+);

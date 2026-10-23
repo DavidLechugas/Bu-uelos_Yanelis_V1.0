@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal } from '../../components/Modal.jsx';
 import { Spinner } from '../../components/Spinner.jsx';
 import { couriersApi, ordersApi } from '../../api/client.js';
-import { ChatIcon, MapPinIcon, PhoneIcon } from '../../components/icons.jsx';
+import { CardsViewIcon, ChatIcon, GridViewIcon, ListViewIcon, MapPinIcon, PhoneIcon } from '../../components/icons.jsx';
 import { ManagementField } from '../ManagementField.jsx';
 import { Toast, useNotice } from '../feedback/Toast.jsx';
 import { SAVE_DONE_MS, pause } from '../feedback/timing.js';
@@ -34,12 +34,31 @@ const NEXT = {
   EN_CAMINO: { estado: 'ENTREGADO', admin: 'Marcar entregado', courier: 'Marcar entregado' },
 };
 
+const VIEWS = [
+  { id: 'tarjetas', label: 'Tarjetas', Icon: CardsViewIcon },
+  { id: 'lista', label: 'Lista compacta', Icon: ListViewIcon },
+  { id: 'mosaico', label: 'Mosaico', Icon: GridViewIcon },
+];
+const VIEW_KEY = 'bunuelos.orders.view';
+
+function readView() {
+  try {
+    const saved = localStorage.getItem(VIEW_KEY);
+    return VIEWS.some((view) => view.id === saved) ? saved : 'tarjetas';
+  } catch {
+    return 'tarjetas';
+  }
+}
+
 const EMPTY_DRAFT = { tipo: 'DOMICILIO', cliente: '', telefono: '', direccion: '', detalle: '', totalCop: '', domiciliarioId: '', items: [], baseTotal: 0 };
 const MAX_DETAIL = 500;
 const POLL_MS = 10000;
 const CLOCK_MS = 30000;
 /** Cada cuántos refrescos se vuelve a pedir el equipo (cambia poco). */
 const COURIERS_EVERY = 6;
+const shortId = (id) => `#${String(id).slice(-6).toUpperCase()}`;
+const courierCell = (order) => (isLocal(order) ? 'No' : order.domiciliarioNombre ?? 'Sin asignar');
+
 const currency = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
 const dateTime = new Intl.DateTimeFormat('es-CO', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Bogota' });
 
@@ -89,6 +108,7 @@ export function Orders({ user, active = true }) {
   const [saved, setSaved] = useState('');
   const [search, setSearch] = useState('');
   const [range, setRange] = useState('todas');
+  const [view, setView] = useState(readView);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState(null);
@@ -209,6 +229,10 @@ export function Orders({ user, active = true }) {
     setDraft({ ...draft, items, totalCop: total ? String(total) : '' });
   };
   const activeCouriers = couriers.filter((courier) => courier.activo);
+  const changeView = (next) => {
+    setView(next);
+    try { localStorage.setItem(VIEW_KEY, next); } catch { /* sin almacenamiento: solo no se recuerda */ }
+  };
   const current = FILTERS.find((item) => item.id === filter);
   const available = isAdmin ? [] : (orders ?? []).filter(isAvailable);
   const mine = isAdmin ? (orders ?? []) : (orders ?? []).filter((order) => !isAvailable(order));
@@ -217,6 +241,97 @@ export function Orders({ user, active = true }) {
     .filter((order) => matchesDate(order, range, now) && matchesSearch(order, search));
   const narrowed = search.trim() !== '' || range !== 'todas';
   const totalPreview = Number((draft?.totalCop ?? '').replace(/\D/g, ''));
+
+  const renderActions = (order, busy, next) => (
+    <div className="order-actions">
+        {isAdmin && ASSIGNABLE.has(order.estado) && (
+          <div className="management-field order-assign">
+            <label htmlFor={`assign-${order.id}`}>Asignar a</label>
+            <select
+              id={`assign-${order.id}`}
+              value={order.domiciliarioId ?? ''}
+              disabled={busy}
+              onChange={(event) => run(
+                order.id,
+                () => ordersApi.assign(order.id, event.target.value || null),
+                (updated) => updated.domiciliarioNombre
+                  ? 'Pedido asignado.'
+                  : 'Pedido sin asignar.',
+              )}
+            >
+              <option value="">Sin asignar</option>
+              {activeCouriers.map((courier) => (
+                <option key={courier.id} value={courier.id}>{courier.nombre}</option>
+              ))}
+              {order.domiciliarioId && !activeCouriers.some((courier) => courier.id === order.domiciliarioId) && (
+                <option value={order.domiciliarioId} disabled>{order.domiciliarioNombre} (inactivo)</option>
+              )}
+            </select>
+          </div>
+        )}
+        {next && (
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={busy}
+            onClick={() => run(
+              order.id,
+              () => ordersApi.setStatus(order.id, next.estado),
+              (updated) => `Pedido ${STATUS[updated.estado].label.toLowerCase()}.`,
+            )}
+          >
+            {isAdmin ? next.admin : next.courier}
+          </button>
+        )}
+        {isAdmin && OPEN.has(order.estado) && (
+          <button
+            type="button"
+            className="btn-secondary"
+            disabled={busy}
+            aria-label={`Editar pedido de ${order.cliente}`}
+            onClick={() => {
+              setDraft({
+                id: order.id,
+                cliente: order.cliente,
+                telefono: order.telefono,
+                direccion: order.direccion,
+                detalle: order.detalle,
+                totalCop: String(order.totalCop),
+                domiciliarioId: order.domiciliarioId ?? '',
+                items: [],
+                baseTotal: order.totalCop,
+              });
+              setErrors({});
+              setNotice('');
+            }}
+          >
+            Editar
+          </button>
+        )}
+        {isAdmin && OPEN.has(order.estado) && (confirmCancel === order.id ? (
+          <div className="order-confirm" role="group" aria-label={`Confirmar cancelación del pedido de ${order.cliente}`}>
+            <span>¿Cancelar este pedido?</span>
+            <button
+              type="button"
+              className="btn-danger"
+              disabled={busy}
+              onClick={() => run(
+                order.id,
+                () => ordersApi.setStatus(order.id, 'CANCELADO'),
+                () => 'Pedido cancelado.',
+              )}
+            >
+              Sí, cancelar
+            </button>
+            <button type="button" className="btn-secondary" onClick={() => setConfirmCancel(null)}>No</button>
+          </div>
+        ) : (
+          <button type="button" className="btn-secondary" disabled={busy} onClick={() => setConfirmCancel(order.id)}>
+            Cancelar pedido
+          </button>
+        ))}
+    </div>
+  );
 
   return (
     <section className="management-section" aria-labelledby="orders-title">
@@ -342,6 +457,7 @@ export function Orders({ user, active = true }) {
         </section>
       )}
 
+      <div className="orders-toolbar">
       <div className="filter-chips" role="group" aria-label="Filtrar pedidos">
         {FILTERS.map((item) => (
           <button
@@ -355,6 +471,14 @@ export function Orders({ user, active = true }) {
             {orders && <span className="filter-chip-count">{mine.filter(item.match).length}</span>}
           </button>
         ))}
+      </div>
+      <div className="view-switch" role="group" aria-label="Vista de los pedidos">
+        {VIEWS.map(({ id, label, Icon }) => (
+          <button key={id} type="button" aria-pressed={view === id} aria-label={label} title={label} onClick={() => changeView(id)}>
+            <Icon size={20} />
+          </button>
+        ))}
+      </div>
       </div>
 
       <div className="order-search">
@@ -395,7 +519,45 @@ export function Orders({ user, active = true }) {
         </p>
       )}
 
-      <ul className="management-list">
+      {view === 'lista' && visible.length > 0 && (
+        <div className="orders-table-wrap">
+          <table className="orders-table">
+            <caption className="visually-hidden">Pedidos</caption>
+            <thead>
+              <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Cliente</th>
+                <th scope="col">Productos</th>
+                <th scope="col" className="num">Total</th>
+                <th scope="col">Fecha</th>
+                <th scope="col">Domicilio</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((order) => {
+                const status = STATUS[order.estado];
+                return (
+                  <tr key={order.id} className={`order-row--${status.tone}`}>
+                    <td className="mono">{shortId(order.id)}</td>
+                    <th scope="row">{order.cliente}</th>
+                    <td className="wide">{order.detalle}</td>
+                    <td className="num">${currency.format(order.totalCop)}</td>
+                    <td><time dateTime={order.creadoEn}>{dateTime.format(new Date(order.creadoEn))}</time></td>
+                    <td>{courierCell(order)}</td>
+                    <td><span className={`status-badge status-badge--${status.tone}`}>{isLocal(order) ? 'Local' : status.label}</span></td>
+                    <td className="actions">{renderActions(order, busyId === order.id, NEXT[order.estado])}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {view !== 'lista' && (
+      <ul className={`management-list orders-view--${view}`}>
         {visible.map((order) => {
           const status = STATUS[order.estado];
           const next = NEXT[order.estado];
@@ -410,18 +572,18 @@ export function Orders({ user, active = true }) {
               <dl className="order-meta">
                 {!isLocal(order) && (
                   <>
-                    <div>
+                    <div className="meta-extra">
                       <dt>Dirección</dt>
                       <dd>{order.direccion}</dd>
                     </div>
-                    <div>
+                    <div className="meta-extra">
                       <dt>Teléfono</dt>
                       <dd>{order.telefono}</dd>
                     </div>
                   </>
                 )}
                 <div><dt>Total</dt><dd className="order-total">${currency.format(order.totalCop)}</dd></div>
-                {isAdmin && !isLocal(order) && <div><dt>Domiciliario</dt><dd>{order.domiciliarioNombre ?? 'Sin asignar'}</dd></div>}
+                {isAdmin && !isLocal(order) && <div className="meta-extra"><dt>Domiciliario</dt><dd>{order.domiciliarioNombre ?? 'Sin asignar'}</dd></div>}
                 <div><dt>Creado</dt><dd><time dateTime={order.creadoEn} title={dateTime.format(new Date(order.creadoEn))}>{timeAgo(order.creadoEn, now)}</time></dd></div>
               </dl>
 
@@ -439,98 +601,12 @@ export function Orders({ user, active = true }) {
                 </div>
               )}
 
-              <div className="order-actions">
-                {isAdmin && ASSIGNABLE.has(order.estado) && (
-                  <div className="management-field order-assign">
-                    <label htmlFor={`assign-${order.id}`}>Asignar a</label>
-                    <select
-                      id={`assign-${order.id}`}
-                      value={order.domiciliarioId ?? ''}
-                      disabled={busy}
-                      onChange={(event) => run(
-                        order.id,
-                        () => ordersApi.assign(order.id, event.target.value || null),
-                        (updated) => updated.domiciliarioNombre
-                          ? 'Pedido asignado.'
-                          : 'Pedido sin asignar.',
-                      )}
-                    >
-                      <option value="">Sin asignar</option>
-                      {activeCouriers.map((courier) => (
-                        <option key={courier.id} value={courier.id}>{courier.nombre}</option>
-                      ))}
-                      {order.domiciliarioId && !activeCouriers.some((courier) => courier.id === order.domiciliarioId) && (
-                        <option value={order.domiciliarioId} disabled>{order.domiciliarioNombre} (inactivo)</option>
-                      )}
-                    </select>
-                  </div>
-                )}
-                {next && (
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    disabled={busy}
-                    onClick={() => run(
-                      order.id,
-                      () => ordersApi.setStatus(order.id, next.estado),
-                      (updated) => `Pedido ${STATUS[updated.estado].label.toLowerCase()}.`,
-                    )}
-                  >
-                    {isAdmin ? next.admin : next.courier}
-                  </button>
-                )}
-                {isAdmin && OPEN.has(order.estado) && (
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    disabled={busy}
-                    aria-label={`Editar pedido de ${order.cliente}`}
-                    onClick={() => {
-                      setDraft({
-                        id: order.id,
-                        cliente: order.cliente,
-                        telefono: order.telefono,
-                        direccion: order.direccion,
-                        detalle: order.detalle,
-                        totalCop: String(order.totalCop),
-                        domiciliarioId: order.domiciliarioId ?? '',
-                        items: [],
-                        baseTotal: order.totalCop,
-                      });
-                      setErrors({});
-                      setNotice('');
-                    }}
-                  >
-                    Editar
-                  </button>
-                )}
-                {isAdmin && OPEN.has(order.estado) && (confirmCancel === order.id ? (
-                  <div className="order-confirm" role="group" aria-label={`Confirmar cancelación del pedido de ${order.cliente}`}>
-                    <span>¿Cancelar este pedido?</span>
-                    <button
-                      type="button"
-                      className="btn-danger"
-                      disabled={busy}
-                      onClick={() => run(
-                        order.id,
-                        () => ordersApi.setStatus(order.id, 'CANCELADO'),
-                        () => 'Pedido cancelado.',
-                      )}
-                    >
-                      Sí, cancelar
-                    </button>
-                    <button type="button" className="btn-secondary" onClick={() => setConfirmCancel(null)}>No</button>
-                  </div>
-                ) : (
-                  <button type="button" className="btn-secondary" disabled={busy} onClick={() => setConfirmCancel(order.id)}>
-                    Cancelar pedido
-                  </button>
-                ))}
-              </div>
+              {renderActions(order, busy, next)}
             </li>
           );
         })}
       </ul>
+      )}
     </section>
   );
 }

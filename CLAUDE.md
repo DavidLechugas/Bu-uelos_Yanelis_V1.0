@@ -80,6 +80,8 @@ Además: admin edita pedidos abiertos (`PUT /api/orders/{id}`) y Productos se gu
 
 Además (2026-10-17): pedidos de tipo `DOMICILIO` o `LOCAL` (venta en local: nace Entregado, sin cliente ni domiciliario). Un domiciliario ve los pedidos pendientes sin asignar en «Disponibles» (sin teléfono) y los toma con `POST /api/orders/{id}/tomar` (atómico: el primero gana, el resto recibe 409). El formulario de pedido es una ventana flotante (`components/Modal.jsx`, con portal). Refresco de pedidos cada 10 s.
 
+Pedidos tiene un conmutador de vista (tarjetas, lista compacta = tabla ID/Cliente/Productos/Total/Fecha/Domicilio/Estado/Acciones, mosaico; las tres vistas comparten las mismas acciones; se recuerda por dispositivo en localStorage `bunuelos.orders.view`) y el backend rechaza (400) cambiar el `tipo` al editar un pedido: se cancela y se crea otro.
+
 La PWA ya está instalada en Android (confirmado por el usuario). Costo de domicilio
 separado: no acordado.
 

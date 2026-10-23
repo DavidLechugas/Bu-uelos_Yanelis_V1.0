@@ -23,6 +23,7 @@ import com.bunuelosyanelys.backend.auth.Role;
 import com.bunuelosyanelys.backend.auth.SessionService;
 import com.bunuelosyanelys.backend.common.ApiException;
 import com.bunuelosyanelys.backend.orders.OrderRepository;
+import com.bunuelosyanelys.backend.orders.OrderService;
 import com.bunuelosyanelys.backend.orders.OrderStatus;
 
 import jakarta.validation.Valid;
@@ -39,8 +40,9 @@ import jakarta.validation.constraints.Size;
 @RequestMapping("/api/couriers")
 public class CourierController {
 
+    /** pedidosLiberados: al desactivar, cuántos pedidos ASIGNADO volvieron a Pendientes (0 en el resto). */
     public record CourierView(String id, String nombre, String usuario, boolean activo, long pedidosActivos,
-            String foto) {
+            String foto, long pedidosLiberados) {
     }
 
     public record CreateCourierRequest(
@@ -66,14 +68,16 @@ public class CourierController {
 
     private final AppUserRepository users;
     private final OrderRepository orders;
+    private final OrderService orderService;
     private final PasswordEncoder encoder;
     private final SessionService sessions;
     private final Clock clock;
 
-    public CourierController(AppUserRepository users, OrderRepository orders, PasswordEncoder encoder,
-            SessionService sessions, Clock clock) {
+    public CourierController(AppUserRepository users, OrderRepository orders, OrderService orderService,
+            PasswordEncoder encoder, SessionService sessions, Clock clock) {
         this.users = users;
         this.orders = orders;
+        this.orderService = orderService;
         this.encoder = encoder;
         this.sessions = sessions;
         this.clock = clock;
@@ -106,10 +110,12 @@ public class CourierController {
         AppUser courier = find(id);
         courier.setActivo(request.activo());
         AppUser saved = users.save(courier);
+        long released = 0;
         if (!request.activo()) {
             sessions.revokeAll(id);
+            released = orderService.releaseAssigned(id);
         }
-        return view(saved);
+        return view(saved, released);
     }
 
     @PutMapping("/{id}/password")
@@ -128,7 +134,11 @@ public class CourierController {
     }
 
     private CourierView view(AppUser user) {
+        return view(user, 0);
+    }
+
+    private CourierView view(AppUser user, long released) {
         return new CourierView(user.getId(), user.getNombre(), user.getUsername(), user.isActivo(),
-                orders.countByDomiciliarioIdAndEstadoIn(user.getId(), ACTIVE), user.getFoto());
+                orders.countByDomiciliarioIdAndEstadoIn(user.getId(), ACTIVE), user.getFoto(), released);
     }
 }

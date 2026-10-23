@@ -220,6 +220,35 @@ class OrderFlowTest extends ApiTestSupport {
     }
 
     @Test
+    void alDesactivarUnDomiciliarioSusAsignadosVuelvenAPendientesYLosEnCaminoSeQuedan() throws Exception {
+        String asignado = createOrder(luis.getId());
+        String enCamino = createOrder(luis.getId());
+        String deMarta = createOrder(marta.getId());
+        setStatus(admin, enCamino, "EN_CAMINO").andExpect(status().isOk());
+
+        mvc.perform(admin.with(patch("/api/couriers/" + luis.getId() + "/activo"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json("activo", false)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activo").value(false))
+                .andExpect(jsonPath("$.pedidosLiberados").value(1))
+                .andExpect(jsonPath("$.pedidosActivos").value(1));
+
+        String lista = mvc.perform(admin.with(get("/api/orders")))
+                .andReturn().getResponse().getContentAsString();
+        java.util.Map<String, Object> liberado = orderById(lista, asignado);
+        org.junit.jupiter.api.Assertions.assertEquals("PENDIENTE", liberado.get("estado"));
+        org.junit.jupiter.api.Assertions.assertNull(liberado.get("domiciliarioId"));
+        org.junit.jupiter.api.Assertions.assertEquals("EN_CAMINO", orderById(lista, enCamino).get("estado"));
+        org.junit.jupiter.api.Assertions.assertEquals("ASIGNADO", orderById(lista, deMarta).get("estado"));
+    }
+
+    private static java.util.Map<String, Object> orderById(String listJson, String id) {
+        java.util.List<java.util.Map<String, Object>> found = JsonPath.read(listJson, "$[?(@.id=='" + id + "')]");
+        return found.get(0);
+    }
+
+    @Test
     void elAdminEditaUnPedidoAbiertoSinCambiarEstadoNiDomiciliario() throws Exception {
         String id = createOrder(luis.getId());
         mvc.perform(admin.with(put("/api/orders/" + id))
@@ -231,6 +260,22 @@ class OrderFlowTest extends ApiTestSupport {
                 .andExpect(jsonPath("$.totalCop").value(48000))
                 .andExpect(jsonPath("$.estado").value("ASIGNADO"))
                 .andExpect(jsonPath("$.domiciliarioNombre").value("Luis"));
+    }
+
+    @Test
+    void alEditarUnPedidoSeRechazaCambiarSuTipo() throws Exception {
+        String id = createOrder(luis.getId());
+        mvc.perform(admin.with(put("/api/orders/" + id))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json("tipo", "LOCAL", "detalle", "24 buñuelos", "totalCop", 48000)))
+                .andExpect(status().isBadRequest());
+        // Con su mismo tipo (o sin indicarlo, como un domicilio) sí se edita.
+        mvc.perform(admin.with(put("/api/orders/" + id))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json("tipo", "DOMICILIO", "cliente", "Carmen R.", "telefono", "3001112233",
+                        "direccion", "Calle 9 #1-2", "detalle", "24 buñuelos", "totalCop", 48000)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tipo").value("DOMICILIO"));
     }
 
     @Test

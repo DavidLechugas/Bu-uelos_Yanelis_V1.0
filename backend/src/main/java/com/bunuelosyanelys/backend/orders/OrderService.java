@@ -39,6 +39,8 @@ public class OrderService {
             OrderStatus.EN_CAMINO, OrderStatus.ENTREGADO);
 
     private static final Set<OrderStatus> ASSIGNABLE = Set.of(OrderStatus.PENDIENTE, OrderStatus.ASIGNADO);
+    private static final Set<OrderStatus> OPEN_STATUSES =
+            Set.of(OrderStatus.PENDIENTE, OrderStatus.ASIGNADO, OrderStatus.EN_CAMINO);
 
     private final OrderRepository orders;
     private final AppUserRepository users;
@@ -90,6 +92,19 @@ public class OrderService {
         return taken;
     }
 
+    /** Devuelve a Pendientes los pedidos aún sin salir (ASIGNADO) de un domiciliario; los EN_CAMINO no se tocan. */
+    public long releaseAssigned(String courierId) {
+        Query query = new Query(new Criteria().andOperator(
+                Criteria.where("domiciliarioId").is(courierId),
+                Criteria.where("estado").is(OrderStatus.ASIGNADO)));
+        Update update = new Update()
+                .set("estado", OrderStatus.PENDIENTE)
+                .unset("domiciliarioId")
+                .unset("domiciliarioNombre")
+                .set("actualizadoEn", clock.instant());
+        return mongo.updateMulti(query, update, Order.class).getModifiedCount();
+    }
+
     public Order create(OrderController.CreateOrderRequest request) {
         Order order = new Order();
         applyDetails(order, request);
@@ -105,14 +120,28 @@ public class OrderService {
         return save(order);
     }
 
-    /** Corrige los datos de un pedido abierto; el domiciliario y el estado no cambian. */
+    /**
+     * Corrige los datos de un pedido abierto; el domiciliario y el estado no cambian.
+     * Solo se escriben los datos: así no pisa una toma o un cambio de estado simultáneos.
+     */
     public Order update(String orderId, OrderController.CreateOrderRequest request) {
         Order order = find(orderId);
         if (!order.getEstado().isOpen()) {
             throw new ApiException(HttpStatus.CONFLICT, "Solo se puede editar un pedido abierto (no entregado ni cancelado).");
         }
+        OrderType requested = request.tipo() == OrderType.LOCAL ? OrderType.LOCAL : OrderType.DOMICILIO;
+        if (requested != order.getTipo()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "No se puede cambiar el tipo de un pedido. Cancélalo y crea uno nuevo.");
+        }
         applyDetails(order, request);
-        return save(order);
+        Update update = new Update()
+                .set("cliente", order.getCliente())
+                .set("telefono", order.getTelefono())
+                .set("direccion", order.getDireccion())
+                .set("detalle", order.getDetalle())
+                .set("totalCop", order.getTotalCop());
+        return updateIfStill(orderId, Criteria.where("estado").in(OPEN_STATUSES), update);
     }
 
     public Order assign(String orderId, String courierId) {
@@ -122,7 +151,11 @@ public class OrderService {
                     "Solo se puede asignar un pedido pendiente o asignado (no en camino ni cerrado).");
         }
         applyCourier(order, courierId);
-        return save(order);
+        Update update = new Update()
+                .set("domiciliarioId", order.getDomiciliarioId())
+                .set("domiciliarioNombre", order.getDomiciliarioNombre())
+                .set("estado", order.getEstado());
+        return updateIfStill(orderId, Criteria.where("estado").in(ASSIGNABLE), update);
     }
 
     public Order changeStatus(String orderId, OrderStatus target, AuthUser user) {
@@ -140,8 +173,29 @@ public class OrderService {
                 || (target == OrderStatus.CANCELADO && current.isOpen()))) {
             throw new ApiException(HttpStatus.CONFLICT, "Ese cambio de estado no está permitido.");
         }
-        order.setEstado(target);
-        return save(order);
+        // Solo si el pedido sigue como lo leí (mismo estado y mismo domiciliario).
+        Criteria unchanged = new Criteria().andOperator(
+                Criteria.where("estado").is(current),
+                Criteria.where("domiciliarioId").is(order.getDomiciliarioId()));
+        return updateIfStill(orderId, unchanged, new Update().set("estado", target));
+    }
+
+    /**
+     * Aplica el cambio en una sola operación atómica y solo si el pedido sigue cumpliendo
+     * la condición; si otro lo cambió mientras tanto, responde 409 en vez de pisarlo.
+     */
+    private Order updateIfStill(String orderId, Criteria condition, Update update) {
+        Query query = new Query(new Criteria().andOperator(Criteria.where("_id").is(orderId), condition));
+        update.set("actualizadoEn", clock.instant());
+        Order changed = mongo.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Order.class);
+        if (changed == null) {
+            if (!orders.existsById(orderId)) {
+                throw new ApiException(HttpStatus.NOT_FOUND, "Pedido no encontrado.");
+            }
+            throw new ApiException(HttpStatus.CONFLICT,
+                    "El pedido cambió mientras lo editabas. Recarga la lista e inténtalo de nuevo.");
+        }
+        return changed;
     }
 
     private void applyDetails(Order order, OrderController.CreateOrderRequest request) {

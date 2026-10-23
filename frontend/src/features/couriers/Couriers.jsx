@@ -83,9 +83,24 @@ export function Couriers({ active = true }) {
     try {
       const updated = await couriersApi.setActive(courier.id, !courier.activo);
       replace(updated);
-      setNotice(updated.activo
-        ? 'Domiciliario activado.'
-        : 'Domiciliario desactivado.');
+      if (updated.activo) {
+        setNotice('Domiciliario activado.');
+      } else {
+        const released = updated.pedidosLiberados || 0;
+        const onTheWay = updated.pedidosActivos || 0;
+        const parts = ['Domiciliario desactivado.'];
+        if (released > 0) {
+          parts.push(released === 1
+            ? '1 pedido asignado volvió a Pendientes.'
+            : `${released} pedidos asignados volvieron a Pendientes.`);
+        }
+        if (onTheWay > 0) {
+          parts.push(onTheWay === 1
+            ? 'Aún tiene 1 pedido en camino: ciérralo desde Pedidos.'
+            : `Aún tiene ${onTheWay} pedidos en camino: ciérralos desde Pedidos.`);
+        }
+        setNotice(parts.join(' '));
+      }
     } catch (error) {
       setNotice(error.message, 'error');
     } finally {
