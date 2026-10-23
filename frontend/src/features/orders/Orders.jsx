@@ -28,7 +28,6 @@ const FILTERS = [
   { id: 'todos', label: 'Todos', match: () => true },
 ];
 
-/** Siguiente paso permitido; el servidor vuelve a validar cada transición. */
 const NEXT = {
   ASIGNADO: { estado: 'EN_CAMINO', admin: 'Marcar en camino', courier: 'Voy en camino' },
   EN_CAMINO: { estado: 'ENTREGADO', admin: 'Marcar entregado', courier: 'Marcar entregado' },
@@ -54,7 +53,6 @@ const EMPTY_DRAFT = { tipo: 'DOMICILIO', cliente: '', telefono: '', direccion: '
 const MAX_DETAIL = 500;
 const POLL_MS = 10000;
 const CLOCK_MS = 30000;
-/** Cada cuántos refrescos se vuelve a pedir el equipo (cambia poco). */
 const COURIERS_EVERY = 6;
 const shortId = (id) => `#${String(id).slice(-6).toUpperCase()}`;
 const courierCell = (order) => (isLocal(order) ? 'No' : order.domiciliarioNombre ?? 'Sin asignar');
@@ -75,7 +73,6 @@ export function whatsappUrl(phone) {
 const CONTACTABLE = new Set(['PENDIENTE', 'ASIGNADO', 'EN_CAMINO']);
 
 const isLocal = (order) => order.tipo === 'LOCAL';
-/** Pedido a domicilio pendiente que ningún domiciliario ha tomado. */
 const isAvailable = (order) => order.estado === 'PENDIENTE' && !order.domiciliarioId && !isLocal(order);
 
 function validate(draft) {
@@ -93,11 +90,6 @@ function validate(draft) {
   return { errors, total, detalle };
 }
 
-/**
- * Pedidos. Administrador: crea, asigna, avanza y cancela. Domiciliario:
- * ve solo los suyos y los marca «en camino» y «entregado». Se actualiza
- * cada 10 s mientras la vista está abierta y la pestaña visible.
- */
 export function Orders({ user, active = true }) {
   const isAdmin = user.role === 'ADMIN';
   const [orders, setOrders] = useState(null);
@@ -158,7 +150,6 @@ export function Orders({ user, active = true }) {
     };
   }, [active, load]);
 
-  // Reloj para «hace X min»: solo repinta cada 30 s mientras la vista está activa.
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!active) return undefined;
@@ -223,7 +214,6 @@ export function Orders({ user, active = true }) {
   }
 
   const change = (key) => (event) => setDraft({ ...draft, [key]: event.target.value });
-  /** El total sigue a los productos; al editar un pedido viejo se suma al total que ya tenía. */
   const changeItems = (items) => {
     const total = draft.baseTotal + itemsTotal(items);
     setDraft({ ...draft, items, totalCop: total ? String(total) : '' });

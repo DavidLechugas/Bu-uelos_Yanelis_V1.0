@@ -19,7 +19,6 @@ const SEXO = [
 const currency = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
 const bogotaDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' });
 
-/** Resumen de hoy (hora de Bogotá) a partir de los pedidos que ve este usuario. */
 export function dayStats(orders) {
   const today = bogotaDay.format(new Date());
   const delivered = orders.filter((order) => order.estado === 'ENTREGADO' && bogotaDay.format(new Date(order.actualizadoEn)) === today);
@@ -30,7 +29,6 @@ export function dayStats(orders) {
   };
 }
 
-/** Recorta al centro y reduce a 160×160 JPEG (~10 KB) en el propio teléfono. */
 export async function resizePhoto(file) {
   if (!file.type.startsWith('image/')) throw new Error('Elige un archivo de imagen.');
   let bitmap;
@@ -49,11 +47,6 @@ export async function resizePhoto(file) {
   return canvas.toDataURL('image/jpeg', 0.85);
 }
 
-/**
- * Ventana centrada de perfil (diálogo modal): nombre, foto pequeña y
- * cambio de contraseña. Escape u overlay lo cierran; el foco vuelve
- * al botón del perfil.
- */
 export function ProfilePanel({ open, user, onClose, onUpdated, onLogout }) {
   const panelRef = useRef(null);
   const previousFocus = useRef(null);
@@ -98,7 +91,7 @@ export function ProfilePanel({ open, user, onClose, onUpdated, onLogout }) {
       document.body.style.overflow = overflow;
       previousFocus.current?.focus?.();
     };
-    // Solo al abrir/cerrar: el borrador no debe reiniciarse en cada render.
+    // Solo al abrir o cerrar: el borrador no debe reiniciarse en cada render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 

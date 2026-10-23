@@ -3,20 +3,13 @@ import { AlertIcon, CheckCircleIcon, CloseIcon } from '../../components/icons.js
 
 const AUTO_CLOSE_MS = 5000;
 
-/**
- * Aviso de una vista: `[notice, setNotice]`. `setNotice('texto')` es un éxito,
- * `setNotice('texto', 'error')` un error y `setNotice('')` lo quita.
- */
+/** `setNotice(texto)` muestra un éxito, `setNotice(texto, 'error')` un error y `setNotice('')` lo quita. */
 export function useNotice() {
   const [notice, setNotice] = useState(null);
   const show = useCallback((text, tone = 'success') => setNotice(text ? { text, tone } : null), []);
   return [notice, show];
 }
 
-/**
- * Toast flotante sobre la barra inferior. Los éxitos se cierran solos a los
- * 5 s; los errores se quedan hasta cerrarlos. `role="status"` / `"alert"`.
- */
 export function Toast({ notice, onClose }) {
   const close = useRef(onClose);
   close.current = onClose;

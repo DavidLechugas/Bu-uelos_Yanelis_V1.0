@@ -3,7 +3,6 @@ package com.bunuelosyanelys.backend.products;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-/** Producto del catálogo. */
 @Document("products")
 public class Product {
 

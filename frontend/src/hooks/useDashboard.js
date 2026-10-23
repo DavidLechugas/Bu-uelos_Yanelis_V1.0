@@ -3,11 +3,7 @@ import { fetchDashboard } from '../api/client.js';
 
 export const DASHBOARD_POLL_MS = 15000;
 
-/**
- * Datos de demostración con la misma forma que la API.
- * Solo se usan tras pulsar explícitamente «Cargar datos de demostración»
- * en el estado de error: nunca como sustitución silenciosa.
- */
+/** Datos de demostración: solo tras pulsar «Cargar datos de demostración», nunca como sustituto silencioso. */
 export const DEMO_DASHBOARD = {
   saludo: 'Buenos días, Ana',
   ventasTotales: 428000,
@@ -25,12 +21,7 @@ export const DEMO_DASHBOARD = {
   ],
 };
 
-/**
- * Tablero en vivo: carga inicial con estados loading | error | success
- * y, después, refresco silencioso cada 15 s mientras la vista está activa
- * y la pestaña visible (también al volver a la pestaña). Si un refresco
- * falla se conservan los últimos datos y se marca `stale`.
- */
+/** Tablero en vivo: refresca cada 15 s con la vista activa y visible; si un refresco falla conserva los datos y marca `stale`. */
 export function useDashboard({ active = true } = {}) {
   const [state, setState] = useState({ status: 'loading', data: null, error: null, updatedAt: null, stale: false });
   const [attempt, setAttempt] = useState(0);

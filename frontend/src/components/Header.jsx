@@ -1,10 +1,6 @@
 import { MenuIcon } from './icons.jsx';
 import { Avatar } from './Avatar.jsx';
 
-/**
- * Encabezado caramelo: menú, título y botón de perfil (foto o inicial),
- * que abre el panel de perfil.
- */
 export function Header({ title, user, onOpenDrawer, onOpenProfile }) {
   return (
     <header className="app-header">

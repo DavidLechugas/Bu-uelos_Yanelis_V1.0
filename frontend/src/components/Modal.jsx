@@ -3,10 +3,7 @@ import { createPortal } from 'react-dom';
 import { CloseIcon } from './icons.jsx';
 import { trapTabKey } from './Drawer.jsx';
 
-/**
- * Ventana flotante centrada (diálogo modal): Escape y el fondo la cierran,
- * atrapa el foco, bloquea el scroll de atrás y devuelve el foco al cerrar.
- */
+/** Diálogo modal centrado: Escape o el fondo lo cierran, atrapa el foco y lo devuelve al cerrar. */
 export function Modal({ open, title, onClose, children }) {
   const panelRef = useRef(null);
   const previousFocus = useRef(null);

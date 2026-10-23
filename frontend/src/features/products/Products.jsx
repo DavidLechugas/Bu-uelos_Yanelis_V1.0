@@ -8,7 +8,6 @@ import { SAVE_DONE_MS, pause } from '../feedback/timing.js';
 const currency = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
 const EMPTY_DRAFT = { nombre: '', descripcion: '', precio: '', disponible: true };
 
-/** Catálogo guardado en el servidor (solo administrador). */
 export function Products({ active = true }) {
   const [products, setProducts] = useState(null);
   const [loadError, setLoadError] = useState('');

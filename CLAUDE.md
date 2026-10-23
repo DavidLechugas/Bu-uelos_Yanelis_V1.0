@@ -92,6 +92,8 @@ separado: no acordado.
 - Marca: la fuente es `docs/buñuelo.svg` (canasta de buñuelos, `#c37029`); `frontend/public/icons/logo.svg` es su recorte y de ahí salen los PNG de `public/icons/` (incluye `icon-maskable-*`). Los PNG 4K/FHD y el .rar de `docs/` son locales (ignorados).
 - Toda la app lleva de fondo (montado en `main.jsx`) `components/BunueloRain.jsx` (buñuelos a línea que caen lento; trazo `currentColor`, quieto con animaciones reducidas).
 - Esperas: `components/Spinner.jsx` (anillo que gira; con `done`, círculo con chulito verde que se dibuja). Pausas de confirmación en `features/feedback/timing.js` (0 en pruebas, cortas con animaciones reducidas). Botones con `aria-busy` muestran un anillo por CSS.
+- Comentarios mínimos: un comentario breve en alguna clase o método y solo cuando el porqué no sea evidente; sin comentarios que repitan el código. Las directivas (eslint, vitest) se conservan.
+- Los pedidos tienen índices en Mongo creados al arrancar (`orders/OrderIndexes`); las consultas nuevas deben apoyarse en ellos.
 - Mantener paleta crema/caramelo/marrón y accesibilidad (drawer: overlay, Escape, foco); no rediseñar.
 - Sin microservicios ni refactors masivos junto con auth.
 - Commit/push de trabajo verificado autorizado (solo archivos necesarios); cambios de recursos cloud,

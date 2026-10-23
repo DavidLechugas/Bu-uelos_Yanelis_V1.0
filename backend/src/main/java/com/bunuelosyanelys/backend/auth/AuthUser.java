@@ -1,6 +1,5 @@
 package com.bunuelosyanelys.backend.auth;
 
-/** Usuario autenticado de la petición actual (principal de Spring Security). */
 public record AuthUser(String id, String usuario, String nombre, Role role, String foto, String telefono,
         String correo, String sexo) {
 

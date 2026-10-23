@@ -1,7 +1,4 @@
-// Stub de 'virtual:pwa-register/react' para el entorno de tests
-// (jsdom no tiene service workers). Solo se usa cuando VITEST está
-// activo (ver resolve.alias en vite.config.js); en la build real
-// vite-plugin-pwa resuelve el módulo virtual genuino.
+// Stub de 'virtual:pwa-register/react' para jsdom, que no tiene service workers (ver resolve.alias en vite.config.js).
 import { useState } from 'react';
 
 /** Estado controlable desde los tests (sueño de prueba del stub). */

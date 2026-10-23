@@ -22,18 +22,13 @@ import com.bunuelosyanelys.backend.auth.AuthUser;
 import com.bunuelosyanelys.backend.auth.Role;
 import com.bunuelosyanelys.backend.common.ApiException;
 
-/**
- * Reglas de pedidos. Los permisos por rol están en SecurityConfig; aquí se
- * comprueba la propiedad (un domiciliario solo ve y mueve SUS pedidos) y
- * que cada cambio de estado sea una transición válida.
- */
+/** Reglas de pedidos: propiedad por domiciliario y transiciones de estado válidas. */
 @Service
 public class OrderService {
 
     static final int LIST_LIMIT = 200;
     static final String LOCAL_CLIENT = "Venta en local";
 
-    /** Transiciones que puede hacer el domiciliario asignado. */
     private static final Map<OrderStatus, OrderStatus> COURIER_TRANSITIONS = Map.of(
             OrderStatus.ASIGNADO, OrderStatus.EN_CAMINO,
             OrderStatus.EN_CAMINO, OrderStatus.ENTREGADO);
@@ -110,7 +105,6 @@ public class OrderService {
         applyDetails(order, request);
         order.setCreadoEn(clock.instant());
         if (request.tipo() == OrderType.LOCAL) {
-            // Venta en el local: sin domiciliario y cerrada desde el principio.
             order.setTipo(OrderType.LOCAL);
             order.setEstado(OrderStatus.ENTREGADO);
         } else {
@@ -120,10 +114,7 @@ public class OrderService {
         return save(order);
     }
 
-    /**
-     * Corrige los datos de un pedido abierto; el domiciliario y el estado no cambian.
-     * Solo se escriben los datos: así no pisa una toma o un cambio de estado simultáneos.
-     */
+    /** Escribe solo los datos, sin pisar una toma o un cambio de estado simultáneos. */
     public Order update(String orderId, OrderController.CreateOrderRequest request) {
         Order order = find(orderId);
         if (!order.getEstado().isOpen()) {
@@ -173,7 +164,6 @@ public class OrderService {
                 || (target == OrderStatus.CANCELADO && current.isOpen()))) {
             throw new ApiException(HttpStatus.CONFLICT, "Ese cambio de estado no está permitido.");
         }
-        // Solo si el pedido sigue como lo leí (mismo estado y mismo domiciliario).
         Criteria unchanged = new Criteria().andOperator(
                 Criteria.where("estado").is(current),
                 Criteria.where("domiciliarioId").is(order.getDomiciliarioId()));

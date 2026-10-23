@@ -24,18 +24,7 @@ import com.bunuelosyanelys.backend.auth.SessionService;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 
-/**
- * Seguridad de la API:
- * <ul>
- * <li>Sesión propia en cookie HttpOnly (ver {@link SessionService}); sin
- * HttpSession, formLogin ni Basic.</li>
- * <li>CSRF con cookie {@code XSRF-TOKEN} legible por JS y cabecera
- * {@code X-XSRF-TOKEN} (patrón double-submit). El token se genera en cada
- * respuesta que no lo tenga, también en la consulta de sesión anónima.</li>
- * <li>Permisos por rol aquí; la propiedad de cada pedido se comprueba en
- * el servicio.</li>
- * </ul>
- */
+/** Sesión propia en cookie HttpOnly, CSRF double-submit y permisos por rol; la propiedad de cada pedido se valida en el servicio. */
 @Configuration
 @EnableConfigurationProperties(AuthProperties.class)
 public class SecurityConfig {
@@ -49,7 +38,6 @@ public class SecurityConfig {
                 .sameSite("Lax")
                 .path("/"));
         CsrfTokenRequestAttributeHandler csrfHandler = new CsrfTokenRequestAttributeHandler();
-        // Sin token diferido: la cookie se emite en la primera respuesta.
         csrfHandler.setCsrfRequestAttributeName(null);
 
         http

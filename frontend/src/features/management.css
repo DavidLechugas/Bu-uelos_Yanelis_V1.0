@@ -100,9 +100,6 @@
 .login-error { padding: .75rem 1rem; border-radius: var(--radius-small); background: var(--danger-soft); border-left: 3px solid var(--red); color: var(--danger-text); font-size: .9375rem; }
 .notice-toast--low { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
 
-/* Tableta: tarjeta a todo el ancho, datos en dos columnas. En
-   escritorio las tarjetas van de dos en dos y los datos vuelven a
-   una columna para no partir fechas y direcciones. */
 @media (min-width: 600px) and (max-width: 1024px) {
   .order-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 1.5rem; }
 }

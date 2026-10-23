@@ -17,27 +17,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.bunuelosyanelys.backend.health.HealthController;
 
-/**
- * Fail closed: sin {@code FRONTEND_ORIGIN} no se
- * registra ningún mapeo CORS. Las respuestas no llevan
- * cabeceras CORS, así que el navegador bloquea todo
- * acceso cruzado:
- * <ul>
- *   <li>Preflight: la respuesta no contiene
- *       {@code Access-Control-Allow-*} → el navegador
- *       no envía la petición real.</li>
- *   <li>Lectura: sin {@code Access-Control-Allow-Origin}
- *       el navegador oculta la respuesta al JS.</li>
- * </ul>
- *
- * <p>Igual que {@link ApiCorsConfigTest}: slice web sin
- * MongoDB y sin activar ningún perfil.
- */
+/** Sin {@code FRONTEND_ORIGIN} no se registra ningún mapeo CORS y el navegador bloquea el acceso cruzado. */
 @WebMvcTest(HealthController.class)
 @Import({ApiCorsConfig.class, SecurityConfig.class})
 class ApiCorsConfigFailClosedTest {
 
-    /** La cadena de seguridad real necesita el servicio de sesiones. */
     @MockitoBean
     private SessionService sessionService;
 
@@ -57,9 +41,6 @@ class ApiCorsConfigFailClosedTest {
                         .header("Origin", ORIGEN_CUALQUIERA)
                         .header("Access-Control-Request-Method", "GET"))
                 .andExpect(status().isOk())
-                // Sin mapeo CORS, Spring no procesa CORS:
-                // no hay cabeceras Access-Control-* y el
-                // navegador rechaza el preflight.
                 .andExpect(header().doesNotExist("Access-Control-Allow-Origin"))
                 .andExpect(header().doesNotExist("Access-Control-Allow-Methods"))
                 .andExpect(header().doesNotExist("Access-Control-Allow-Credentials"));

@@ -17,25 +17,13 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.bunuelosyanelys.backend.health.HealthController;
 
-/**
- * CORS con {@code FRONTEND_ORIGIN} configurado: el
- * preflight (OPTIONS) y las lecturas del origen EXACTO
- * se permiten; cualquier otro origen se rechaza con
- * 403 (preflight y petición real: "Invalid CORS
- * request").
- *
- * <p>Usa el slice web de {@link HealthController} (sin
- * MongoDB ni perfil activo): prueba el comportamiento
- * HTTP real de CORS sin tocar bases de datos ni
- * activar perfiles por accidente.
- */
+/** Con {@code FRONTEND_ORIGIN} se permite solo el origen exacto; cualquier otro recibe 403. */
 @WebMvcTest(HealthController.class)
 @Import({ApiCorsConfig.class, SecurityConfig.class})
 @TestPropertySource(
         properties = "FRONTEND_ORIGIN=https://bunuelos-yanelys.pages.dev")
 class ApiCorsConfigTest {
 
-    /** La cadena de seguridad real necesita el servicio de sesiones. */
     @MockitoBean
     private SessionService sessionService;
 
@@ -56,8 +44,6 @@ class ApiCorsConfigTest {
                 .andExpect(status().isOk())
                 .andExpect(header()
                         .string("Access-Control-Allow-Origin", ORIGEN_PERMITIDO))
-                // allowCredentials=false: la cabecera no
-                // se emite (solo se envía cuando es true).
                 .andExpect(header()
                         .doesNotExist("Access-Control-Allow-Credentials"));
     }
@@ -85,9 +71,6 @@ class ApiCorsConfigTest {
 
     @Test
     void lecturaDesdeOrigenDesconocidoSeRechaza() throws Exception {
-        // Hay un mapeo CORS, pero el origen no está en
-        // la lista: Spring rechaza también la petición
-        // real (no solo el preflight).
         mockMvc.perform(get("/api/health")
                         .header("Origin", ORIGEN_DESCONOCIDO))
                 .andExpect(status().isForbidden());

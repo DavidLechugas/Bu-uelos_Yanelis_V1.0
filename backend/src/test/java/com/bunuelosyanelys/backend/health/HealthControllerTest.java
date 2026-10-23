@@ -17,7 +17,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @org.springframework.context.annotation.Import(SecurityConfig.class)
 class HealthControllerTest {
 
-    /** La cadena de seguridad real necesita el servicio de sesiones. */
     @MockitoBean
     private SessionService sessionService;
 

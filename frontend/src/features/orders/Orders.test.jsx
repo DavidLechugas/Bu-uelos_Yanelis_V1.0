@@ -348,7 +348,6 @@ describe('Orders — vista', () => {
       .toEqual(['ID', 'Cliente', 'Productos', 'Total', 'Fecha', 'Domicilio', 'Estado', 'Acciones']);
     expect(within(table).getByRole('rowheader', { name: 'Carmen' })).toBeInTheDocument();
     expect(within(table).getByRole('cell', { name: 'Sin asignar' })).toBeInTheDocument();
-    // La tabla también permite editar y cancelar (no se dibujan las tarjetas a la vez).
     expect(within(table).getByRole('button', { name: 'Editar pedido de Carmen' })).toBeInTheDocument();
     expect(within(table).getByRole('button', { name: 'Cancelar pedido' })).toBeInTheDocument();
     expect(screen.queryByRole('list')).not.toBeInTheDocument();

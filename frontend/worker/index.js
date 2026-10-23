@@ -1,5 +1,4 @@
-// Código de servidor Cloudflare: no se incluye en el bundle React.
-// Solo este backend está permitido; la petición nunca decide el destino.
+// Worker de Cloudflare: sirve dist/ y reenvía /api solo al backend permitido; la petición nunca decide el destino.
 const BACKEND_ORIGIN = 'https://bu-uelos-yanelis-v1-0.onrender.com';
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const METHODS = new Set([...SAFE_METHODS, 'POST', 'PUT', 'PATCH', 'DELETE']);
@@ -33,8 +32,7 @@ export default {
       return errorResponse(403, 'Origen no permitido.');
     }
 
-    // Allowlist: no confiar en Forwarded, X-Forwarded-*, X-Admin ni
-    // otras cabeceras de identidad suministradas por el navegador.
+    // Allowlist: no se confía en cabeceras de identidad enviadas por el navegador.
     const headers = new Headers();
     for (const name of REQUEST_HEADERS) {
       if (request.headers.has(name)) headers.set(name, request.headers.get(name));
@@ -60,7 +58,6 @@ export default {
       const responseHeaders = new Headers(response.headers);
       responseHeaders.set('cache-control', 'no-store');
       responseHeaders.set('x-content-type-options', 'nosniff');
-      // La API es same-origin: no publicar permisos CORS del upstream.
       for (const name of [...responseHeaders.keys()]) {
         if (name.startsWith('access-control-')) responseHeaders.delete(name);
       }
@@ -70,7 +67,7 @@ export default {
         headers: responseHeaders,
       });
     } catch {
-      // Nunca registrar cuerpo de login, cookies ni errores con secretos.
+      // Nunca se registran cuerpos de login, cookies ni errores con secretos.
       return errorResponse(502, 'No se pudo contactar con el servicio.');
     }
   },

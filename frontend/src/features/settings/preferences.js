@@ -1,8 +1,4 @@
-/**
- * Preferencias de este dispositivo (tema y animaciones). Viven en
- * localStorage: son comodidades por dispositivo, no datos de la cuenta.
- * index.html aplica el tema antes de pintar para evitar parpadeos.
- */
+/** Tema y animaciones de este dispositivo (localStorage); index.html aplica el tema antes de pintar. */
 const KEY = 'by-preferences';
 export const DEFAULT_PREFERENCES = { theme: 'system', motion: 'normal' };
 const THEME_COLORS = { light: '#a5631a', dark: '#2a1a0e' };
@@ -32,7 +28,7 @@ export function savePreferences(preferences) {
   try {
     localStorage.setItem(KEY, JSON.stringify(preferences));
   } catch {
-    // Sin almacenamiento (modo privado): se aplica solo en esta visita.
+    // Sin almacenamiento (modo privado): la preferencia solo vale en esta visita.
   }
   applyPreferences(preferences);
 }

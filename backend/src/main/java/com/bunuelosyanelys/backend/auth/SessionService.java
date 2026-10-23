@@ -13,7 +13,6 @@ import java.util.Optional;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
-/** Crea, resuelve y revoca sesiones guardadas en MongoDB. */
 @Service
 public class SessionService {
 
@@ -31,7 +30,6 @@ public class SessionService {
         this.clock = clock;
     }
 
-    /** Devuelve el token en claro, que solo viaja en la cookie. */
     public String create(String userId) {
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);
@@ -71,8 +69,7 @@ public class SessionService {
     }
 
     private ResponseCookie.ResponseCookieBuilder baseCookie(String value) {
-        // Sin Domain: la cookie queda ligada al dominio que la recibe
-        // (el del Worker, a través del proxy same-origin).
+        // Sin Domain: la cookie queda ligada al dominio del Worker, vía el proxy del mismo origen.
         return ResponseCookie.from(AuthProperties.SESSION_COOKIE, value)
                 .httpOnly(true)
                 .secure(properties.cookieSecure())

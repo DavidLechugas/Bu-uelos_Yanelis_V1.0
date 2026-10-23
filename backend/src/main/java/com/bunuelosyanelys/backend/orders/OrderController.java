@@ -24,7 +24,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/** Pedidos: el admin crea y asigna; cada domiciliario ve y avanza los suyos. */
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
@@ -68,7 +67,6 @@ public class OrderController {
         return service.update(id, request);
     }
 
-    /** Un domiciliario toma un pedido disponible; el primero que llega se lo queda. */
     @PostMapping("/{id}/tomar")
     public Order claim(@PathVariable String id, @AuthenticationPrincipal AuthUser user) {
         return service.claim(id, user);

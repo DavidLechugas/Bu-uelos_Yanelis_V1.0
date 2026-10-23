@@ -1,7 +1,4 @@
-/**
- * Iconos SVG propios (24×24, trazo de 2 px, color = currentColor).
- * Decorativos: siempre acompañan a un texto o a un aria-label.
- */
+/** Iconos SVG propios de 24×24, trazo de 2 px y `currentColor`; siempre decorativos. */
 function Svg({ children, size = 24, className }) {
   return (
     <svg

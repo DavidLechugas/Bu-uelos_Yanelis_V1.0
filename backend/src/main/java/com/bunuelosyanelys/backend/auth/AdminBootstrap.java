@@ -10,13 +10,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-/**
- * Alta del PRIMER administrador por procedimiento privado: solo si no
- * existe ninguno y están definidas {@code ADMIN_BOOTSTRAP_USERNAME} y
- * {@code ADMIN_BOOTSTRAP_PASSWORD} (variables de entorno de Render, nunca
- * en el repositorio). Sin cuenta ni contraseña de fábrica. Tras el primer
- * acceso conviene borrar las variables.
- */
+/** Crea el primer administrador con ADMIN_BOOTSTRAP_USERNAME y ADMIN_BOOTSTRAP_PASSWORD si aún no hay ninguno. */
 @Component
 class AdminBootstrap implements ApplicationRunner {
 

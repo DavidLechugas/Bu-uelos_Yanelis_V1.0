@@ -20,11 +20,6 @@ function validate(draft, { withProfile }) {
   return errors;
 }
 
-/**
- * Domiciliarios (solo administrador): crear cuentas, activar o
- * desactivar y asignar una contraseña nueva. Desactivar o cambiar la
- * contraseña cierra las sesiones abiertas de esa persona.
- */
 export function Couriers({ active = true }) {
   const [couriers, setCouriers] = useState(null);
   const [confirmed, setConfirmed] = useState('');

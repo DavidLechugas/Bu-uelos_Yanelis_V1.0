@@ -2,10 +2,6 @@ import { useState } from 'react';
 import { auth } from '../api/client.js';
 import { EyeIcon, EyeOffIcon } from './icons.jsx';
 
-/**
- * Inicio de sesión real. El rol lo decide el servidor según la cuenta;
- * no hay registro público: el administrador crea las cuentas.
- */
 export function Login({ onLogin, connectionError }) {
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');

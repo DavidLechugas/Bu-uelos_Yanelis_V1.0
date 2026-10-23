@@ -76,7 +76,6 @@ class OrderFlowTest extends ApiTestSupport {
         createOrder(luis.getId());
         createOrder(marta.getId());
         createOrder(null);
-        // Ve el suyo y el que nadie ha tomado (sin teléfono), pero no el de Marta.
         mvc.perform(login("luis").with(get("/api/orders")))
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[?(@.domiciliarioId == '" + marta.getId() + "')]").isEmpty());
@@ -96,10 +95,8 @@ class OrderFlowTest extends ApiTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("ASIGNADO"))
                 .andExpect(jsonPath("$.domiciliarioNombre").value("Luis"));
-        // Ya es suyo: ahora sí ve el teléfono.
         mvc.perform(luisBrowser.with(get("/api/orders")))
                 .andExpect(jsonPath("$[0].telefono").value("300 123 4567"));
-        // Marta llega tarde: 409, y ya no lo ve disponible.
         Browser martaBrowser = login("marta");
         mvc.perform(martaBrowser.with(post("/api/orders/" + libre + "/tomar")))
                 .andExpect(status().isConflict());
@@ -130,12 +127,10 @@ class OrderFlowTest extends ApiTestSupport {
                 .andExpect(jsonPath("$.cliente").value("Venta en local"))
                 .andReturn().getResponse().getContentAsString();
         String id = JsonPath.read(body, "$.id");
-        // No aparece a los domiciliarios ni se puede tomar.
         mvc.perform(login("luis").with(get("/api/orders")))
                 .andExpect(jsonPath("$.length()").value(0));
         mvc.perform(login("luis").with(post("/api/orders/" + id + "/tomar")))
                 .andExpect(status().isConflict());
-        // A domicilio sigue exigiendo los datos del cliente.
         mvc.perform(admin.with(post("/api/orders"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json("tipo", "DOMICILIO", "detalle", "x", "totalCop", 1000)))
@@ -179,7 +174,6 @@ class OrderFlowTest extends ApiTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("ASIGNADO"));
 
-        // Quitar la asignación lo devuelve a pendiente.
         mvc.perform(admin.with(put("/api/orders/" + id + "/domiciliario"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json("domiciliarioId", null)))
@@ -269,7 +263,6 @@ class OrderFlowTest extends ApiTestSupport {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json("tipo", "LOCAL", "detalle", "24 buñuelos", "totalCop", 48000)))
                 .andExpect(status().isBadRequest());
-        // Con su mismo tipo (o sin indicarlo, como un domicilio) sí se edita.
         mvc.perform(admin.with(put("/api/orders/" + id))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json("tipo", "DOMICILIO", "cliente", "Carmen R.", "telefono", "3001112233",

@@ -32,10 +32,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/**
- * Cuentas de domiciliarios, solo para el administrador (SecurityConfig).
- * El rol COURIER lo impone el servidor; no hay registro público.
- */
 @RestController
 @RequestMapping("/api/couriers")
 public class CourierController {

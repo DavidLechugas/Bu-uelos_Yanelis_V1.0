@@ -23,7 +23,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/** Inicio y cierre de sesión. Sin registro público. */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -81,7 +80,6 @@ public class AuthController {
                 .body(Map.of("usuario", AuthUser.of(found.get())));
     }
 
-    /** Foto pequeña (el cliente la reduce a ~160 px) como data URL de imagen. */
     static final String PHOTO_PATTERN = "data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+";
     static final int PHOTO_MAX = 140_000;
 

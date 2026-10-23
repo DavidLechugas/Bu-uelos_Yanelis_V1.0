@@ -1,9 +1,7 @@
-/** Tiempo relativo, búsqueda y filtro por fecha de la lista de pedidos (hora de Bogotá). */
 
 const bogotaDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' });
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** «hace 12 min», «hace 3 h», «hace 2 d». */
 export function timeAgo(iso, now = Date.now()) {
   const minutes = Math.floor((now - new Date(iso).getTime()) / 60000);
   if (minutes < 1) return 'hace menos de 1 min';
@@ -20,7 +18,6 @@ export const DATE_RANGES = [
   { id: 'semana', label: 'Últimos 7 días' },
 ];
 
-/** `range`: todas | hoy | ayer | semana, según el día de creación en Bogotá. */
 export function matchesDate(order, range, now = Date.now()) {
   if (range === 'todas') return true;
   const created = bogotaDay.format(new Date(order.creadoEn));
@@ -31,7 +28,6 @@ export function matchesDate(order, range, now = Date.now()) {
 
 const normalize = (text) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
-/** Coincide con cliente, dirección o teléfono (los dígitos, sin espacios ni signos). */
 export function matchesSearch(order, query) {
   const text = normalize(query.trim());
   if (!text) return true;

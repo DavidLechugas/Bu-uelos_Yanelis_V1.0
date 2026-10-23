@@ -5,10 +5,6 @@ import java.time.Instant;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-/**
- * Pedido. Contiene datos personales del cliente: solo se expone con sesión y
- * permisos.
- */
 @Document("orders")
 public class Order {
 

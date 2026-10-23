@@ -21,12 +21,7 @@ import com.bunuelosyanelys.backend.orders.Order;
 
 import jakarta.servlet.http.Cookie;
 
-/**
- * Base de las pruebas de integración HTTP: Spring completo + MongoDB local
- * en la base de pruebas {@code bunuelos_yanelys_test} (nunca la real).
- * Vacía solo usuarios, sesiones y pedidos de ESA base antes de cada prueba.
- * Usa cookies y cabecera CSRF reales, como el navegador.
- */
+/** Pruebas HTTP con Spring completo y MongoDB local en la base de pruebas {@code bunuelos_yanelys_test}, nunca la real. */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -43,7 +38,6 @@ public abstract class ApiTestSupport {
     @Autowired
     protected PasswordEncoder encoder;
 
-    /** Navegador simulado: cookie CSRF y, tras el login, cookie de sesión. */
     public record Browser(Cookie csrf, Cookie session) {
 
         public MockHttpServletRequestBuilder with(MockHttpServletRequestBuilder request) {
@@ -99,7 +93,6 @@ public abstract class ApiTestSupport {
         return new Browser(browser.csrf(), session);
     }
 
-    /** JSON plano a partir de pares clave/valor (valores String, número o null). */
     protected static String json(Object... pairs) {
         StringBuilder out = new StringBuilder("{");
         for (int i = 0; i < pairs.length; i += 2) {

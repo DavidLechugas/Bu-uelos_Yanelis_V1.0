@@ -1,8 +1,4 @@
-/**
- * Indicador de espera: anillo que gira; con `done`, círculo con un chulito
- * que se dibuja (confirmación). Con `label` es un aviso `role="status"`;
- * sin él es solo decorativo.
- */
+/** Anillo que gira; con `done`, círculo con chulito. Con `label` es un aviso `role="status"`. */
 export function Spinner({ size = 'md', done = false, label }) {
   return (
     <div

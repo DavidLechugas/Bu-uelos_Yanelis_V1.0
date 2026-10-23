@@ -9,10 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-/**
- * Respuestas de error JSON uniformes: {@code {"error": "..."}} y,
- * en validaciones, {@code campos} con el mensaje de cada campo.
- */
+/** Errores JSON uniformes: {@code {"error": "..."}} y {@code campos} en validaciones. */
 @RestControllerAdvice
 public class ApiExceptionHandler {
 

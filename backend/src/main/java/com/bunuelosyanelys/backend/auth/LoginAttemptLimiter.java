@@ -8,11 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Component;
 
-/**
- * Bloquea un nombre de usuario durante 15 minutos tras 5 intentos
- * fallidos. Se aplica a cualquier nombre, exista o no, para no
- * revelar qué cuentas existen. En memoria: hay una sola instancia.
- */
+/** Bloquea un usuario 15 minutos tras 5 intentos fallidos, exista o no la cuenta. En memoria. */
 @Component
 public class LoginAttemptLimiter {
 

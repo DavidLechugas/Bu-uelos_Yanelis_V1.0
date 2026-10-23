@@ -2,18 +2,7 @@ import { useEffect } from 'react';
 import { CloseIcon } from './icons.jsx';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-/**
- * Estado del service worker (vite-plugin-pwa, registerType 'prompt').
- *
- * - Nueva versión: aviso con botón «Actualizar». NUNCA recarga
- *   automáticamente: la actualización ocurre solo cuando el usuario
- *   pulsa «Actualizar» (sin interrumpir formularios ni provocar
- *   bucles de recarga).
- * - Sin conexión: avisa cuando el shell ya está cacheado.
- *
- * La API (/api) nunca se cachea (NetworkOnly en el service
- * worker generado); las credenciales del login no se almacenan.
- */
+/** Avisa de una versión nueva (nunca recarga sola) y de la disponibilidad sin conexión. La API no se cachea. */
 export function PwaStatus() {
   const {
     needRefresh: [needRefresh, setNeedRefresh],
@@ -21,7 +10,6 @@ export function PwaStatus() {
     updateServiceWorker,
   } = useRegisterSW();
 
-  // «Disponible sin conexión» es informativo: se retira solo a los 6 s.
   useEffect(() => {
     if (!offlineReady) return undefined;
     const timer = setTimeout(() => setOfflineReady(false), 6000);

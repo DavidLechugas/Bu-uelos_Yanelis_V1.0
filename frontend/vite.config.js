@@ -3,20 +3,15 @@ import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
-// En tests (jsdom) el módulo virtual del service worker no existe:
-// se resuelve a un stub que no registra nada. En dev/build real
-// (VITEST no definido) vite-plugin-pwa resuelve el módulo virtual.
+// En tests (VITEST) el módulo virtual del service worker se sustituye por un stub.
 const pwaRegisterStub = fileURLToPath(
   new URL('./src/test/pwa-register-react-stub.js', import.meta.url),
 );
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      // Aviso en la UI ante nueva versión (sin recarga automática:
-      // no interrumpe formularios).
       registerType: 'prompt',
       includeAssets: [
         'icons/icon-48.png',
@@ -30,8 +25,6 @@ export default defineConfig({
         description:
           'Gestión de pedidos y entregas de Buñuelos Yanelys.',
         lang: 'es',
-        // Relativos: funcionan en cualquier origen (localhost o URL
-        // del tunnel, que cambia en cada sesión).
         start_url: '.',
         scope: '.',
         display: 'standalone',
@@ -65,13 +58,10 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Shell de la app (solo activos estáticos same-origin del
-        // build: HTML/JS/CSS/iconos) para la vista offline. Nunca
-        // se precachean rutas de /api, credenciales ni datos.
+        // Solo el shell estático se precachea: nunca rutas de /api ni datos.
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/api/],
-        // /api: NetworkOnly en TODAS las rutas: la API nunca se
-        // cachea (ni POST de login ni datos del tablero).
+        // /api siempre va a la red: nunca se cachea.
         runtimeCaching: [
           {
             urlPattern: /\/api\//,
@@ -83,7 +73,6 @@ export default defineConfig({
   ],
   server: {
     port: 5173,
-    // La API del backend (Spring Boot) corre en 127.0.0.1:8080.
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8080',
@@ -92,14 +81,10 @@ export default defineConfig({
     },
   },
   preview: {
-    // Sirve la build de producción (dist/) SOLO en loopback.
-    // El tunnel (cloudflared) reenvía con Host: localhost (ver
-    // scripts/3-start-tunnel), que Vite permite por defecto:
-    // NO se usa allowedHosts: true ni comodines.
+    // Sirve dist/ solo en loopback; no se usan allowedHosts: true ni comodines.
     host: '127.0.0.1',
     port: 4173,
     strictPort: true,
-    // Preview es solo para esta demo temporal; no es hosting de producción.
     headers: {
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',

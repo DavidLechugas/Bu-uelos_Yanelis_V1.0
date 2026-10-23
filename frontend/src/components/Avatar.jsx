@@ -1,4 +1,3 @@
-/** Foto de perfil o, si no hay, la inicial del nombre. Decorativa. */
 export function Avatar({ user, size = 'small' }) {
   const initial = (user?.nombre?.trim()?.[0] ?? '?').toUpperCase();
   return (

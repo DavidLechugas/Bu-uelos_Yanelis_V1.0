@@ -5,11 +5,7 @@ import java.time.Instant;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-/**
- * Sesión de servidor. El id es el SHA-256 del token de la cookie:
- * leer la base no permite suplantar sesiones. Índice TTL sobre
- * {@code expiraEn} (ver {@link AuthIndexes}).
- */
+/** El id es el SHA-256 del token de la cookie; expira por índice TTL sobre {@code expiraEn}. */
 @Document("auth_sessions")
 public class AuthSession {
 

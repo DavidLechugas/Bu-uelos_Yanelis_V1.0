@@ -27,7 +27,6 @@ export function Choice({ legend, name, options, value, onChange }) {
   );
 }
 
-/** Configuración de este dispositivo y acceso al perfil. */
 export function Settings({ onOpenProfile }) {
   const [preferences, setPreferences] = useState(loadPreferences);
 

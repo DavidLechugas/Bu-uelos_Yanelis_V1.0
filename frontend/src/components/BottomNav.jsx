@@ -6,7 +6,6 @@ const NAV_ITEMS = [
   { id: 'domicilios', label: 'Domicilios', Icon: DeliveryIcon },
 ];
 
-/** Navegación inferior del administrador, con iconos SVG propios. */
 export function BottomNav({ active, onSelect }) {
   return (
     <nav className="bottom-nav" aria-label="Navegación principal">

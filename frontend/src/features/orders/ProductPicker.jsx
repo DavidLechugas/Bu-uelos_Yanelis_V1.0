@@ -5,18 +5,12 @@ import { addItem, changeQuantity, itemsTotal, removeItem } from './orderItems.js
 
 const currency = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
 
-/**
- * Catálogo de productos disponibles (un toque suma 1) y resumen del pedido
- * con cantidades. Si el catálogo no carga, el formulario sigue funcionando
- * con detalle y total escritos a mano.
- */
 export function ProductPicker({ items, onChange, active = true }) {
   const [products, setProducts] = useState(null);
   const [error, setError] = useState('');
   const titleId = useId();
 
-  // Se vuelve a pedir cada vez que la vista de Pedidos pasa a ser visible: así
-  // los productos creados mientras el formulario seguía abierto aparecen.
+  // Se vuelve a pedir al volver a Pedidos para incluir productos creados con el formulario abierto.
   useEffect(() => {
     if (!active) return undefined;
     let cancelled = false;

@@ -11,10 +11,6 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.Payload;
 
-/**
- * Un pedido a domicilio exige cliente, teléfono y dirección; una venta en el
- * local no. Los errores se reportan en el campo correspondiente.
- */
 @Documented
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

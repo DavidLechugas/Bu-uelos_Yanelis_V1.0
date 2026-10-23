@@ -20,7 +20,6 @@ import './features/management.css';
 const ROLE_LABEL = { ADMIN: 'Administrador', COURIER: 'Domiciliario' };
 const TITLES = { inicio: 'Inicio', pedidos: 'Pedidos', domicilios: 'Domicilios', productos: 'Productos', configuracion: 'Configuración' };
 
-/** Entradas del drawer por rol: las que tienen vista navegan, el resto avisa. */
 const DRAWER_ITEMS = {
   ADMIN: ['Inicio', 'Pedidos', 'Domiciliarios', 'Productos', 'Perfil', 'Configuración'],
   COURIER: ['Mis pedidos', 'Perfil', 'Configuración'],
@@ -30,11 +29,6 @@ const DRAWER_VIEWS = {
   Productos: 'productos', Configuración: 'configuracion',
 };
 
-/**
- * Buñuelos Yanelys: sesión real (cookie HttpOnly del servidor). El
- * administrador ve tablero, pedidos y domiciliarios; el domiciliario
- * solo sus pedidos. Los permisos se aplican en el servidor.
- */
 export default function App() {
   // undefined = comprobando sesión; null = sin sesión.
   const [user, setUser] = useState(undefined);
@@ -50,7 +44,6 @@ export default function App() {
     const startedAt = Date.now();
     auth.session()
       .then(async (result) => {
-        // Si la carga se notó, un rebotito con chulito antes de entrar.
         if (result.usuario && Date.now() - startedAt > 300) {
           setBootDone(true);
           await pause(BOOT_DONE_MS);
@@ -66,7 +59,6 @@ export default function App() {
       setLoginMessage('Tu sesión terminó. Inicia sesión de nuevo.');
     }
     window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
-    // Tema «según el teléfono»: seguir los cambios del sistema en vivo.
     const scheme = window.matchMedia?.('(prefers-color-scheme: dark)');
     const onScheme = () => applyPreferences(loadPreferences());
     scheme?.addEventListener?.('change', onScheme);

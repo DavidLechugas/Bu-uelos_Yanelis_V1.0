@@ -1,6 +1,5 @@
 package com.bunuelosyanelys.backend.orders;
 
-/** Estados confirmados: Pendiente → Asignado → En camino → Entregado, más Cancelado. */
 public enum OrderStatus {
     PENDIENTE,
     ASIGNADO,

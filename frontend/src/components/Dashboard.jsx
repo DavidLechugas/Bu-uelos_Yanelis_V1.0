@@ -22,7 +22,6 @@ function LiveIndicator({ updatedAt, stale }) {
 }
 
 function formatCurrency(value) {
-  // "$428.000" como en la referencia: símbolo + separador de miles es-CO.
   return `$${new Intl.NumberFormat('es-CO', {
     maximumFractionDigits: 0,
   }).format(value)}`;
@@ -60,11 +59,7 @@ function DashboardError({ error, onRetry, onUseDemo }) {
   );
 }
 
-/**
- * Tablero principal. Todos los datos provienen de la API
- * (MongoDB). Si la API falla, el usuario decide explícitamente
- * si reintentar o usar datos de demostración.
- */
+/** Tablero con datos de la API; si falla, el usuario elige reintentar o ver datos de demostración. */
 export function Dashboard({ session, active = true, onOpenDrawer, onOpenProfile, onSelectNav }) {
   const { status, data, error, demoMode, retry, useDemoData, updatedAt, stale } = useDashboard({ active });
 

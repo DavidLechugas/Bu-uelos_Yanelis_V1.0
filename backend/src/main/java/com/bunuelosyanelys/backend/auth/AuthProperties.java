@@ -4,10 +4,7 @@ import java.time.Duration;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/**
- * {@code app.auth.*}. La cookie es Secure por defecto; solo el perfil
- * dev la desactiva para http://localhost.
- */
+/** {@code app.auth.*}: la cookie es Secure salvo en el perfil dev. */
 @ConfigurationProperties("app.auth")
 public record AuthProperties(Boolean cookieSecure, Duration sessionDuration) {
 

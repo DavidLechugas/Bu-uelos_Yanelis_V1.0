@@ -1,14 +1,6 @@
 /**
- * Cliente HTTP de la API (Spring Boot).
- *
- * Siempre MISMO ORIGEN (/api): en desarrollo Vite lo proxyfica a
- * 127.0.0.1:8080 y en hosting el Worker de Cloudflare lo reenvía a
- * Render. Así la cookie de sesión (HttpOnly) es de primera parte y
- * funciona en móviles sin cookies de terceros. VITE_API_BASE_URL ya
- * no se usa.
- *
- * cache: 'no-store': las respuestas nunca se guardan en la caché HTTP
- * (son datos personales). El service worker además aplica NetworkOnly.
+ * Cliente HTTP de la API. Siempre mismo origen (/api): proxy de Vite en desarrollo y Worker de
+ * Cloudflare en hosting, así la cookie HttpOnly es de primera parte. Nada se guarda en caché (datos personales).
  */
 
 export const SESSION_EXPIRED_EVENT = 'by:session-expired';
@@ -25,7 +17,6 @@ export class ApiError extends Error {
   }
 }
 
-/** Token CSRF de la cookie XSRF-TOKEN (patrón double-submit de Spring Security). */
 function csrfToken() {
   const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
   return match ? decodeURIComponent(match[1]) : null;
@@ -84,7 +75,6 @@ export const fetchDashboard = () => apiRequest('/api/dashboard');
 export const auth = {
   session: () => apiRequest('/api/auth/session', { notifyExpired: false }),
   login: async (usuario, password) => {
-    // Sin cookie CSRF (p. ej. la primera consulta falló), pedirla antes.
     if (!csrfToken()) await apiRequest('/api/auth/session', { notifyExpired: false });
     return apiRequest('/api/auth/login', { method: 'POST', body: { usuario, password }, notifyExpired: false });
   },

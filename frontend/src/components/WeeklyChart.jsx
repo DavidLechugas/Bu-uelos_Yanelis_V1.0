@@ -1,13 +1,4 @@
-/**
- * Gráfica ligera de barras (SVG) con los últimos 7 días.
- * Sin dependencias: colores planos caramelo, accesible con
- * role="img" y <title> por barra.
- *
- * Las etiquetas de los días son HTML (.chart-x-axis) bajo
- * la SVG, no texto dentro de ella: así su tamaño (mínimo
- * 14 px) no escala con el ancho de la gráfica y se alinea
- * con las barras (mismo padding proporcional 28/320).
- */
+/** Barras SVG de los últimos 7 días; las etiquetas de día son HTML para que su tamaño no escale con la gráfica. */
 export function WeeklyChart({ data }) {
   const width = 320;
   const height = 170;

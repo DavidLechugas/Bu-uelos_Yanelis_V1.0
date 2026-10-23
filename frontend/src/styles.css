@@ -1,17 +1,4 @@
-/* ============================================================
-   Buñuelos Yanelys — prototipo local
-   Paleta crema/caramelo/marrón. Texto mínimo 14 px,
-   objetivos táctiles mínimos 44 px.
-
-   Tipografía en rem: NO se fija font-size en html, así
-   que rem hereda el tamaño de letra preferido del
-   navegador. (px y rem escalan igual con el zoom del
-   navegador; lo que respeta la preferencia del usuario
-   es no fijar px en la raíz.)
-   Escala: cuerpo 1rem · etiquetas .9375rem · mínimo
-   .875rem · entradas ≥1rem · títulos y valores con
-   clamp (rem + vw, acotados).
-   ============================================================ */
+/* Buñuelos Yanelys: paleta crema/caramelo/marrón, texto mínimo de 14 px y objetivos táctiles de 44 px. Tipografía en rem. */
 
 :root {
   scrollbar-color: var(--caramel-border) transparent;
@@ -32,12 +19,8 @@
   --shadow: 0 8px 24px rgba(90, 58, 20, 0.12);
   --radius: 16px;
   --radius-small: 10px;
-  /* Ancho máximo del CONTENIDO. Encabezado y navegación
-     inferior ocupan siempre todo el ancho de la pantalla
-     y alinean su contenido interior con este ancho. */
   --content-max: 100%;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  /* Tokens que cambian en modo oscuro. */
   --header-bg: #a5631a;
   --on-primary: #fff;
   --input-bg: #fff;
@@ -54,8 +37,6 @@
   color-scheme: light;
 }
 
-/* Modo oscuro: marrones profundos con acentos caramelo. Lo activa
-   data-theme="dark" (preferencia o sistema, ver index.html). */
 :root[data-theme="dark"] {
   --cream-bg: #1b130d;
   --cream-surface: #2a1e15;
@@ -122,9 +103,6 @@ button {
 
 /* ---------- Login ---------- */
 
-/* Fondo decorativo de toda la app: buñuelos a línea que caen despacio
-   (BunueloRain.jsx, montado en main.jsx). Va detrás del contenido: se ve
-   donde se ve el fondo. */
 .bunuelo-rain {
   position: fixed;
   inset: 0;
@@ -177,7 +155,6 @@ button {
   to { transform: rotate(var(--spin)); }
 }
 
-/* Sin animación (preferencia del sistema o de Configuración): quedan quietos. */
 @media (prefers-reduced-motion: reduce) {
   .bunuelo-item { top: var(--top); }
 }
@@ -460,9 +437,6 @@ button {
 }
 
 .dashboard-main {
-  /* 96 px deja libre la navegación inferior (60 px) + margen;
-     el safe-area se suma para no tapar contenido en móviles
-     con barra de gestos. */
   padding: 16px 16px calc(96px + env(safe-area-inset-bottom, 0px));
   width: 100%;
   max-width: var(--content-max);
@@ -479,14 +453,10 @@ button {
 
 .stats-grid {
   display: grid;
-  /* minmax(0,1fr): la tarjeta se encoge y el texto
-     ajusta en lugar de desbordar la rejilla. */
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
-/* En móvil, las tres métricas son filas de ancho completo:
-   ninguna tarjeta aislada ocupa solo media fila. */
 .stats-grid--orders {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -505,8 +475,6 @@ button {
 .stat-value {
   font-size: clamp(1.375rem, 1.125rem + 1.25vw, 1.5rem);
   font-weight: 700;
-  /* Valores largos (p. ej. "$1.234.567") ajustan
-     en vez de ensanchar la tarjeta. */
   overflow-wrap: break-word;
 }
 
@@ -575,9 +543,6 @@ button {
 
 .weekly-chart {
   width: 100%;
-  /* Alto acotado: en escritorio la gráfica ya no crece hasta ocupar
-     toda la pantalla. preserveAspectRatio="none" mantiene la
-     alineación horizontal con el eje de días en HTML. */
   height: clamp(170px, 32vw, 280px);
   display: block;
 }
@@ -586,17 +551,9 @@ button {
   fill: var(--caramel);
 }
 
-/* Etiquetas de los días de la gráfica: HTML bajo la SVG
-   (ver .chart-x-axis en WeeklyChart). Tamaño estable:
-   no escalan con el viewBox, así que cumplen el mínimo
-   de 14 px en 320 px y no crecen desproporcionadamente
-   en pantallas anchas. */
 .chart-x-axis {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  /* Mismo padding proporcional que la SVG (28/320 =
-     8.75 %): cada etiqueta queda centrada bajo su
-     barra. */
   padding: 0 8.75%;
   margin-top: 0.25rem;
   color: var(--muted);
@@ -619,7 +576,6 @@ button {
   animation: pulse 1.4s ease-in-out infinite;
 }
 
-/* Spinner de espera y chulito de confirmación (Spinner.jsx). */
 .spinner-box {
   --spin: 52px;
   display: flex;
@@ -697,7 +653,6 @@ button {
   100% { transform: scale(1); }
 }
 
-/* Sin animación (sistema o Configuración): chulito ya dibujado. */
 @media (prefers-reduced-motion: reduce) {
   .spinner-check-circle,
   .spinner-check-mark { stroke-dashoffset: 0; }
@@ -706,7 +661,6 @@ button {
 :root[data-motion="reduce"] .spinner-check-circle,
 :root[data-motion="reduce"] .spinner-check-mark { stroke-dashoffset: 0; }
 
-/* Botones ocupados: anillo que gira. */
 .btn-primary[aria-busy="true"] {
   display: inline-flex;
   align-items: center;
@@ -779,7 +733,6 @@ button {
 
 .notice-toast {
   position: fixed;
-  /* Sobre la navegación inferior, más el safe-area si existe. */
   bottom: calc(84px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
@@ -809,11 +762,8 @@ button {
 
 /* ---------- Avisos PWA (actualización / sin conexión) ---------- */
 
-/* Igual que .notice-toast pero apilado por encima: conviven
-   sin taparse (el de PWA queda ~64 px más arriba). */
 .pwa-toast {
   position: fixed;
-  /* Sin navegación inferior (login): pegado abajo. */
   bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
@@ -830,12 +780,10 @@ button {
   z-index: 60;
 }
 
-/* En el tablero: por encima de la navegación y del aviso. */
 .app-shell .pwa-toast {
   bottom: calc(148px + env(safe-area-inset-bottom, 0px));
 }
 
-/* El login puede desplazarse por encima del aviso PWA. */
 .login-page:has(~ .pwa-toast) {
   padding-bottom: 120px;
 }
@@ -954,13 +902,9 @@ button {
   left: 0;
   right: 0;
   display: flex;
-  /* Fondo a todo el ancho; los botones se alinean con el
-     contenido (mismo ancho máximo que el tablero). */
   padding-inline: max(0px, calc((100% - var(--content-max)) / 2));
   background-color: var(--cream-surface);
   border-top: 1px solid var(--caramel-border);
-  /* Safe area de móviles (barra de gestos): crece hacia arriba
-     sin tapar el borde inferior del contenido. */
   padding-bottom: env(safe-area-inset-bottom, 0px);
   z-index: 30;
 }
@@ -999,18 +943,6 @@ button {
 
 /* ---------- Escritorio (≥1025 px) ---------- */
 
-/* Tramos explícitos y sin solapamiento: móvil
-   (estilos base), tableta 600-1024 px y
-   escritorio ≥1025 px.
-
-   Escritorio: el shell aprovecha el lienzo con
-   un ancho razonable (clamp entre 60rem y
-   68rem). Con el shell anterior de 720 px las
-   cuatro métricas quedaban de ~129 px y la
-   gráfica de ~377 px (mitad del ancho); con
-   este ancho las tarjetas rondan los 250 px y
-   la gráfica ~520 px, legibles sin rediseñar
-   la paleta. */
 @media (min-width: 1025px) {
   :root {
     --content-max: clamp(60rem, 90vw, 68rem);
@@ -1027,10 +959,6 @@ button {
   }
 
   .stats-grid {
-    /* Cruza el ancho completo: las cuatro métricas
-       en fila (como la referencia), ~250 px por
-       tarjeta en vez de ~120 px dentro de una
-       columna. */
     grid-column: 1 / -1;
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -1053,15 +981,6 @@ button {
 
 /* ---------- Tableta (600-1024 px) ---------- */
 
-/* De 600 a 1024 px (tabletas en vertical) el shell
-   móvil de 480 px dejaba márgenes enormes y tarjetas
-   estrechas: el shell sube a 720 px y el contenido
-   aprovecha el lienzo en una sola columna (gráfica a
-   ancho completo). La tipografía crece sola con los
-   clamp de cada elemento (saludo 24 px, h2 18 px,
-   valor 24 px, título del encabezado 20 px a partir
-   de ~500 px de ancho de viewport). El escritorio
-   (≥1025 px) conserva su rejilla de dos columnas. */
 @media (min-width: 600px) and (max-width: 1024px) {
   :root {
     --content-max: 720px;
@@ -1086,12 +1005,6 @@ button {
 
 /* ---------- Tableta ancha (900-1024 px) ---------- */
 
-/* A 900-1024 px (p. ej. iPad Pro de 12,9" vertical)
-   el shell de 720 px dejaría márgenes grandes: el
-   shell sube a 840 px, las métricas siguen en 2
-   columnas amplias y el tablero fluye en una sola
-   columna (la rejilla de dos columnas es de
-   escritorio, ≥1025 px). */
 @media (min-width: 900px) and (max-width: 1024px) {
   :root {
     --content-max: 840px;
@@ -1109,12 +1022,6 @@ button {
 
 /* ---------- Móvil estrecho (≤360 px) ---------- */
 
-/* En 320 px las opciones de rol se compactan (menos
-   relleno y hueco) para ganar margen; el texto se
-   mantiene en .9375rem (15 px) y cabe sin
-   desbordar: "Administrador" necesita ~120 px de
-   los ~143 px disponibles a 320 px. El objetivo
-   táctil sigue siendo ≥48 px. */
 @media (max-width: 360px) {
   .login-page {
     padding: 24px 12px;
@@ -1141,10 +1048,6 @@ button {
 
 /* ---------- Pantallas cortas (apaisado / teclado virtual) ---------- */
 
-/* Con poca altura (p. ej. 375 px en apaisado o con el
-   teclado virtual abierto) se compacta el inicio de sesión
-   para que campos y botón queden accesibles antes; el
-   desbordamiento vertical sigue disponible (min-height: 100dvh). */
 @media (max-height: 500px) {
   .login-page {
     padding: 16px;
@@ -1598,12 +1501,10 @@ button {
   grid-column: 1 / -1;
 }
 
-/* El valor de una métrica se anima al cambiar (key en StatCard). */
 .stat-value {
   animation: value-pop 450ms var(--ease-out);
 }
 
-/* Las barras crecen o encogen suavemente con cada actualización. */
 .chart-bar {
   transition: y 500ms var(--ease-out), height 500ms var(--ease-out);
 }
@@ -1635,7 +1536,6 @@ body,
   100% { box-shadow: 0 0 0 0 rgba(30, 122, 52, 0); }
 }
 
-/* Preferencia «Animaciones reducidas» de Configuración. */
 :root[data-motion="reduce"] *,
 :root[data-motion="reduce"] *::before,
 :root[data-motion="reduce"] *::after {

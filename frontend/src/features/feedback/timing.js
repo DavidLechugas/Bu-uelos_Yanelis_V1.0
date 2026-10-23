@@ -1,7 +1,4 @@
-/**
- * Pausas breves de confirmación (chulito) tras cargar o guardar.
- * Con animaciones reducidas se acortan; en pruebas no esperan.
- */
+/** Pausas de confirmación (chulito): más cortas con animaciones reducidas y nulas en pruebas. */
 export const BOOT_DONE_MS = 1000;
 export const SAVE_DONE_MS = 1200;
 const REDUCED_MAX_MS = 500;

@@ -1,9 +1,4 @@
-/**
- * Fondo decorativo: buñuelos dibujados solo con líneas que caen despacio.
- * El trazo usa `currentColor` (token de marca, ver `.bunuelo-sketch` en
- * styles.css); sin colores ni rellenos propios. Toda la geometría sale de
- * un PRNG con semilla, así el dibujo y la disposición son estables.
- */
+/** Fondo decorativo de buñuelos a línea (`currentColor`); la geometría sale de un PRNG con semilla, así es estable. */
 
 const VARIANTS = 3;
 const COUNT = 14;
@@ -23,7 +18,6 @@ export function seeded(seed) {
 const round = (value) => Math.round(value * 100) / 100;
 const point = (radius, angle) => [50 + radius * Math.cos(angle), 50 + radius * Math.sin(angle)];
 
-/** Contorno cerrado casi circular, con ligera irregularidad de pulso. */
 function outline(random, radius, wobble) {
   const steps = 14;
   const pts = Array.from({ length: steps }, (_, i) =>
@@ -38,7 +32,6 @@ function outline(random, radius, wobble) {
   return `${d}Z`;
 }
 
-/** Rayitas curvas que siguen el borde inferior derecho (sombreado a tinta). */
 function hatching(random, radius) {
   let d = '';
   for (let i = 0; i < 26; i += 1) {
@@ -52,7 +45,6 @@ function hatching(random, radius) {
   return d;
 }
 
-/** Poros: rayitas cortas dispersas, más hacia arriba a la izquierda. */
 function pores(random, radius) {
   let d = '';
   for (let i = 0; i < 16; i += 1) {
@@ -64,7 +56,6 @@ function pores(random, radius) {
   return d;
 }
 
-/** Trazos de una variante del buñuelo: contorno doble, sombreado y poros. */
 export function sketchPaths(seed) {
   const random = seeded(seed);
   return {

@@ -15,10 +15,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-/**
- * Autentica la petición con la cookie de sesión. No es un bean: solo
- * se registra dentro de la cadena de Spring Security (ver SecurityConfig).
- */
+/** Autentica la petición con la cookie de sesión dentro de la cadena de Spring Security. */
 public class SessionAuthenticationFilter extends OncePerRequestFilter {
 
     private final SessionService sessions;

@@ -1,6 +1,5 @@
 import { useId } from 'react';
 
-/** Campo etiquetado con error accesible. `multiline` usa textarea. */
 export function ManagementField({ label, error, hint, multiline = false, wide = false, ...props }) {
   const id = useId();
   const Control = multiline ? 'textarea' : 'input';

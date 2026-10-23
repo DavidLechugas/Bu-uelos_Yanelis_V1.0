@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Health sencillo del servicio (demo local). */
 @RestController
 @RequestMapping("/api")
 public class HealthController {

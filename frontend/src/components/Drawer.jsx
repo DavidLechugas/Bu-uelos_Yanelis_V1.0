@@ -6,7 +6,6 @@ const FOCUSABLE_SELECTOR =
 
 
 export function trapTabKey(event, container) {
-  // El selector ya excluye botones deshabilitados y tabindex="-1".
   const focusable = Array.from(
     container.querySelectorAll(FOCUSABLE_SELECTOR),
   );
@@ -24,14 +23,7 @@ export function trapTabKey(event, container) {
   }
 }
 
-/**
- * Drawer lateral izquierdo (máx. 320 px, 80 % en móvil) con overlay
- * oscuro. Se cierra con Escape, clic en overlay o su botón; atrapa el
- * foco, bloquea el scroll del fondo y restaura el foco al cerrar.
- *
- * App decide qué secciones están implementadas. Las pendientes
- * avisan honestamente. «Cerrar sesión» cierra la sesión en el servidor.
- */
+/** Menú lateral accesible: Escape y overlay lo cierran, atrapa el foco y bloquea el scroll del fondo. */
 export function Drawer({ open, role, items = [], onClose, onNavigate, onLogout }) {
   const drawerRef = useRef(null);
   const previousFocusRef = useRef(null);

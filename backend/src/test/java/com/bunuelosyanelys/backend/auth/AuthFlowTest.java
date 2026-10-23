@@ -36,7 +36,6 @@ class AuthFlowTest extends ApiTestSupport {
         Browser browser = anonymous();
         MockHttpServletResponse response = mvc.perform(browser.with(post("/api/auth/login"))
                 .contentType(MediaType.APPLICATION_JSON)
-                // Un rol enviado por el cliente se ignora.
                 .content(json("usuario", "  ANA ", "password", PASSWORD, "role", "ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.usuario.usuario").value("ana"))
@@ -88,7 +87,6 @@ class AuthFlowTest extends ApiTestSupport {
         createUser("admin", "Yanelys", Role.ADMIN, true);
         Browser admin = login("admin");
         mvc.perform(admin.with(post("/api/auth/logout"))).andExpect(status().isNoContent());
-        // Reutilizar la cookie antigua ya no autentica.
         mvc.perform(admin.with(get("/api/orders"))).andExpect(status().isUnauthorized());
     }
 
