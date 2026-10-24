@@ -6,7 +6,7 @@ const NAV_ITEMS = [
   { id: 'domicilios', label: 'Domicilios', Icon: DeliveryIcon },
 ];
 
-export function BottomNav({ active, onSelect }) {
+export function BottomNav({ active, onSelect, badges = {} }) {
   return (
     <nav className="bottom-nav" aria-label="Navegación principal">
       {NAV_ITEMS.map(({ id, label, Icon }) => (
@@ -17,7 +17,10 @@ export function BottomNav({ active, onSelect }) {
           aria-current={active === id ? 'page' : undefined}
           onClick={() => onSelect({ id, label })}
         >
-          <Icon className="bottom-nav-icon" />
+          <span className="bottom-nav-icon-wrap">
+            <Icon className="bottom-nav-icon" />
+            {badges[id] > 0 && <span className="bottom-nav-badge" aria-label={`${badges[id]} novedades`}>{badges[id]}</span>}
+          </span>
           <span className="bottom-nav-label">{label}</span>
         </button>
       ))}

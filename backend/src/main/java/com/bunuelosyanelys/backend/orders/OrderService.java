@@ -21,6 +21,7 @@ import com.bunuelosyanelys.backend.auth.AppUserRepository;
 import com.bunuelosyanelys.backend.auth.AuthUser;
 import com.bunuelosyanelys.backend.auth.Role;
 import com.bunuelosyanelys.backend.common.ApiException;
+import com.bunuelosyanelys.backend.push.PushNotifier;
 
 /** Reglas de pedidos: propiedad por domiciliario y transiciones de estado válidas. */
 @Service
@@ -41,12 +42,15 @@ public class OrderService {
     private final AppUserRepository users;
     private final Clock clock;
     private final MongoTemplate mongo;
+    private final PushNotifier push;
 
-    public OrderService(OrderRepository orders, AppUserRepository users, Clock clock, MongoTemplate mongo) {
+    public OrderService(OrderRepository orders, AppUserRepository users, Clock clock, MongoTemplate mongo,
+            PushNotifier push) {
         this.orders = orders;
         this.users = users;
         this.clock = clock;
         this.mongo = mongo;
+        this.push = push;
     }
 
     public List<Order> list(AuthUser user) {
@@ -84,6 +88,7 @@ public class OrderService {
             }
             throw new ApiException(HttpStatus.CONFLICT, "Otro domiciliario ya tomó este pedido.");
         }
+        push.toAdmins(user.nombre() + " tomó un pedido", "Pedido de " + taken.getCliente() + ".", "pedido-" + orderId);
         return taken;
     }
 
@@ -97,7 +102,11 @@ public class OrderService {
                 .unset("domiciliarioId")
                 .unset("domiciliarioNombre")
                 .set("actualizadoEn", clock.instant());
-        return mongo.updateMulti(query, update, Order.class).getModifiedCount();
+        long released = mongo.updateMulti(query, update, Order.class).getModifiedCount();
+        if (released > 0) {
+            push.toCouriers("Hay pedidos disponibles", "Un pedido volvió a Pendientes: tómalo si puedes.", "disponibles");
+        }
+        return released;
     }
 
     public Order create(OrderController.CreateOrderRequest request) {
@@ -111,7 +120,9 @@ public class OrderService {
             order.setTipo(OrderType.DOMICILIO);
             applyCourier(order, request.domiciliarioId());
         }
-        return save(order);
+        Order created = save(order);
+        notifyCreated(created);
+        return created;
     }
 
     /** Escribe solo los datos, sin pisar una toma o un cambio de estado simultáneos. */
@@ -146,7 +157,9 @@ public class OrderService {
                 .set("domiciliarioId", order.getDomiciliarioId())
                 .set("domiciliarioNombre", order.getDomiciliarioNombre())
                 .set("estado", order.getEstado());
-        return updateIfStill(orderId, Criteria.where("estado").in(ASSIGNABLE), update);
+        Order assigned = updateIfStill(orderId, Criteria.where("estado").in(ASSIGNABLE), update);
+        notifyCreated(assigned);
+        return assigned;
     }
 
     public Order changeStatus(String orderId, OrderStatus target, AuthUser user) {
@@ -167,7 +180,9 @@ public class OrderService {
         Criteria unchanged = new Criteria().andOperator(
                 Criteria.where("estado").is(current),
                 Criteria.where("domiciliarioId").is(order.getDomiciliarioId()));
-        return updateIfStill(orderId, unchanged, new Update().set("estado", target));
+        Order changed = updateIfStill(orderId, unchanged, new Update().set("estado", target));
+        notifyStatus(changed, target, user);
+        return changed;
     }
 
     /**
@@ -186,6 +201,30 @@ public class OrderService {
                     "El pedido cambió mientras lo editabas. Recarga la lista e inténtalo de nuevo.");
         }
         return changed;
+    }
+
+    private void notifyCreated(Order order) {
+        if (order.getTipo() == OrderType.LOCAL || order.getEstado() != OrderStatus.ASIGNADO && order.getEstado() != OrderStatus.PENDIENTE) {
+            return;
+        }
+        if (order.getDomiciliarioId() != null) {
+            push.toUser(order.getDomiciliarioId(), "Te asignaron un pedido", "Entra para ver los detalles.", "pedido-" + order.getId());
+        } else {
+            push.toCouriers("Pedido nuevo disponible", "El primero que lo toque se lo queda.", "disponibles");
+        }
+    }
+
+    private void notifyStatus(Order order, OrderStatus target, AuthUser actor) {
+        if (!actor.isAdmin()) {
+            String courier = actor.nombre();
+            if (target == OrderStatus.EN_CAMINO) {
+                push.toAdmins(courier + " salió con un pedido", "Pedido de " + order.getCliente() + ".", "pedido-" + order.getId());
+            } else if (target == OrderStatus.ENTREGADO) {
+                push.toAdmins(courier + " entregó un pedido", "Pedido de " + order.getCliente() + ".", "pedido-" + order.getId());
+            }
+        } else if (target == OrderStatus.CANCELADO) {
+            push.toUser(order.getDomiciliarioId(), "Cancelaron un pedido", "Pedido de " + order.getCliente() + ".", "pedido-" + order.getId());
+        }
     }
 
     private void applyDetails(Order order, OrderController.CreateOrderRequest request) {

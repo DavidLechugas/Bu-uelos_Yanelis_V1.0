@@ -90,7 +90,7 @@ function validate(draft) {
   return { errors, total, detalle };
 }
 
-export function Orders({ user, active = true }) {
+export function Orders({ user, active = true, onFetched, onChanged }) {
   const isAdmin = user.role === 'ADMIN';
   const [orders, setOrders] = useState(null);
   const [couriers, setCouriers] = useState([]);
@@ -123,6 +123,7 @@ export function Orders({ user, active = true }) {
         ordersApi.list(),
         withTeam ? couriersApi.list() : Promise.resolve(null),
       ]);
+      onFetched?.(list);
       setOrders((previous) => (previous && JSON.stringify(previous) === JSON.stringify(list) ? previous : list));
       if (team) setCouriers(team);
       setLoadError('');
@@ -131,7 +132,11 @@ export function Orders({ user, active = true }) {
     } finally {
       inFlight.current = false;
     }
-  }, [isAdmin]);
+  }, [isAdmin, onFetched]);
+
+  useEffect(() => {
+    if (orders) onChanged?.(orders);
+  }, [orders, onChanged]);
 
   useEffect(() => {
     if (!active) return undefined;

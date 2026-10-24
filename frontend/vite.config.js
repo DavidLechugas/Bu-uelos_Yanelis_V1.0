@@ -59,6 +59,7 @@ export default defineConfig({
       },
       workbox: {
         // Solo el shell estático se precachea: nunca rutas de /api ni datos.
+        importScripts: ['push-sw.js'],
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/api/],
         // /api siempre va a la red: nunca se cachea.

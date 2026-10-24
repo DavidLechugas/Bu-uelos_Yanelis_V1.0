@@ -26,5 +26,7 @@ class AuthIndexes {
         mongo.indexOps(AuthSession.class)
                 .createIndex(new Index("expiraEn", Sort.Direction.ASC).expire(Duration.ZERO));
         mongo.indexOps(AuthSession.class).createIndex(new Index("userId", Sort.Direction.ASC));
+        mongo.indexOps(AppUser.class)
+                .createIndex(new Index().on("role", Sort.Direction.ASC).on("creadoEn", Sort.Direction.ASC));
     }
 }

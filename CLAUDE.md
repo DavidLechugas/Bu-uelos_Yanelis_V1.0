@@ -82,6 +82,8 @@ Además (2026-10-17): pedidos de tipo `DOMICILIO` o `LOCAL` (venta en local: nac
 
 Pedidos tiene un conmutador de vista (tarjetas, lista compacta = tabla ID/Cliente/Productos/Total/Fecha/Domicilio/Estado/Acciones, mosaico; las tres vistas comparten las mismas acciones; se recuerda por dispositivo en localStorage `bunuelos.orders.view`) y el backend rechaza (400) cambiar el `tipo` al editar un pedido: se cancela y se crea otro.
 
+Además: la cuenta principal (el administrador más antiguo, sin migrar datos) crea, activa y cambia la contraseña de administradores extra desde «Domicilios» (`/api/admins`); los extra hacen todo menos gestionar administradores. Avisos de pedidos: dentro de la app (`features/alerts`: sonido, vibración, globo en la barra, título y badge) y push real (`push/`: claves VAPID generadas y guardadas en Mongo, `PushNotifier` con virtual threads, `public/push-sw.js` importado por el service worker; se activa por dispositivo en Configuración).
+
 La PWA ya está instalada en Android (confirmado por el usuario). Costo de domicilio
 separado: no acordado.
 

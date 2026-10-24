@@ -144,6 +144,9 @@ quieres que la demo muestre otros números.)
      ella la app no arranca.
    - `FRONTEND_ORIGIN` = la URL **exacta** del frontend en
      Cloudflare Workers (ver paso 4), sin barra final.
+   - Opcionales de notificaciones push: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y
+     `VAPID_SUBJECT`. Si no se definen, el backend genera las claves la primera vez y las guarda en
+     la colección `push_config` de Mongo; no la borres, porque invalidaría las suscripciones.
 4. Deploy. Verifica en la URL `onrender.com` del servicio:
    - `GET /api/health` → `{"status":"UP",...}` (liveness).
    - `GET /api/dashboard` → el snapshot de la semilla (404

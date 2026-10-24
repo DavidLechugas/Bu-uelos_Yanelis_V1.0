@@ -21,13 +21,15 @@ public class SessionService {
     private final AppUserRepository users;
     private final AuthProperties properties;
     private final Clock clock;
+    private final PrincipalAdmin principal;
 
     public SessionService(AuthSessionRepository sessions, AppUserRepository users,
-            AuthProperties properties, Clock clock) {
+            AuthProperties properties, Clock clock, PrincipalAdmin principal) {
         this.sessions = sessions;
         this.users = users;
         this.properties = properties;
         this.clock = clock;
+        this.principal = principal;
     }
 
     public String create(String userId) {
@@ -47,7 +49,7 @@ public class SessionService {
                 .filter(session -> session.getExpiraEn().isAfter(clock.instant()))
                 .flatMap(session -> users.findById(session.getUserId()))
                 .filter(AppUser::isActivo)
-                .map(AuthUser::of);
+                .map(user -> AuthUser.of(user, principal.is(user)));
     }
 
     public void revoke(String token) {

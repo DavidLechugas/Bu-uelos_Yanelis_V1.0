@@ -104,6 +104,21 @@ export const couriersApi = {
     apiRequest(`/api/couriers/${encodeURIComponent(id)}/password`, { method: 'PUT', body: { password } }),
 };
 
+export const pushApi = {
+  key: () => apiRequest('/api/push/key'),
+  subscribe: (subscription) => apiRequest('/api/push/subscribe', { method: 'POST', body: subscription }),
+  unsubscribe: (endpoint) => apiRequest('/api/push/unsubscribe', { method: 'POST', body: { endpoint } }),
+};
+
+export const adminsApi = {
+  list: () => apiRequest('/api/admins'),
+  create: (admin) => apiRequest('/api/admins', { method: 'POST', body: admin }),
+  setActive: (id, activo) =>
+    apiRequest(`/api/admins/${encodeURIComponent(id)}/activo`, { method: 'PATCH', body: { activo } }),
+  resetPassword: (id, password) =>
+    apiRequest(`/api/admins/${encodeURIComponent(id)}/password`, { method: 'PUT', body: { password } }),
+};
+
 export const productsApi = {
   list: () => apiRequest('/api/products'),
   create: (product) => apiRequest('/api/products', { method: 'POST', body: product }),

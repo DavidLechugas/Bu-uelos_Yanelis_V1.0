@@ -38,15 +38,17 @@ public class AuthController {
     private final PasswordEncoder encoder;
     private final SessionService sessions;
     private final LoginAttemptLimiter limiter;
+    private final PrincipalAdmin principal;
     /** Hash de relleno: igual coste de verificación exista o no el usuario. */
     private final String dummyHash;
 
     public AuthController(AppUserRepository users, PasswordEncoder encoder, SessionService sessions,
-            LoginAttemptLimiter limiter) {
+            LoginAttemptLimiter limiter, PrincipalAdmin principal) {
         this.users = users;
         this.encoder = encoder;
         this.sessions = sessions;
         this.limiter = limiter;
+        this.principal = principal;
         this.dummyHash = encoder.encode("contraseña-de-relleno");
     }
 
@@ -77,7 +79,7 @@ public class AuthController {
         String token = sessions.create(found.get().getId());
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, sessions.cookie(token).toString())
-                .body(Map.of("usuario", AuthUser.of(found.get())));
+                .body(Map.of("usuario", AuthUser.of(found.get(), principal.is(found.get()))));
     }
 
     static final String PHOTO_PATTERN = "data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+";
@@ -117,7 +119,8 @@ public class AuthController {
         user.setTelefono(blankToNull(request.telefono()));
         user.setCorreo(blankToNull(request.correo()));
         user.setSexo(request.sexo());
-        return Map.of("usuario", AuthUser.of(users.save(user)));
+        AppUser saved = users.save(user);
+        return Map.of("usuario", AuthUser.of(saved, principal.is(saved)));
     }
 
     /** Cambia la propia contraseña: cierra las demás sesiones y renueva la actual. */

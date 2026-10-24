@@ -10,7 +10,11 @@ import { Header } from './components/Header.jsx';
 import { BottomNav } from './components/BottomNav.jsx';
 import { Products } from './features/products/Products.jsx';
 import { Orders } from './features/orders/Orders.jsx';
+import { Admins } from './features/admins/Admins.jsx';
+import { useOrderAlerts } from './features/alerts/useOrderAlerts.js';
 import { Couriers } from './features/couriers/Couriers.jsx';
+import { Toast } from './features/feedback/Toast.jsx';
+import { releasePush, syncPush } from './features/push/push.js';
 import { ProfilePanel } from './features/profile/ProfilePanel.jsx';
 import { Settings } from './features/settings/Settings.jsx';
 import { applyPreferences, loadPreferences } from './features/settings/preferences.js';
@@ -39,6 +43,7 @@ export default function App() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [bootDone, setBootDone] = useState(false);
   const shell = useRef(null);
+  const alerts = useOrderAlerts({ user, pedidosActive: view === 'pedidos' });
 
   useEffect(() => {
     const startedAt = Date.now();
@@ -76,6 +81,7 @@ export default function App() {
   function startSession(nextUser) {
     setUser(nextUser);
     setView(nextUser?.role === 'COURIER' ? 'pedidos' : 'inicio');
+    if (nextUser) syncPush();
   }
 
   function resetSession() {
@@ -92,6 +98,7 @@ export default function App() {
 
   async function handleLogout() {
     try {
+      await releasePush();
       await auth.logout();
     } catch {
       // Aunque falle la red, la interfaz sale; la sesión caduca sola.
@@ -165,17 +172,21 @@ export default function App() {
         <Header title={title} user={user} onOpenDrawer={openDrawer} onOpenProfile={openProfile} />
         <main className="management-main">
           <div className="view-panel" hidden={view !== 'pedidos'}>
-            <Orders user={user} active={view === 'pedidos'} />
+            <Orders user={user} active={view === 'pedidos'} onFetched={alerts.report} onChanged={alerts.baseline} />
           </div>
           {isAdmin && (
             <>
-              <div className="view-panel" hidden={view !== 'domicilios'}><Couriers active={view === 'domicilios'} /></div>
+              <div className="view-panel management-stack" hidden={view !== 'domicilios'}>
+                <Couriers active={view === 'domicilios'} />
+                {user.principal && <Admins active={view === 'domicilios'} />}
+              </div>
               <div className="view-panel" hidden={view !== 'productos'}><Products active={view === 'productos'} /></div>
             </>
           )}
           <div className="view-panel" hidden={view !== 'configuracion'}><Settings onOpenProfile={openProfile} /></div>
         </main>
-        {isAdmin && <BottomNav active={view} onSelect={handleBottomNav} />}
+        {isAdmin && <BottomNav active={view} onSelect={handleBottomNav} badges={{ pedidos: alerts.unseen }} />}
+        <Toast notice={alerts.notice} onClose={alerts.closeNotice} />
       </div>
       <ProfilePanel open={profileOpen} user={user} onClose={() => setProfileOpen(false)} onUpdated={setUser} onLogout={handleLogout} />
       <Drawer

@@ -1,6 +1,6 @@
 /** Tema y animaciones de este dispositivo (localStorage); index.html aplica el tema antes de pintar. */
 const KEY = 'by-preferences';
-export const DEFAULT_PREFERENCES = { theme: 'system', motion: 'normal' };
+export const DEFAULT_PREFERENCES = { theme: 'system', motion: 'normal', alertSound: true };
 const THEME_COLORS = { light: '#a5631a', dark: '#2a1a0e' };
 
 export function loadPreferences() {

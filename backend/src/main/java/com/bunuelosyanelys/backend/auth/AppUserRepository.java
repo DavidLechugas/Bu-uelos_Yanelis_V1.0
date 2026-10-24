@@ -14,4 +14,6 @@ public interface AppUserRepository extends MongoRepository<AppUser, String> {
     boolean existsByRole(Role role);
 
     List<AppUser> findByRoleOrderByNombreAsc(Role role);
+
+    Optional<AppUser> findFirstByRoleOrderByCreadoEnAscIdAsc(Role role);
 }

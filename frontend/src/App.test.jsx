@@ -132,7 +132,12 @@ describe('App — sesión real y navegación por rol', () => {
   });
 
   it('una sesión caducada devuelve al login con un aviso', async () => {
-    mockApi(adminRoutes({ 'GET /api/orders': { status: 401, body: { error: 'Tu sesión no está activa.' } } }));
+    let ordersCalls = 0;
+    mockApi(adminRoutes({
+      'GET /api/orders': () => (++ordersCalls === 1
+        ? { body: [] }
+        : { status: 401, body: { error: 'Tu sesión no está activa.' } }),
+    }));
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText('Buenos días, Ana');

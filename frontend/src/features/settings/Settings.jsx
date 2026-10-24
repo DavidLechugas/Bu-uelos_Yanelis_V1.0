@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { disablePush, enablePush, pushStatus } from '../push/push.js';
 import { loadPreferences, savePreferences } from './preferences.js';
 
 export const THEMES = [
@@ -9,6 +10,11 @@ export const THEMES = [
 export const MOTION = [
   { value: 'normal', label: 'Normales' },
   { value: 'reduce', label: 'Reducidas' },
+];
+
+export const SOUND = [
+  { value: true, label: 'Con sonido y vibración' },
+  { value: false, label: 'Sin sonido' },
 ];
 
 export function Choice({ legend, name, options, value, onChange }) {
@@ -24,6 +30,54 @@ export function Choice({ legend, name, options, value, onChange }) {
         ))}
       </div>
     </fieldset>
+  );
+}
+
+const PUSH_TEXT = {
+  unsupported: 'Este navegador no permite notificaciones. Instala la app en el teléfono para recibirlas.',
+  blocked: 'Las notificaciones están bloqueadas. Actívalas en los ajustes del navegador o de la app.',
+  off: 'Recibe un aviso en el teléfono cuando haya pedidos nuevos, aunque la app esté cerrada.',
+  on: 'Este dispositivo recibe avisos de pedidos aunque la app esté cerrada.',
+};
+
+function PushSetting() {
+  const [status, setStatus] = useState('off');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    pushStatus().then(setStatus);
+  }, []);
+
+  async function toggle() {
+    setBusy(true);
+    setError('');
+    try {
+      if (status === 'on') {
+        await disablePush();
+        setStatus('off');
+      } else {
+        setStatus(await enablePush());
+      }
+    } catch {
+      setError('No se pudo cambiar el aviso. Revisa tu conexión e inténtalo de nuevo.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const unavailable = status === 'unsupported' || status === 'blocked';
+  return (
+    <div className="card settings-group">
+      <h3>Notificaciones</h3>
+      <p className="management-hint">{PUSH_TEXT[status]}</p>
+      {!unavailable && (
+        <button type="button" className={status === 'on' ? 'btn-secondary' : 'btn-primary'} disabled={busy} aria-busy={busy} onClick={toggle}>
+          {status === 'on' ? 'Desactivar en este dispositivo' : 'Activar en este dispositivo'}
+        </button>
+      )}
+      {error && <p className="field-error" role="alert">{error}</p>}
+    </div>
   );
 }
 
@@ -46,6 +100,8 @@ export function Settings({ onOpenProfile }) {
       </div>
       <Choice legend="Apariencia" name="theme" options={THEMES} value={preferences.theme} onChange={(value) => update('theme', value)} />
       <Choice legend="Animaciones" name="motion" options={MOTION} value={preferences.motion} onChange={(value) => update('motion', value)} />
+      <Choice legend="Avisos de pedidos" name="alertSound" options={SOUND} value={preferences.alertSound} onChange={(value) => update('alertSound', value)} />
+      <PushSetting />
       <div className="card settings-group">
         <h3>Cuenta</h3>
         <p className="management-hint">Cambia tu nombre, tu foto o tu contraseña.</p>
