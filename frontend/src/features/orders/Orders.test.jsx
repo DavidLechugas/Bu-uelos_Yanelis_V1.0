@@ -12,7 +12,7 @@ const AGOTADO = { id: 'p-3', nombre: 'Empanada', descripcion: '', precio: 3000, 
 afterEach(() => vi.unstubAllGlobals());
 
 describe('Orders — administrador', () => {
-  it('crea un pedido asignado y lo muestra arriba en Activos', async () => {
+  it('crea un pedido asignado y lo muestra arriba en Todos', async () => {
     const { calls } = mockApi({
       'GET /api/orders': { body: [] },
       'GET /api/couriers': { body: [LUIS] },
@@ -24,7 +24,7 @@ describe('Orders — administrador', () => {
     });
     const user = userEvent.setup();
     render(<Orders user={ADMIN} />);
-    await screen.findByText(/No hay pedidos en «Activos»/);
+    await screen.findByText(/No hay pedidos en «Todos»/);
 
     await user.click(screen.getByRole('button', { name: 'Nuevo pedido' }));
     await user.type(screen.getByLabelText('Cliente'), 'Marta');
@@ -187,7 +187,7 @@ describe('Orders — administrador', () => {
     const user = userEvent.setup();
     render(<Orders user={ADMIN} />);
     expect(await screen.findByRole('heading', { name: 'Carmen' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Rosa' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Rosa' })).toBeInTheDocument();
 
     expect(screen.queryByRole('button', { name: 'Cancelar pedido' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Ver pedido de Carmen' }));
@@ -195,12 +195,31 @@ describe('Orders — administrador', () => {
     const confirm = screen.getByRole('group', { name: /Confirmar cancelación/ });
     await user.click(within(confirm).getByRole('button', { name: 'Sí, cancelar' }));
     expect(await screen.findByText('Pedido cancelado.')).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Carmen' })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /Entregados/ }));
+    await user.selectOptions(screen.getByLabelText('Estado'), 'entregados');
     expect(screen.getByRole('heading', { name: 'Rosa' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /Cancelados/ }));
+    expect(screen.queryByRole('heading', { name: 'Carmen' })).not.toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText('Estado'), 'cancelados');
     expect(screen.getByRole('heading', { name: 'Carmen' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Rosa' })).not.toBeInTheDocument();
+  });
+
+  it('separa los pedidos por día y cambia el orden', async () => {
+    mockApi({
+      'GET /api/orders': { body: [
+        order({ id: 'o-1', cliente: 'Carmen', creadoEn: '2026-10-14T15:00:00Z' }),
+        order({ id: 'o-2', cliente: 'Rosa', creadoEn: '2026-10-15T15:00:00Z' }),
+      ] },
+      'GET /api/couriers': { body: [] },
+    });
+    const user = userEvent.setup();
+    render(<Orders user={ADMIN} />);
+    await screen.findByRole('heading', { name: 'Carmen' });
+    const names = () => screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent);
+    expect(screen.getAllByRole('list')).toHaveLength(2);
+    expect(names()).toEqual(['Rosa', 'Carmen']);
+    await user.selectOptions(screen.getByLabelText('Orden'), 'antiguos');
+    expect(names()).toEqual(['Carmen', 'Rosa']);
   });
 });
 
@@ -215,9 +234,11 @@ describe('Orders — domiciliario', () => {
     render(<Orders user={COURIER} />);
 
     expect(await screen.findByRole('region', { name: 'Mis pedidos' })).toBeInTheDocument();
-    expect(await screen.findByText('Cra 5 #10-20')).toBeInTheDocument();
+    await screen.findByRole('button', { name: 'Ver pedido de Carmen' });
+    expect(screen.queryByText('Cra 5 #10-20')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Llamar a Carmen' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Ver pedido de Carmen' }));
+    expect(screen.getByText('Cra 5 #10-20')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Llamar a Carmen' })).toHaveAttribute('href', 'tel:3001234567');
     expect(screen.getByRole('link', { name: 'WhatsApp a Carmen' })).toHaveAttribute('href', 'https://wa.me/573001234567');
     expect(screen.getByRole('link', { name: 'Abrir la dirección de Carmen en Maps' })).toHaveAttribute('href', expect.stringContaining('google.com/maps'));
@@ -302,7 +323,7 @@ describe('Orders — venta en local y pedidos disponibles', () => {
     });
     const user = userEvent.setup();
     render(<Orders user={ADMIN} />);
-    await screen.findByText(/No hay pedidos en «Activos»/);
+    await screen.findByText(/No hay pedidos en «Todos»/);
     await user.click(screen.getByRole('button', { name: 'Nuevo pedido' }));
     const dialog = screen.getByRole('dialog', { name: 'Nuevo pedido' });
     expect(within(dialog).getByLabelText('Cliente')).toBeInTheDocument();
@@ -360,7 +381,7 @@ describe('Orders — vista', () => {
 
     await user.click(screen.getByRole('button', { name: 'Lista compacta' }));
     const table = screen.getByRole('table');
-    expect(within(table).getAllByRole('columnheader').map((cell) => cell.textContent))
+    expect(within(within(table).getAllByRole('rowgroup')[0]).getAllByRole('columnheader').map((cell) => cell.textContent))
       .toEqual(['ID', 'Cliente', 'Productos', 'Total', 'Fecha', 'Domicilio', 'Estado', 'Acciones']);
     expect(within(table).getByRole('rowheader', { name: 'Carmen' })).toBeInTheDocument();
     expect(within(table).getByRole('cell', { name: 'Sin asignar' })).toBeInTheDocument();

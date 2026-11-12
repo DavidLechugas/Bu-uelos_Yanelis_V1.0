@@ -97,9 +97,10 @@ separado: no acordado.
 - Comentarios mínimos: un comentario breve en alguna clase o método y solo cuando el porqué no sea evidente; sin comentarios que repitan el código. Las directivas (eslint, vitest) se conservan.
 - Los pedidos tienen índices en Mongo creados al arrancar (`orders/OrderIndexes`); las consultas nuevas deben apoyarse en ellos.
 - Mantener paleta crema/caramelo/marrón y accesibilidad (ventanas y hojas: overlay, Escape, foco) y la
-  forma de app descrita en `AGENTS.md` («Diseño»). Rediseño móvil por fases: fase 1 hecha el
-  2026-11-10 (navegación, encabezado, Inicio, Pedidos; sin commit); fase 2 pendiente (Domicilios,
-  Productos, Perfil, Configuración, Login).
+  forma de app descrita en `AGENTS.md` («Diseño»). Rediseño móvil por fases: fase 1 hecha y subida
+  a `main` (commit `74a05e5`, 2026-11-12: navegación, encabezado, Inicio, Pedidos, botón «Nuevo pedido»
+  con color propio `--fab-*`); fase 2 pendiente (Domicilios, Productos, Perfil, Configuración, Login).
+  Lista de tareas en `docs/PENDIENTES.md`.
 - Sin microservicios ni refactors masivos junto con auth.
 - Commit/push de trabajo verificado autorizado (solo archivos necesarios); cambios de recursos cloud,
   cuentas o costes se consultan antes.

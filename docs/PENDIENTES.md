@@ -26,7 +26,40 @@ y Chrome (Playwright `channel: 'chrome'`) a 375 y 1280 px, en tema claro y oscur
 - [x] Búsqueda por cliente/teléfono/dirección y filtro por fecha (Hoy, Ayer, 7 días); refresco automático cada 10 s (solo pedidos; el equipo cada 60 s) (ya existe `FILTERS` en `features/orders/Orders.jsx`).
 - [x] Sin cambios de backend salvo que haga falta un campo nuevo.
 
+## 5. Rediseño móvil con forma de app (por fases)
+Plan acordado: navegación inferior, un encabezado, botón flotante como acción principal, hojas inferiores
+en teléfono, textos cortos. Guía en `AGENTS.md` («Diseño»).
+- [x] Fase 1 (commit `74a05e5`, subida a `main` 2026-11-12): encabezado y barra inferior comunes, menú «Más», Modal como hoja en teléfono, Pedidos (tarjetas, detalle y «Filtros»), Inicio. Lint y 114 pruebas en verde; capturas 320/390/768/1280 y oscuro revisadas.
+- [x] «Nuevo pedido»: color propio (`--fab-bg`) para que no se confunda con los botones de las tarjetas.
+- [ ] Fase 2: Domicilios, Productos, Perfil, Configuración y Login a la misma forma. Empezar solo cuando el usuario lo pida.
+- [ ] Pendiente de verificar: teléfono real, animaciones reducidas, contraste medido, backend real en local (MongoDB detenido).
+
+## 6. Entorno local (pendiente de la sesión)
+- [ ] MongoDB (servicio) está **detenido**: `Start-Service MongoDB` exige PowerShell como administrador (lo hace el usuario). No detenerlo ni tocar sus datos.
+- [ ] Backend (8080) no arrancado; con Mongo arriba, `.\mvnw.cmd spring-boot:run` con JDK 21 en `backend/`.
+- [ ] Vite (5173) puede seguir corriendo de la sesión anterior; cerrarlo por puerto si ya no hace falta. La memoria del equipo estaba muy justa (~690 MB libres).
+
+## 7. Pedidos: tarjetas, detalle y filtros (sin commit)
+- [x] Tarjetas con solo cliente, precio, etiquetas de estado y tiempo («hace 25 d») con domiciliario; mismo tamaño que antes.
+- [x] Detalle del pedido con texto más grande (total, productos, etiquetas de datos).
+- [x] Filtros: se quitan los chips; estado y orden («más recientes/antiguos primero») en el menú de filtros; por defecto «Todos»; separador por día.
+- [x] Disponibles (domiciliario) en formato grande; formulario «Nuevo pedido» con títulos de campo y ayudas de 16–18 px.
+- [x] Tipografía del resto de la app (preguntas 4 a 12; el usuario pidió subir todo de una vez): texto mínimo 16 px.
+  - [x] 4. Lista compacta (tablet/PC): filas y separador por día 15 → 16 px, encabezados 13 → 14 px.
+  - [x] 5. Botones secundarios (Cancelar, Editar, Llamar…): 15 → 16 px.
+  - [x] 6. Inicio (nombres de tarjetas, «En vivo», días de la gráfica): 15/14 → 16 px.
+  - [x] 7. Barra inferior: 14 → 15 px (16 px no cabe: «Domicilios» se partiría a 320 px).
+  - [x] 8. Domicilios y Productos (precio, disponibilidad, datos): 14–15 → 16 px.
+  - [x] 9. Perfil (nombres de datos y estadísticas): 14 → 16 px.
+  - [x] 10. Menú «Más» (usuario bajo el nombre): 15 → 16 px.
+  - [x] 11. Login (lema, campos, errores): 15 → 16 px.
+  - [x] 12. Avisos, toasts y error de carga: 15 → 16 px.
+  - Excepciones a propósito: etiquetas de estado y contador de chips 14 → 15 px; globos de conteo (12–14 px) sin cambio por su círculo fijo.
+- [ ] Pruebas completas (`npm run lint; npm run test; npm run build`) y capturas a 375/1280 px en claro y oscuro: aún no hechas para este bloque.
+- [ ] Commit: pendiente de autorización del usuario. Cerrar el mock de la API en el puerto 8080 (proceso de prueba, no es del proyecto) antes de terminar.
+
 ## Otros pendientes conocidos
 - [x] Instalación Android de la PWA: confirmada por el usuario (modo offline en hosting, sin comprobar).
 - [ ] Costo de domicilio separado: no acordado, no inventarlo.
 - [ ] Cambiar la contraseña del administrador local de pruebas (el usuario dijo que lo hará).
+- [ ] Decidir si se retira `VITE_API_BASE_URL` de Cloudflare (ya no lo usa el frontend).

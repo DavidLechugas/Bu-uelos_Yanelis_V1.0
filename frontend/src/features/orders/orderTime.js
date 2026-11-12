@@ -11,6 +11,19 @@ export function timeAgo(iso, now = Date.now()) {
   return `hace ${Math.floor(hours / 24)} d`;
 }
 
+const dayTitle = new Intl.DateTimeFormat('es-CO', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/Bogota' });
+
+/** Día del pedido en Bogotá (AAAA-MM-DD), ordenable como texto. */
+export const dayKey = (iso) => bogotaDay.format(new Date(iso));
+
+export function dayLabel(iso, now = Date.now()) {
+  const key = dayKey(iso);
+  if (key === bogotaDay.format(new Date(now))) return 'Hoy';
+  if (key === bogotaDay.format(new Date(now - DAY_MS))) return 'Ayer';
+  const label = dayTitle.format(new Date(iso));
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
 export const DATE_RANGES = [
   { id: 'todas', label: 'Todas las fechas' },
   { id: 'hoy', label: 'Hoy' },

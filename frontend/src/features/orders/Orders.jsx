@@ -8,7 +8,7 @@ import { ManagementField } from '../ManagementField.jsx';
 import { Toast, useNotice } from '../feedback/Toast.jsx';
 import { SAVE_DONE_MS, pause } from '../feedback/timing.js';
 import { composeDetail, itemsTotal } from './orderItems.js';
-import { DATE_RANGES, matchesDate, matchesSearch, timeAgo } from './orderTime.js';
+import { DATE_RANGES, dayKey, dayLabel, matchesDate, matchesSearch, timeAgo } from './orderTime.js';
 import { ProductPicker } from './ProductPicker.jsx';
 
 export const STATUS = {
@@ -28,6 +28,22 @@ const FILTERS = [
   { id: 'cancelados', label: 'Cancelados', match: (order) => order.estado === 'CANCELADO' },
   { id: 'todos', label: 'Todos', match: () => true },
 ];
+
+const SORTS = [
+  { id: 'recientes', label: 'Más recientes primero' },
+  { id: 'antiguos', label: 'Más antiguos primero' },
+];
+
+/** Agrupa pedidos ya ordenados en bloques consecutivos del mismo día. */
+function groupByDay(orders) {
+  const days = [];
+  for (const order of orders) {
+    const key = dayKey(order.creadoEn);
+    if (days.at(-1)?.key !== key) days.push({ key, orders: [] });
+    days.at(-1).orders.push(order);
+  }
+  return days;
+}
 
 const NEXT = {
   ASIGNADO: { estado: 'EN_CAMINO', admin: 'Marcar en camino', courier: 'Voy en camino' },
@@ -97,7 +113,8 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
   const [orders, setOrders] = useState(null);
   const [couriers, setCouriers] = useState([]);
   const [loadError, setLoadError] = useState('');
-  const [filter, setFilter] = useState('activos');
+  const [filter, setFilter] = useState('todos');
+  const [sort, setSort] = useState('recientes');
   const [draft, setDraft] = useState(null);
   const [saved, setSaved] = useState('');
   const [search, setSearch] = useState('');
@@ -210,7 +227,7 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
       } else {
         const created = await ordersApi.create(body);
         setOrders((previous) => [created, ...(previous ?? [])]);
-        setFilter(local ? 'todos' : 'activos');
+        if (!FILTERS.find((item) => item.id === filter).match(created)) setFilter('todos');
         setNotice(local ? 'Venta registrada.' : 'Pedido hecho correctamente.');
       }
       setSaved(draft.id ? '¡Pedido actualizado!' : local ? '¡Venta registrada!' : '¡Pedido enviado!');
@@ -240,10 +257,12 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
   const mine = isAdmin ? (orders ?? []) : (orders ?? []).filter((order) => !isAvailable(order));
   const visible = mine
     .filter(current.match)
-    .filter((order) => matchesDate(order, range, now) && matchesSearch(order, search));
+    .filter((order) => matchesDate(order, range, now) && matchesSearch(order, search))
+    .sort((a, b) => (sort === 'antiguos' ? 1 : -1) * a.creadoEn.localeCompare(b.creadoEn));
+  const days = groupByDay(visible);
   const showActions = visible.some((order) => NEXT[order.estado] || (isAdmin && OPEN.has(order.estado)));
-  const narrowed = search.trim() !== '' || range !== 'todas';
-  const activeFilters = (search.trim() !== '' ? 1 : 0) + (range !== 'todas' ? 1 : 0);
+  const activeFilters = (search.trim() !== '' ? 1 : 0) + (range !== 'todas' ? 1 : 0) + (filter !== 'todos' ? 1 : 0);
+  const clearFilters = () => { setSearch(''); setRange('todas'); setFilter('todos'); setSort('recientes'); };
   const shownView = !wide && view === 'lista' ? 'tarjetas' : view;
   const detail = detailId ? (orders ?? []).find((order) => order.id === detailId) : null;
   const closeDetail = () => { setDetailId(null); setConfirmCancel(null); };
@@ -353,6 +372,22 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
         value={search}
         onChange={(event) => setSearch(event.target.value)}
       />
+      <div className="management-field">
+        <label htmlFor="order-status">Estado</label>
+        <select id="order-status" value={filter} onChange={(event) => setFilter(event.target.value)}>
+          {FILTERS.map((item) => (
+            <option key={item.id} value={item.id}>
+              {orders ? `${item.label} (${mine.filter(item.match).length})` : item.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="management-field">
+        <label htmlFor="order-sort">Orden</label>
+        <select id="order-sort" value={sort} onChange={(event) => setSort(event.target.value)}>
+          {SORTS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+        </select>
+      </div>
       <div className="management-field order-find-date">
         <label htmlFor="order-range">Fecha</label>
         <select id="order-range" value={range} onChange={(event) => setRange(event.target.value)}>
@@ -451,7 +486,11 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
               <span className={`status-badge status-badge--${STATUS[detail.estado].tone}`}>{isLocal(detail) ? 'Local' : STATUS[detail.estado].label}</span>
               <span className="order-sheet-id">{shortId(detail.id)}</span>
             </p>
-            <p className="order-detail">{detail.detalle}</p>
+            <p className="order-sheet-total">${currency.format(detail.totalCop)}</p>
+            <div>
+              <h3 className="order-sheet-label">Productos</h3>
+              <p className="order-detail">{detail.detalle}</p>
+            </div>
             <dl className="order-meta">
               {!isLocal(detail) && (
                 <>
@@ -460,7 +499,6 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
                 </>
               )}
               {isAdmin && !isLocal(detail) && <div><dt>Domiciliario</dt><dd>{detail.domiciliarioNombre ?? 'Sin asignar'}</dd></div>}
-              <div><dt>Total</dt><dd className="order-total">${currency.format(detail.totalCop)}</dd></div>
               <div><dt>Creado</dt><dd><time dateTime={detail.creadoEn}>{dateTime.format(new Date(detail.creadoEn))}</time></dd></div>
             </dl>
 
@@ -490,7 +528,7 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
             <button type="button" className="btn-primary" onClick={() => setFiltersOpen(false)}>
               {visible.length === 1 ? 'Ver 1 pedido' : `Ver ${visible.length} pedidos`}
             </button>
-            <button type="button" className="btn-secondary" disabled={!activeFilters} onClick={() => { setSearch(''); setRange('todas'); }}>Limpiar</button>
+            <button type="button" className="btn-secondary" disabled={!activeFilters && sort === 'recientes'} onClick={clearFilters}>Limpiar</button>
           </div>
         </div>
       </Modal>
@@ -506,10 +544,9 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
                   <h3>{order.cliente}</h3>
                   <span className="status-badge status-badge--pending">Disponible</span>
                 </div>
-                <p className="order-detail">{order.detalle}</p>
-                <p className="order-address"><MapPinIcon size={16} /><span>{order.direccion}</span></p>
+                <p className="order-price">${currency.format(order.totalCop)}</p>
+                <p className="order-address"><MapPinIcon size={20} /><span>{order.direccion}</span></p>
                 <p className="order-foot">
-                  <span className="order-total">${currency.format(order.totalCop)}</span>
                   <time dateTime={order.creadoEn} title={dateTime.format(new Date(order.creadoEn))}>{timeAgo(order.creadoEn, now)}</time>
                 </p>
                 <button
@@ -528,20 +565,10 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
 
       <div className="orders-controls">
         <div className="orders-bar">
-          <div className="filter-chips" role="group" aria-label="Filtrar pedidos">
-            {FILTERS.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className="filter-chip"
-                aria-pressed={filter === item.id}
-                onClick={() => setFilter(item.id)}
-              >
-                {item.label}
-                {orders && <span className="filter-chip-count">{mine.filter(item.match).length}</span>}
-              </button>
-            ))}
-          </div>
+          <p className="orders-summary" aria-live="polite">
+            {current.label}
+            {orders && <span className="filter-chip-count">{visible.length}</span>}
+          </p>
           {!wide && (
             <button
               type="button"
@@ -570,7 +597,7 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
       {orders && !visible.length && (
         <p className="card management-empty">
           <img className="empty-logo" src="/icons/logo.svg" alt="" />
-          {narrowed
+          {search.trim() !== '' || range !== 'todas'
             ? 'Ningún pedido coincide con los filtros.'
             : isAdmin
               ? `No hay pedidos en «${current.label}».`
@@ -594,72 +621,78 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
                 {showActions && <th scope="col">Acciones</th>}
               </tr>
             </thead>
-            <tbody>
-              {visible.map((order) => {
-                const status = STATUS[order.estado];
-                return (
-                  <tr key={order.id} className={`order-row--${status.tone}`}>
-                    <td className="mono">{shortId(order.id)}</td>
-                    <th scope="row">{nameOf(order)}</th>
-                    <td className="wide">{order.detalle}</td>
-                    <td className="num">${currency.format(order.totalCop)}</td>
-                    <td><time dateTime={order.creadoEn}>{dateTime.format(new Date(order.creadoEn))}</time></td>
-                    <td>{courierCell(order)}</td>
-                    <td><span className={`status-badge status-badge--${status.tone}`}>{isLocal(order) ? 'Local' : status.label}</span></td>
-                    {showActions && <td className="actions">{renderActions(order, busyId === order.id, NEXT[order.estado])}</td>}
-                  </tr>
-                );
-              })}
-            </tbody>
+            {days.map((day) => (
+              <tbody key={day.key}>
+                <tr className="order-day-row">
+                  <th scope="colgroup" colSpan={showActions ? 8 : 7}>{dayLabel(day.orders[0].creadoEn, now)}</th>
+                </tr>
+                {day.orders.map((order) => {
+                  const status = STATUS[order.estado];
+                  return (
+                    <tr key={order.id} className={`order-row--${status.tone}`}>
+                      <td className="mono">{shortId(order.id)}</td>
+                      <th scope="row">{nameOf(order)}</th>
+                      <td className="wide">{order.detalle}</td>
+                      <td className="num">${currency.format(order.totalCop)}</td>
+                      <td><time dateTime={order.creadoEn}>{dateTime.format(new Date(order.creadoEn))}</time></td>
+                      <td>{courierCell(order)}</td>
+                      <td><span className={`status-badge status-badge--${status.tone}`}>{isLocal(order) ? 'Local' : status.label}</span></td>
+                      {showActions && <td className="actions">{renderActions(order, busyId === order.id, NEXT[order.estado])}</td>}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            ))}
           </table>
         </div>
       )}
 
-      {shownView !== 'lista' && (
-        <ul className={`management-list orders-view--${shownView}`}>
-          {visible.map((order) => {
-            const status = STATUS[order.estado];
-            const next = NEXT[order.estado];
-            const busy = busyId === order.id;
-            const unassigned = isAdmin && order.estado === 'PENDIENTE' && !order.domiciliarioId && !isLocal(order);
-            return (
-              <li key={order.id} className={`card order-card order-card--${status.tone}`} aria-busy={busy}>
-                <button type="button" className="order-open" aria-haspopup="dialog" aria-label={`Ver pedido de ${nameOf(order)}`} onClick={() => setDetailId(order.id)} />
-                <div className="order-head">
-                  <h3>{nameOf(order)}</h3>
-                  <span className={`status-badge status-badge--${status.tone}`}>{isLocal(order) ? 'Local' : status.label}</span>
-                </div>
-                <p className="order-detail order-detail--clamp">{(order.detalle ?? '').split('\n').filter(Boolean).join(' · ')}</p>
-                {!isAdmin && !isLocal(order) && <p className="order-address"><MapPinIcon size={16} /><span>{order.direccion}</span></p>}
-                <p className="order-foot">
-                  <span className="order-total">${currency.format(order.totalCop)}</span>
-                  <time dateTime={order.creadoEn} title={dateTime.format(new Date(order.creadoEn))}>{timeAgo(order.creadoEn, now)}</time>
-                  {isAdmin && order.domiciliarioNombre && <span>{order.domiciliarioNombre}</span>}
-                </p>
-                {next && (
-                  <button
-                    type="button"
-                    className="btn-primary order-quick"
-                    disabled={busy}
-                    onClick={() => run(
-                      order.id,
-                      () => ordersApi.setStatus(order.id, next.estado),
-                      (updated) => `Pedido ${STATUS[updated.estado].label.toLowerCase()}.`,
-                    )}
-                  >
-                    {isAdmin ? next.admin : next.courier}
-                  </button>
-                )}
-                {unassigned && (
-                  <button type="button" className="btn-secondary order-quick" aria-haspopup="dialog" onClick={() => setDetailId(order.id)}>
-                    Asignar
-                  </button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      {shownView !== 'lista' && days.map((day) => (
+        <section key={day.key} className="order-day" aria-labelledby={`day-${day.key}`}>
+          <h2 id={`day-${day.key}`} className="order-day-title">{dayLabel(day.orders[0].creadoEn, now)}</h2>
+          <ul className={`management-list orders-view--${shownView}`}>
+            {day.orders.map((order) => {
+              const status = STATUS[order.estado];
+              const next = NEXT[order.estado];
+              const busy = busyId === order.id;
+              const unassigned = isAdmin && order.estado === 'PENDIENTE' && !order.domiciliarioId && !isLocal(order);
+              return (
+                <li key={order.id} className={`card order-card order-card--${status.tone}`} aria-busy={busy}>
+                  <button type="button" className="order-open" aria-haspopup="dialog" aria-label={`Ver pedido de ${nameOf(order)}`} onClick={() => setDetailId(order.id)} />
+                  <div className="order-head">
+                    <h3>{nameOf(order)}</h3>
+                    <span className={`status-badge status-badge--${status.tone}`}>{isLocal(order) ? 'Local' : status.label}</span>
+                  </div>
+                  <p className="order-price">${currency.format(order.totalCop)}</p>
+                  <p className="order-foot">
+                    <time dateTime={order.creadoEn} title={dateTime.format(new Date(order.creadoEn))}>{timeAgo(order.creadoEn, now)}</time>
+                    {isAdmin && order.domiciliarioNombre && <span>{order.domiciliarioNombre}</span>}
+                  </p>
+                  {next && (
+                    <button
+                      type="button"
+                      className="btn-primary order-quick"
+                      disabled={busy}
+                      onClick={() => run(
+                        order.id,
+                        () => ordersApi.setStatus(order.id, next.estado),
+                        (updated) => `Pedido ${STATUS[updated.estado].label.toLowerCase()}.`,
+                      )}
+                    >
+                      {isAdmin ? next.admin : next.courier}
+                    </button>
+                  )}
+                  {unassigned && (
+                    <button type="button" className="btn-secondary order-quick" aria-haspopup="dialog" onClick={() => setDetailId(order.id)}>
+                      Asignar
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
 
       {isAdmin && !draft && (
         <button type="button" className="fab" onClick={openForm}>

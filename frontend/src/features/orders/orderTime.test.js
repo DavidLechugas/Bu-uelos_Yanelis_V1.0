@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { matchesDate, matchesSearch, timeAgo } from './orderTime.js';
+import { dayLabel, matchesDate, matchesSearch, timeAgo } from './orderTime.js';
 
 // 2026-10-17 15:00 en Bogotá (UTC-5) = 20:00 UTC
 const NOW = Date.parse('2026-10-17T20:00:00Z');
@@ -23,6 +23,14 @@ describe('matchesDate', () => {
     expect(matchesDate(at('2026-10-11T20:00:00Z'), 'semana', NOW)).toBe(true);
     expect(matchesDate(at('2026-10-10T20:00:00Z'), 'semana', NOW)).toBe(false);
     expect(matchesDate(at('2020-01-01T00:00:00Z'), 'todas', NOW)).toBe(true);
+  });
+});
+
+describe('dayLabel', () => {
+  it('nombra hoy, ayer y los demás días en Bogotá', () => {
+    expect(dayLabel('2026-10-18T03:00:00Z', NOW)).toBe('Hoy');
+    expect(dayLabel('2026-10-16T20:00:00Z', NOW)).toBe('Ayer');
+    expect(dayLabel('2026-10-14T20:00:00Z', NOW)).toBe('Miércoles, 14 de octubre');
   });
 });
 

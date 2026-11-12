@@ -213,7 +213,7 @@ button {
 }
 
 .brand-tagline {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   color: var(--muted);
 }
 
@@ -239,7 +239,7 @@ button {
 }
 
 .demo-notice {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   background-color: var(--caramel-soft);
   border-left: 3px solid var(--caramel);
   border-radius: var(--radius-small);
@@ -253,7 +253,7 @@ button {
 }
 
 .role-fieldset legend {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 600;
   margin-bottom: 8px;
   padding: 0;
@@ -274,7 +274,7 @@ button {
   border: 1px solid var(--caramel-border);
   border-radius: var(--radius-small);
   background-color: var(--input-bg);
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 600;
   padding: 8px 12px;
   cursor: pointer;
@@ -299,7 +299,7 @@ button {
 }
 
 .field label {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 
@@ -337,7 +337,7 @@ button {
 }
 
 .field-error {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   color: var(--red);
 }
 
@@ -362,7 +362,7 @@ button {
   border-radius: var(--radius-small);
   background-color: transparent;
   color: var(--brown-700);
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 700;
   padding: 0 16px;
 }
@@ -376,13 +376,13 @@ button {
   border: 0;
   background: none;
   color: var(--brown-700);
-  font-size: 0.9375rem;
+  font-size: 1rem;
   text-decoration: underline;
   text-align: center;
 }
 
 .help-text {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   color: var(--muted);
   background-color: var(--cream-deep);
   border-radius: var(--radius-small);
@@ -473,7 +473,7 @@ button {
 }
 
 .stat-label {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   color: var(--muted);
   margin-bottom: 4px;
 }
@@ -495,7 +495,7 @@ button {
 .stat-badge {
   display: inline-block;
   margin-top: 6px;
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: var(--brown-700);
   background-color: var(--caramel-soft);
   border-radius: 999px;
@@ -526,7 +526,7 @@ button {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  font-size: 0.9375rem;
+  font-size: 1rem;
   background-color: var(--caramel-soft);
   border-radius: var(--radius-small);
   padding: 10px 12px;
@@ -563,7 +563,7 @@ button {
   padding: 0 8.75%;
   margin-top: 0.25rem;
   color: var(--muted);
-  font-size: 0.875rem;
+  font-size: 1rem;
   text-align: center;
 }
 
@@ -702,13 +702,13 @@ button {
 }
 
 .error-detail {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   color: var(--red);
   margin-bottom: 8px;
 }
 
 .error-card p {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   margin-bottom: 8px;
 }
 
@@ -722,7 +722,7 @@ button {
 /* ---------- Avisos ---------- */
 
 .notice {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   border-radius: var(--radius-small);
   padding: 10px 12px;
 }
@@ -767,7 +767,7 @@ button {
 
 .pwa-toast p {
   flex: 1;
-  font-size: 0.9375rem;
+  font-size: 1rem;
 }
 
 .pwa-toast-btn {
@@ -807,7 +807,7 @@ button {
   border: 0;
   background: transparent;
   color: var(--muted);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
 }
 
 .bottom-nav-label {
@@ -1190,7 +1190,7 @@ button {
 
 .profile-stats dt {
   color: var(--muted);
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
 .profile-stats dd {
@@ -1236,7 +1236,7 @@ button {
 
 .profile-facts dt {
   color: var(--muted);
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
 .profile-facts dd {
@@ -1322,7 +1322,7 @@ button {
   align-items: center;
   gap: 8px;
   color: var(--muted);
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
 .live-dot {
@@ -1364,7 +1364,7 @@ button {
   border-radius: 2rem;
   background-color: var(--red);
   color: var(--on-primary);
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
 .dashboard-main > .alert-banner,
@@ -1504,7 +1504,7 @@ button,
 
 .more-profile-text span {
   color: var(--muted);
-  font-size: 0.9375rem;
+  font-size: 1rem;
 }
 
 .more-list {
