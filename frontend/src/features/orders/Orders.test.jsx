@@ -58,7 +58,9 @@ describe('Orders — administrador', () => {
     });
     const user = userEvent.setup();
     render(<Orders user={ADMIN} />);
-    await user.click(await screen.findByRole('button', { name: 'Editar pedido de Carmen' }));
+    await user.click(await screen.findByRole('button', { name: 'Ver pedido de Carmen' }));
+    await user.click(screen.getByRole('button', { name: 'Editar pedido de Carmen' }));
+    expect(screen.queryByRole('dialog', { name: 'Pedido de Carmen' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Editar pedido' })).toBeInTheDocument();
     expect(screen.getByLabelText('Cliente')).toHaveValue('Carmen');
     expect(screen.queryByLabelText('Domiciliario (opcional)')).not.toBeInTheDocument();
@@ -131,7 +133,8 @@ describe('Orders — administrador', () => {
     });
     const user = userEvent.setup();
     render(<Orders user={ADMIN} />);
-    await user.click(await screen.findByRole('button', { name: 'Editar pedido de Carmen' }));
+    await user.click(await screen.findByRole('button', { name: 'Ver pedido de Carmen' }));
+    await user.click(screen.getByRole('button', { name: 'Editar pedido de Carmen' }));
     expect(screen.getByLabelText('Notas o detalle del pedido')).toHaveValue('12 buñuelos');
     await user.click(await screen.findByRole('button', { name: 'Añadir Buñuelo' }));
     expect(screen.getByLabelText('Total (COP)')).toHaveValue('26500');
@@ -154,7 +157,7 @@ describe('Orders — administrador', () => {
     expect(screen.getByLabelText('Total (COP)')).toBeEnabled();
   });
 
-  it('asigna un pedido pendiente desde la lista', async () => {
+  it('asigna un pedido pendiente desde su detalle', async () => {
     const { calls } = mockApi({
       'GET /api/orders': { body: [order()] },
       'GET /api/couriers': { body: [LUIS] },
@@ -164,8 +167,13 @@ describe('Orders — administrador', () => {
     });
     const user = userEvent.setup();
     render(<Orders user={ADMIN} />);
-    await user.selectOptions(await screen.findByLabelText('Asignar a'), 'u-luis');
+    expect(screen.queryByLabelText('Asignar a')).not.toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: 'Asignar' }));
+    const detail = screen.getByRole('dialog', { name: 'Pedido de Carmen' });
+    expect(within(detail).getByText('Cra 5 #10-20')).toBeInTheDocument();
+    await user.selectOptions(within(detail).getByLabelText('Asignar a'), 'u-luis');
     expect(await screen.findByText('Pedido asignado.')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByText('Asignado', { selector: '.status-badge' })).toBeInTheDocument();
     expect(calls.at(-1).body).toEqual({ domiciliarioId: 'u-luis' });
   });
@@ -181,6 +189,8 @@ describe('Orders — administrador', () => {
     expect(await screen.findByRole('heading', { name: 'Carmen' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Rosa' })).not.toBeInTheDocument();
 
+    expect(screen.queryByRole('button', { name: 'Cancelar pedido' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Ver pedido de Carmen' }));
     await user.click(screen.getByRole('button', { name: 'Cancelar pedido' }));
     const confirm = screen.getByRole('group', { name: /Confirmar cancelación/ });
     await user.click(within(confirm).getByRole('button', { name: 'Sí, cancelar' }));
@@ -204,13 +214,18 @@ describe('Orders — domiciliario', () => {
     const user = userEvent.setup();
     render(<Orders user={COURIER} />);
 
-    expect(await screen.findByRole('heading', { name: 'Mis pedidos' })).toBeInTheDocument();
+    expect(await screen.findByRole('region', { name: 'Mis pedidos' })).toBeInTheDocument();
+    expect(await screen.findByText('Cra 5 #10-20')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Llamar a Carmen' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Ver pedido de Carmen' }));
     expect(screen.getByRole('link', { name: 'Llamar a Carmen' })).toHaveAttribute('href', 'tel:3001234567');
     expect(screen.getByRole('link', { name: 'WhatsApp a Carmen' })).toHaveAttribute('href', 'https://wa.me/573001234567');
     expect(screen.getByRole('link', { name: 'Abrir la dirección de Carmen en Maps' })).toHaveAttribute('href', expect.stringContaining('google.com/maps'));
     expect(screen.queryByRole('button', { name: 'Nuevo pedido' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cancelar pedido' })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Asignar a')).not.toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Voy en camino' }));
     expect(await screen.findByRole('button', { name: 'Marcar entregado' })).toBeInTheDocument();
@@ -260,17 +275,17 @@ describe('Orders — búsqueda y fecha', () => {
     await screen.findByRole('heading', { name: 'Carmen' });
     expect(screen.getByRole('heading', { name: 'José Pérez' })).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText('Buscar pedidos'), 'jose');
+    await user.type(screen.getByLabelText('Buscar'), 'jose');
     expect(screen.queryByRole('heading', { name: 'Carmen' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'José Pérez' })).toBeInTheDocument();
 
-    await user.clear(screen.getByLabelText('Buscar pedidos'));
+    await user.clear(screen.getByLabelText('Buscar'));
     await user.selectOptions(screen.getByLabelText('Fecha'), 'hoy');
     expect(screen.getByRole('heading', { name: 'Carmen' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'José Pérez' })).not.toBeInTheDocument();
 
-    await user.type(screen.getByLabelText('Buscar pedidos'), 'zzz');
-    expect(screen.getByText('Ningún pedido coincide con la búsqueda o la fecha.')).toBeInTheDocument();
+    await user.type(screen.getByLabelText('Buscar'), 'zzz');
+    expect(screen.getByText('Ningún pedido coincide con los filtros.')).toBeInTheDocument();
   });
 });
 
@@ -324,6 +339,7 @@ describe('Orders — venta en local y pedidos disponibles', () => {
     expect(await screen.findByText('Pedido tomado.')).toBeInTheDocument();
     expect(calls.some((call) => call.method === 'POST' && call.path === '/api/orders/o-7/tomar')).toBe(true);
     expect(screen.queryByRole('region', { name: /Disponibles/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Ver pedido de Rosa' }));
     expect(screen.getByRole('link', { name: 'Llamar a Rosa' })).toBeInTheDocument();
   });
 });
@@ -360,6 +376,48 @@ describe('Orders — vista', () => {
     render(<Orders user={ADMIN} />);
     await screen.findByRole('heading', { name: 'Carmen' });
     expect(screen.getByRole('list')).toHaveClass('orders-view--mosaico');
+    localStorage.removeItem('bunuelos.orders.view');
+  });
+});
+
+describe('Orders — teléfono', () => {
+  function stubNarrow() {
+    vi.stubGlobal('matchMedia', (query) => ({
+      matches: !query.includes('min-width'),
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }));
+  }
+
+  it('guarda la búsqueda, la fecha y la vista en la hoja «Filtros»', async () => {
+    localStorage.setItem('bunuelos.orders.view', 'lista');
+    stubNarrow();
+    mockApi({
+      'GET /api/orders': { body: [order(), order({ id: 'o-2', cliente: 'José Pérez' })] },
+      'GET /api/couriers': { body: [] },
+    });
+    const user = userEvent.setup();
+    render(<Orders user={ADMIN} />);
+    await screen.findByRole('heading', { name: 'Carmen' });
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.getByRole('list')).toHaveClass('orders-view--tarjetas');
+    expect(screen.queryByLabelText('Buscar')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Filtros' }));
+    const sheet = screen.getByRole('dialog', { name: 'Filtros' });
+    expect(within(sheet).queryByRole('button', { name: 'Lista compacta' })).not.toBeInTheDocument();
+    expect(within(sheet).getByRole('button', { name: 'Limpiar' })).toBeDisabled();
+    await user.type(within(sheet).getByLabelText('Buscar'), 'jose');
+    await user.click(within(sheet).getByRole('button', { name: 'Ver 1 pedido' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Carmen' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'José Pérez' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Filtros (1 activos)' }));
+    await user.click(screen.getByRole('button', { name: 'Limpiar' }));
+    await user.click(screen.getByRole('button', { name: 'Ver 2 pedidos' }));
+    expect(screen.getByRole('heading', { name: 'Carmen' })).toBeInTheDocument();
     localStorage.removeItem('bunuelos.orders.view');
   });
 });

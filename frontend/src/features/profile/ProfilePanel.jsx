@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { auth, ordersApi } from '../../api/client.js';
 import { Avatar } from '../../components/Avatar.jsx';
-import { trapTabKey } from '../../components/Drawer.jsx';
+import { trapTabKey } from '../../components/focusTrap.js';
 import { CameraIcon, CloseIcon } from '../../components/icons.jsx';
 import { ManagementField } from '../ManagementField.jsx';
 import { Toast, useNotice } from '../feedback/Toast.jsx';

@@ -46,7 +46,7 @@ backend → suites completas. Los tests nunca deben tocar Atlas real. No silenci
 
 - `frontend/` Vite 7 + React 19 (JSX, CSS plano). `src/api/client.js` es el único punto de llamadas
   HTTP, siempre `/api` del mismo origen (cookies y CSRF); `hooks/useDashboard.js` alimenta el tablero.
-  `components/` = shell (Header, Drawer, BottomNav, Login, Dashboard/WeeklyChart).
+  `components/` = shell (Header, BottomNav, MoreMenu, Modal, Login, Dashboard/WeeklyChart).
   `features/<dominio>/` = módulos de negocio: `orders/`, `couriers/`, `products/`, `profile/`,
   `settings/` (todos contra la API real; `features/inventory/` está vacío, Inventario retirado).
   Tests de UI con `src/test/mockApi.js`.
@@ -96,7 +96,10 @@ separado: no acordado.
 - Esperas: `components/Spinner.jsx` (anillo que gira; con `done`, círculo con chulito verde que se dibuja). Pausas de confirmación en `features/feedback/timing.js` (0 en pruebas, cortas con animaciones reducidas). Botones con `aria-busy` muestran un anillo por CSS.
 - Comentarios mínimos: un comentario breve en alguna clase o método y solo cuando el porqué no sea evidente; sin comentarios que repitan el código. Las directivas (eslint, vitest) se conservan.
 - Los pedidos tienen índices en Mongo creados al arrancar (`orders/OrderIndexes`); las consultas nuevas deben apoyarse en ellos.
-- Mantener paleta crema/caramelo/marrón y accesibilidad (drawer: overlay, Escape, foco); no rediseñar.
+- Mantener paleta crema/caramelo/marrón y accesibilidad (ventanas y hojas: overlay, Escape, foco) y la
+  forma de app descrita en `AGENTS.md` («Diseño»). Rediseño móvil por fases: fase 1 hecha el
+  2026-11-10 (navegación, encabezado, Inicio, Pedidos; sin commit); fase 2 pendiente (Domicilios,
+  Productos, Perfil, Configuración, Login).
 - Sin microservicios ni refactors masivos junto con auth.
 - Commit/push de trabajo verificado autorizado (solo archivos necesarios); cambios de recursos cloud,
   cuentas o costes se consultan antes.

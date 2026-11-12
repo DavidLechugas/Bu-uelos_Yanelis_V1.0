@@ -1,18 +1,14 @@
-import { MenuIcon } from './icons.jsx';
+import { BackIcon } from './icons.jsx';
 import { Avatar } from './Avatar.jsx';
 
-export function Header({ title, user, onOpenDrawer, onOpenProfile }) {
+export function Header({ title, user, onBack, onOpenProfile }) {
   return (
     <header className="app-header">
-      <button
-        type="button"
-        className="icon-btn header-menu-btn"
-        aria-label="Abrir menú"
-        aria-haspopup="dialog"
-        onClick={onOpenDrawer}
-      >
-        <MenuIcon />
-      </button>
+      {onBack && (
+        <button type="button" className="icon-btn header-back-btn" aria-label="Volver" onClick={onBack}>
+          <BackIcon />
+        </button>
+      )}
       <h1 className="header-title" tabIndex={-1}>{title}</h1>
       <button
         type="button"

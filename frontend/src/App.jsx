@@ -4,10 +4,10 @@ import { Spinner } from './components/Spinner.jsx';
 import { BOOT_DONE_MS, pause } from './features/feedback/timing.js';
 import { Login } from './components/Login.jsx';
 import { Dashboard } from './components/Dashboard.jsx';
-import { Drawer } from './components/Drawer.jsx';
 import { PwaStatus } from './components/PwaStatus.jsx';
 import { Header } from './components/Header.jsx';
 import { BottomNav } from './components/BottomNav.jsx';
+import { MoreMenu } from './components/MoreMenu.jsx';
 import { Products } from './features/products/Products.jsx';
 import { Orders } from './features/orders/Orders.jsx';
 import { Admins } from './features/admins/Admins.jsx';
@@ -18,27 +18,17 @@ import { releasePush, syncPush } from './features/push/push.js';
 import { ProfilePanel } from './features/profile/ProfilePanel.jsx';
 import { Settings } from './features/settings/Settings.jsx';
 import { applyPreferences, loadPreferences } from './features/settings/preferences.js';
-import { CloseIcon } from './components/icons.jsx';
 import './features/management.css';
 
 const ROLE_LABEL = { ADMIN: 'Administrador', COURIER: 'Domiciliario' };
-const TITLES = { inicio: 'Inicio', pedidos: 'Pedidos', domicilios: 'Domicilios', productos: 'Productos', configuracion: 'Configuración' };
-
-const DRAWER_ITEMS = {
-  ADMIN: ['Inicio', 'Pedidos', 'Domiciliarios', 'Productos', 'Perfil', 'Configuración'],
-  COURIER: ['Mis pedidos', 'Perfil', 'Configuración'],
-};
-const DRAWER_VIEWS = {
-  Inicio: 'inicio', Pedidos: 'pedidos', 'Mis pedidos': 'pedidos', Domiciliarios: 'domicilios',
-  Productos: 'productos', Configuración: 'configuracion',
-};
+const TITLES = { inicio: 'Inicio', pedidos: 'Pedidos', domicilios: 'Domicilios', mas: 'Más', productos: 'Productos', configuracion: 'Configuración' };
+// Pantallas de segundo nivel: se entra desde «Más» y el encabezado ofrece volver.
+const UNDER_MORE = new Set(['productos', 'configuracion']);
 
 export default function App() {
   // undefined = comprobando sesión; null = sin sesión.
   const [user, setUser] = useState(undefined);
   const [loginMessage, setLoginMessage] = useState('');
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [notice, setNotice] = useState(null);
   const [view, setView] = useState('inicio');
   const [profileOpen, setProfileOpen] = useState(false);
   const [bootDone, setBootDone] = useState(false);
@@ -75,7 +65,7 @@ export default function App() {
 
   useEffect(() => {
     shell.current?.scrollIntoView?.({ block: 'start' });
-    shell.current?.querySelector('.view-panel:not([hidden]) h1')?.focus({ preventScroll: true });
+    shell.current?.querySelector('h1')?.focus({ preventScroll: true });
   }, [view]);
 
   function startSession(nextUser) {
@@ -85,10 +75,8 @@ export default function App() {
   }
 
   function resetSession() {
-    setDrawerOpen(false);
     setProfileOpen(false);
     setUser(null);
-    setNotice(null);
   }
 
   function handleLogin(nextUser) {
@@ -106,32 +94,12 @@ export default function App() {
     resetSession();
   }
 
-  function navigate(nextView) {
-    setDrawerOpen(false);
-    setNotice(null);
-    setView(nextView);
-  }
-
   function handleBottomNav(item) {
-    navigate(item.id);
+    setView(item.id);
   }
 
   function openProfile() {
-    setDrawerOpen(false);
     setProfileOpen(true);
-  }
-
-  function handleDrawerNav(section) {
-    if (section === 'Perfil') {
-      openProfile();
-      return;
-    }
-    if (DRAWER_VIEWS[section]) {
-      navigate(DRAWER_VIEWS[section]);
-      return;
-    }
-    setDrawerOpen(false);
-    setNotice(`La sección «${section}» todavía no está disponible.`);
   }
 
   if (user === undefined) {
@@ -152,65 +120,38 @@ export default function App() {
   }
 
   const isAdmin = user.role === 'ADMIN';
-  const openDrawer = () => setDrawerOpen(true);
   const title = !isAdmin && view === 'pedidos' ? 'Mis pedidos' : TITLES[view];
+  const underMore = UNDER_MORE.has(view);
 
   return (
     <div className="app-shell" ref={shell}>
-      {isAdmin && (
-        <div className="view-panel" hidden={view !== 'inicio'}>
-          <Dashboard
-            session={user}
-            active={view === 'inicio'}
-            onOpenDrawer={openDrawer}
-            onOpenProfile={openProfile}
-            onSelectNav={handleBottomNav}
-          />
-        </div>
-      )}
-      <div className="view-panel" hidden={view === 'inicio'}>
-        <Header title={title} user={user} onOpenDrawer={openDrawer} onOpenProfile={openProfile} />
-        <main className="management-main">
-          <div className="view-panel" hidden={view !== 'pedidos'}>
-            <Orders user={user} active={view === 'pedidos'} onFetched={alerts.report} onChanged={alerts.baseline} />
+      <Header title={title} user={user} onBack={underMore ? () => setView('mas') : undefined} onOpenProfile={openProfile} />
+      <main className="app-main">
+        {isAdmin && (
+          <div className="view-panel" hidden={view !== 'inicio'}>
+            <Dashboard active={view === 'inicio'} onSelectNav={handleBottomNav} />
           </div>
-          {isAdmin && (
-            <>
-              <div className="view-panel management-stack" hidden={view !== 'domicilios'}>
-                <Couriers active={view === 'domicilios'} />
-                {user.principal && <Admins active={view === 'domicilios'} />}
-              </div>
-              <div className="view-panel" hidden={view !== 'productos'}><Products active={view === 'productos'} /></div>
-            </>
-          )}
-          <div className="view-panel" hidden={view !== 'configuracion'}><Settings onOpenProfile={openProfile} /></div>
-        </main>
-        {isAdmin && <BottomNav active={view} onSelect={handleBottomNav} badges={{ pedidos: alerts.unseen }} />}
-        <Toast notice={alerts.notice} onClose={alerts.closeNotice} />
-      </div>
-      <ProfilePanel open={profileOpen} user={user} onClose={() => setProfileOpen(false)} onUpdated={setUser} onLogout={handleLogout} />
-      <Drawer
-        open={drawerOpen}
-        role={ROLE_LABEL[user.role]}
-        usuario={user.nombre}
-        items={DRAWER_ITEMS[user.role]}
-        onClose={() => setDrawerOpen(false)}
-        onNavigate={handleDrawerNav}
-        onLogout={handleLogout}
-      />
-      {notice && (
-        <div className={`notice-toast${isAdmin ? '' : ' notice-toast--low'}`} role="status">
-          <p>{notice}</p>
-          <button
-            type="button"
-            className="icon-btn notice-close"
-            aria-label="Cerrar aviso"
-            onClick={() => setNotice(null)}
-          >
-            <CloseIcon />
-          </button>
+        )}
+        <div className="view-panel management-main" hidden={view !== 'pedidos'}>
+          <Orders user={user} active={view === 'pedidos'} onFetched={alerts.report} onChanged={alerts.baseline} />
         </div>
-      )}
+        {isAdmin && (
+          <>
+            <div className="view-panel management-main management-stack" hidden={view !== 'domicilios'}>
+              <Couriers active={view === 'domicilios'} />
+              {user.principal && <Admins active={view === 'domicilios'} />}
+            </div>
+            <div className="view-panel management-main" hidden={view !== 'productos'}><Products active={view === 'productos'} /></div>
+          </>
+        )}
+        <div className="view-panel management-main" hidden={view !== 'mas'}>
+          <MoreMenu user={user} roleLabel={ROLE_LABEL[user.role]} onOpenProfile={openProfile} onNavigate={setView} onLogout={handleLogout} />
+        </div>
+        <div className="view-panel management-main" hidden={view !== 'configuracion'}><Settings onOpenProfile={openProfile} /></div>
+      </main>
+      <BottomNav admin={isAdmin} active={underMore ? 'mas' : view} onSelect={handleBottomNav} badges={{ pedidos: alerts.unseen }} />
+      <Toast notice={alerts.notice} onClose={alerts.closeNotice} />
+      <ProfilePanel open={profileOpen} user={user} onClose={() => setProfileOpen(false)} onUpdated={setUser} onLogout={handleLogout} />
       <PwaStatus />
     </div>
   );

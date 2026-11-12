@@ -21,8 +21,9 @@ solo añade lo que no está allí.
 - node 24, npm 11, git 2.55 en PATH. JDK 21 en `C:\Program Files\Java\jdk-21.0.12.1` (PATH trae 26).
 - MongoDB 8.3 como servicio en 127.0.0.1:27017 (sin mongosh; usar Compass o la API). Maven/Docker no
   globales: `.\mvnw.cmd`.
-- Chrome instalado; Playwright en `C:\Users\david\AppData\Local\Temp\opencode\node_modules`
-  (`channel: 'chrome'`, sin descargar navegadores).
+- Chrome instalado; Playwright no está en el repo: instalar `playwright-core` en una carpeta temporal
+  fuera del proyecto (`channel: 'chrome'`, sin descargar navegadores). La ruta antigua de
+  `Temp\opencode` ya no existe.
 - Comandos en CMD: igual que PowerShell, con `cd /d "<ruta>"` y `set "JAVA_HOME=..."`.
 
 ## Hosting (detalle en `docs/DEPLOY.md`)
@@ -41,7 +42,12 @@ solo añade lo que no está allí.
 ## Diseño (contrato)
 
 - Paleta crema/caramelo/marrón, tipografía en `rem` sin fijar `font-size` en `html`; mínimo `.875rem`,
-  entradas `≥1rem`, objetivos táctiles ≥44 px. Rejillas con `minmax(0, 1fr)`.
+  entradas `≥1rem`, objetivos táctiles ≥48 px. Rejillas con `minmax(0, 1fr)`.
+- Forma de app (2026-11-10): un solo encabezado con el título de la pantalla (flecha «Volver» en las
+  que cuelgan de «Más») y barra inferior para los dos roles (Inicio, Pedidos, Domicilios, Más; el
+  domiciliario solo Pedidos y Más). Sin menú lateral. Una acción principal por pantalla (botón
+  flotante), tarjetas resumidas que abren el detalle y, en teléfono (<600 px), las ventanas
+  (`Modal`, perfil) son hojas inferiores. Textos cortos; lo secundario va al detalle o a «Filtros».
 - Tramos: móvil base, tableta 600–1024 (contenido 720 px; 840 px en 900–1024), escritorio ≥1025
   (`clamp(60rem, 90vw, 68rem)`). `--content-max` limita el contenido; encabezado y barra inferior
   ocupan siempre todo el ancho.

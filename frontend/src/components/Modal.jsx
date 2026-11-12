@@ -1,10 +1,13 @@
 import { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { CloseIcon } from './icons.jsx';
-import { trapTabKey } from './Drawer.jsx';
+import { trapTabKey } from './focusTrap.js';
 
-/** Diálogo modal centrado: Escape o el fondo lo cierran, atrapa el foco y lo devuelve al cerrar. */
-export function Modal({ open, title, onClose, children }) {
+/**
+ * Diálogo modal (hoja inferior en el teléfono, ventana centrada desde tableta): Escape o el fondo
+ * lo cierran, atrapa el foco y lo devuelve al cerrar. `focusField={false}` deja el foco en «Cerrar».
+ */
+export function Modal({ open, title, onClose, children, focusField = true }) {
   const panelRef = useRef(null);
   const previousFocus = useRef(null);
   const closeRef = useRef(onClose);
@@ -15,7 +18,7 @@ export function Modal({ open, title, onClose, children }) {
     if (!open) return undefined;
     previousFocus.current = document.activeElement;
     const panel = panelRef.current;
-    (panel?.querySelector('input, select, textarea') ?? panel?.querySelector('button'))?.focus();
+    ((focusField && panel?.querySelector('input, select, textarea')) || panel?.querySelector('button'))?.focus();
     function onKey(event) {
       if (event.key === 'Escape') closeRef.current();
       else if (event.key === 'Tab' && panelRef.current) trapTabKey(event, panelRef.current);
@@ -28,7 +31,7 @@ export function Modal({ open, title, onClose, children }) {
       document.body.style.overflow = overflow;
       previousFocus.current?.focus?.();
     };
-  }, [open]);
+  }, [open, focusField]);
 
   if (!open) return null;
   // En el body: así queda por encima del encabezado y la barra inferior.

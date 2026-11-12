@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal } from '../../components/Modal.jsx';
 import { Spinner } from '../../components/Spinner.jsx';
 import { couriersApi, ordersApi } from '../../api/client.js';
-import { CardsViewIcon, ChatIcon, GridViewIcon, ListViewIcon, MapPinIcon, PhoneIcon } from '../../components/icons.jsx';
+import { CardsViewIcon, ChatIcon, FilterIcon, GridViewIcon, ListViewIcon, MapPinIcon, PhoneIcon, PlusIcon } from '../../components/icons.jsx';
+import { useMediaQuery } from '../../hooks/useMediaQuery.js';
 import { ManagementField } from '../ManagementField.jsx';
 import { Toast, useNotice } from '../feedback/Toast.jsx';
 import { SAVE_DONE_MS, pause } from '../feedback/timing.js';
@@ -55,6 +56,7 @@ const POLL_MS = 10000;
 const CLOCK_MS = 30000;
 const COURIERS_EVERY = 6;
 const shortId = (id) => `#${String(id).slice(-6).toUpperCase()}`;
+const nameOf = (order) => order.cliente || 'Venta en local';
 const courierCell = (order) => (isLocal(order) ? 'No' : order.domiciliarioNombre ?? 'Sin asignar');
 
 const currency = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
@@ -105,6 +107,10 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState(null);
   const [confirmCancel, setConfirmCancel] = useState(null);
+  const [detailId, setDetailId] = useState(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  // La tabla no cabe en el teléfono: allí la vista «lista» se muestra como tarjetas.
+  const wide = useMediaQuery('(min-width: 600px)');
   const [notice, setNotice] = useNotice();
 
   const inFlight = useRef(false);
@@ -170,6 +176,7 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
       const updated = await request();
       setOrders((previous) => previous.map((order) => (order.id === updated.id ? updated : order)));
       setNotice(success(updated));
+      setDetailId(null);
     } catch (error) {
       setNotice(error.message, 'error');
       if (error.status === 409 || error.status === 404) load();
@@ -236,6 +243,11 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
     .filter((order) => matchesDate(order, range, now) && matchesSearch(order, search));
   const showActions = visible.some((order) => NEXT[order.estado] || (isAdmin && OPEN.has(order.estado)));
   const narrowed = search.trim() !== '' || range !== 'todas';
+  const activeFilters = (search.trim() !== '' ? 1 : 0) + (range !== 'todas' ? 1 : 0);
+  const shownView = !wide && view === 'lista' ? 'tarjetas' : view;
+  const detail = detailId ? (orders ?? []).find((order) => order.id === detailId) : null;
+  const closeDetail = () => { setDetailId(null); setConfirmCancel(null); };
+  const openForm = () => { setDraft(EMPTY_DRAFT); setErrors({}); setNotice(''); };
   const totalPreview = Number((draft?.totalCop ?? '').replace(/\D/g, ''));
 
   const renderActions = (order, busy, next) => (
@@ -299,6 +311,7 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
             });
             setErrors({});
             setNotice('');
+            setDetailId(null);
           }}
         >
           Editar
@@ -329,23 +342,35 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
     </div>
   );
 
-  return (
-    <section className="management-section" aria-labelledby="orders-title">
-      <div className="management-heading">
-        <div>
-          <h2 id="orders-title">{isAdmin ? 'Pedidos' : 'Mis pedidos'}</h2>
-          <p>{isAdmin ? 'Crea pedidos, asígnalos y sigue cada entrega.' : 'Pedidos que tienes asignados y los que puedes tomar.'}</p>
-        </div>
-        <div className="management-actions management-actions--compact">
-          {isAdmin && !draft && (
-            <button className="btn-primary" type="button" onClick={() => { setDraft(EMPTY_DRAFT); setErrors({}); setNotice(''); }}>
-              Nuevo pedido
-            </button>
-          )}
-          <button className="btn-secondary" type="button" onClick={load}>Actualizar</button>
-        </div>
+  const finder = (
+    <>
+      <ManagementField
+        label="Buscar"
+        type="search"
+        inputMode="search"
+        autoComplete="off"
+        placeholder="Cliente, teléfono o dirección"
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+      />
+      <div className="management-field order-find-date">
+        <label htmlFor="order-range">Fecha</label>
+        <select id="order-range" value={range} onChange={(event) => setRange(event.target.value)}>
+          {DATE_RANGES.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+        </select>
       </div>
+      <div className="view-switch" role="group" aria-label="Vista de los pedidos">
+        {VIEWS.filter(({ id }) => wide || id !== 'lista').map(({ id, label, Icon }) => (
+          <button key={id} type="button" aria-pressed={shownView === id} aria-label={label} title={label} onClick={() => changeView(id)}>
+            <Icon size={20} />
+          </button>
+        ))}
+      </div>
+    </>
+  );
 
+  return (
+    <section className="management-section orders-section" aria-label={isAdmin ? 'Pedidos' : 'Mis pedidos'}>
       <Toast notice={notice} onClose={() => setNotice('')} />
 
       <Modal
@@ -419,11 +444,61 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
           </form>
         )}
       </Modal>
+      <Modal open={Boolean(detail)} title={detail ? (isLocal(detail) ? 'Venta en local' : `Pedido de ${detail.cliente}`) : ''} onClose={closeDetail} focusField={false}>
+        {detail && (
+          <div className="order-sheet" aria-busy={busyId === detail.id}>
+            <p className="order-sheet-status">
+              <span className={`status-badge status-badge--${STATUS[detail.estado].tone}`}>{isLocal(detail) ? 'Local' : STATUS[detail.estado].label}</span>
+              <span className="order-sheet-id">{shortId(detail.id)}</span>
+            </p>
+            <p className="order-detail">{detail.detalle}</p>
+            <dl className="order-meta">
+              {!isLocal(detail) && (
+                <>
+                  <div><dt>Dirección</dt><dd>{detail.direccion}</dd></div>
+                  <div><dt>Teléfono</dt><dd>{detail.telefono}</dd></div>
+                </>
+              )}
+              {isAdmin && !isLocal(detail) && <div><dt>Domiciliario</dt><dd>{detail.domiciliarioNombre ?? 'Sin asignar'}</dd></div>}
+              <div><dt>Total</dt><dd className="order-total">${currency.format(detail.totalCop)}</dd></div>
+              <div><dt>Creado</dt><dd><time dateTime={detail.creadoEn}>{dateTime.format(new Date(detail.creadoEn))}</time></dd></div>
+            </dl>
+
+            {CONTACTABLE.has(detail.estado) && !isLocal(detail) && (
+              <div className="order-contact">
+                <a className="btn-secondary" href={`tel:${detail.telefono.replace(/[^0-9+]/g, '')}`} aria-label={`Llamar a ${detail.cliente}`}>
+                  <PhoneIcon size={18} /> Llamar
+                </a>
+                <a className="btn-secondary" href={whatsappUrl(detail.telefono)} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp a ${detail.cliente}`}>
+                  <ChatIcon size={18} /> WhatsApp
+                </a>
+                <a className="btn-secondary" href={mapsUrl(detail.direccion)} target="_blank" rel="noopener noreferrer" aria-label={`Abrir la dirección de ${detail.cliente} en Maps`}>
+                  <MapPinIcon size={18} /> Maps
+                </a>
+              </div>
+            )}
+
+            {renderActions(detail, busyId === detail.id, NEXT[detail.estado])}
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={filtersOpen && !wide} title="Filtros" onClose={() => setFiltersOpen(false)} focusField={false}>
+        <div className="order-filters">
+          {finder}
+          <div className="management-actions">
+            <button type="button" className="btn-primary" onClick={() => setFiltersOpen(false)}>
+              {visible.length === 1 ? 'Ver 1 pedido' : `Ver ${visible.length} pedidos`}
+            </button>
+            <button type="button" className="btn-secondary" disabled={!activeFilters} onClick={() => { setSearch(''); setRange('todas'); }}>Limpiar</button>
+          </div>
+        </div>
+      </Modal>
 
       {available.length > 0 && (
         <section className="order-available" aria-labelledby="available-title">
-          <h3 id="available-title">Disponibles<span className="filter-chip-count">{available.length}</span></h3>
-          <p className="management-hint">El primero que toque «Tomar pedido» se lo queda.</p>
+          <h2 id="available-title">Disponibles<span className="filter-chip-count">{available.length}</span></h2>
+          <p className="management-hint">El primero que lo tome se lo queda.</p>
           <ul className="management-list">
             {available.map((order) => (
               <li key={order.id} className="card order-card order-card--pending" aria-busy={busyId === order.id}>
@@ -432,21 +507,19 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
                   <span className="status-badge status-badge--pending">Disponible</span>
                 </div>
                 <p className="order-detail">{order.detalle}</p>
-                <dl className="order-meta">
-                  <div><dt>Dirección</dt><dd>{order.direccion}</dd></div>
-                  <div><dt>Total</dt><dd className="order-total">${currency.format(order.totalCop)}</dd></div>
-                  <div><dt>Creado</dt><dd><time dateTime={order.creadoEn} title={dateTime.format(new Date(order.creadoEn))}>{timeAgo(order.creadoEn, now)}</time></dd></div>
-                </dl>
-                <div className="order-actions">
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    disabled={busyId === order.id}
-                    onClick={() => run(order.id, () => ordersApi.claim(order.id), () => 'Pedido tomado.')}
-                  >
-                    Tomar pedido
-                  </button>
-                </div>
+                <p className="order-address"><MapPinIcon size={16} /><span>{order.direccion}</span></p>
+                <p className="order-foot">
+                  <span className="order-total">${currency.format(order.totalCop)}</span>
+                  <time dateTime={order.creadoEn} title={dateTime.format(new Date(order.creadoEn))}>{timeAgo(order.creadoEn, now)}</time>
+                </p>
+                <button
+                  type="button"
+                  className="btn-primary order-quick"
+                  disabled={busyId === order.id}
+                  onClick={() => run(order.id, () => ordersApi.claim(order.id), () => 'Pedido tomado.')}
+                >
+                  Tomar pedido
+                </button>
               </li>
             ))}
           </ul>
@@ -454,44 +527,35 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
       )}
 
       <div className="orders-controls">
-        <div className="filter-chips" role="group" aria-label="Filtrar pedidos">
-        {FILTERS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className="filter-chip"
-            aria-pressed={filter === item.id}
-            onClick={() => setFilter(item.id)}
-          >
-            {item.label}
-            {orders && <span className="filter-chip-count">{mine.filter(item.match).length}</span>}
-          </button>
-        ))}
-      </div>
-        <div className="order-find">
-          <ManagementField
-            label="Buscar pedidos"
-            type="search"
-            inputMode="search"
-            autoComplete="off"
-            placeholder="Buscar por cliente, teléfono o dirección"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          <div className="management-field order-find-date">
-            <label htmlFor="order-range">Fecha</label>
-            <select id="order-range" value={range} onChange={(event) => setRange(event.target.value)}>
-              {DATE_RANGES.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
-            </select>
-          </div>
-          <div className="view-switch" role="group" aria-label="Vista de los pedidos">
-            {VIEWS.map(({ id, label, Icon }) => (
-              <button key={id} type="button" aria-pressed={view === id} aria-label={label} title={label} onClick={() => changeView(id)}>
-                <Icon size={20} />
+        <div className="orders-bar">
+          <div className="filter-chips" role="group" aria-label="Filtrar pedidos">
+            {FILTERS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className="filter-chip"
+                aria-pressed={filter === item.id}
+                onClick={() => setFilter(item.id)}
+              >
+                {item.label}
+                {orders && <span className="filter-chip-count">{mine.filter(item.match).length}</span>}
               </button>
             ))}
           </div>
+          {!wide && (
+            <button
+              type="button"
+              className={`icon-btn filters-btn${activeFilters ? ' filters-btn--on' : ''}`}
+              aria-haspopup="dialog"
+              aria-label={activeFilters ? `Filtros (${activeFilters} activos)` : 'Filtros'}
+              onClick={() => setFiltersOpen(true)}
+            >
+              <FilterIcon />
+              {activeFilters > 0 && <span className="filters-btn-count" aria-hidden="true">{activeFilters}</span>}
+            </button>
+          )}
         </div>
+        {wide && <div className="order-find">{finder}</div>}
       </div>
 
       {loadError && (
@@ -507,14 +571,14 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
         <p className="card management-empty">
           <img className="empty-logo" src="/icons/logo.svg" alt="" />
           {narrowed
-            ? 'Ningún pedido coincide con la búsqueda o la fecha.'
+            ? 'Ningún pedido coincide con los filtros.'
             : isAdmin
               ? `No hay pedidos en «${current.label}».`
-              : 'No tienes pedidos en esta lista. Los nuevos aparecen solos en «Disponibles».'}
+              : 'No tienes pedidos aquí.'}
         </p>
       )}
 
-      {view === 'lista' && visible.length > 0 && (
+      {shownView === 'lista' && visible.length > 0 && (
         <div className="orders-table-wrap">
           <table className="orders-table">
             <caption className="visually-hidden">Pedidos</caption>
@@ -536,7 +600,7 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
                 return (
                   <tr key={order.id} className={`order-row--${status.tone}`}>
                     <td className="mono">{shortId(order.id)}</td>
-                    <th scope="row">{order.cliente}</th>
+                    <th scope="row">{nameOf(order)}</th>
                     <td className="wide">{order.detalle}</td>
                     <td className="num">${currency.format(order.totalCop)}</td>
                     <td><time dateTime={order.creadoEn}>{dateTime.format(new Date(order.creadoEn))}</time></td>
@@ -551,56 +615,57 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
         </div>
       )}
 
-      {view !== 'lista' && (
-      <ul className={`management-list orders-view--${view}`}>
-        {visible.map((order) => {
-          const status = STATUS[order.estado];
-          const next = NEXT[order.estado];
-          const busy = busyId === order.id;
-          return (
-            <li key={order.id} className={`card order-card order-card--${status.tone}`} aria-busy={busy}>
-              <div className="order-head">
-                <h3>{order.cliente}</h3>
-                <span className={`status-badge status-badge--${status.tone}`}>{isLocal(order) ? 'Local' : status.label}</span>
-              </div>
-              <p className="order-detail">{order.detalle}</p>
-              <dl className="order-meta">
-                {!isLocal(order) && (
-                  <>
-                    <div className="meta-extra">
-                      <dt>Dirección</dt>
-                      <dd>{order.direccion}</dd>
-                    </div>
-                    <div className="meta-extra">
-                      <dt>Teléfono</dt>
-                      <dd>{order.telefono}</dd>
-                    </div>
-                  </>
-                )}
-                <div><dt>Total</dt><dd className="order-total">${currency.format(order.totalCop)}</dd></div>
-                {isAdmin && !isLocal(order) && <div className="meta-extra"><dt>Domiciliario</dt><dd>{order.domiciliarioNombre ?? 'Sin asignar'}</dd></div>}
-                <div><dt>Creado</dt><dd><time dateTime={order.creadoEn} title={dateTime.format(new Date(order.creadoEn))}>{timeAgo(order.creadoEn, now)}</time></dd></div>
-              </dl>
-
-              {CONTACTABLE.has(order.estado) && !isLocal(order) && (
-                <div className="order-contact">
-                  <a className="btn-secondary" href={`tel:${order.telefono.replace(/[^0-9+]/g, '')}`} aria-label={`Llamar a ${order.cliente}`}>
-                    <PhoneIcon size={18} /> Llamar
-                  </a>
-                  <a className="btn-secondary" href={whatsappUrl(order.telefono)} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp a ${order.cliente}`}>
-                    <ChatIcon size={18} /> WhatsApp
-                  </a>
-                  <a className="btn-secondary" href={mapsUrl(order.direccion)} target="_blank" rel="noopener noreferrer" aria-label={`Abrir la dirección de ${order.cliente} en Maps`}>
-                    <MapPinIcon size={18} /> Maps
-                  </a>
+      {shownView !== 'lista' && (
+        <ul className={`management-list orders-view--${shownView}`}>
+          {visible.map((order) => {
+            const status = STATUS[order.estado];
+            const next = NEXT[order.estado];
+            const busy = busyId === order.id;
+            const unassigned = isAdmin && order.estado === 'PENDIENTE' && !order.domiciliarioId && !isLocal(order);
+            return (
+              <li key={order.id} className={`card order-card order-card--${status.tone}`} aria-busy={busy}>
+                <button type="button" className="order-open" aria-haspopup="dialog" aria-label={`Ver pedido de ${nameOf(order)}`} onClick={() => setDetailId(order.id)} />
+                <div className="order-head">
+                  <h3>{nameOf(order)}</h3>
+                  <span className={`status-badge status-badge--${status.tone}`}>{isLocal(order) ? 'Local' : status.label}</span>
                 </div>
-              )}
+                <p className="order-detail order-detail--clamp">{(order.detalle ?? '').split('\n').filter(Boolean).join(' · ')}</p>
+                {!isAdmin && !isLocal(order) && <p className="order-address"><MapPinIcon size={16} /><span>{order.direccion}</span></p>}
+                <p className="order-foot">
+                  <span className="order-total">${currency.format(order.totalCop)}</span>
+                  <time dateTime={order.creadoEn} title={dateTime.format(new Date(order.creadoEn))}>{timeAgo(order.creadoEn, now)}</time>
+                  {isAdmin && order.domiciliarioNombre && <span>{order.domiciliarioNombre}</span>}
+                </p>
+                {next && (
+                  <button
+                    type="button"
+                    className="btn-primary order-quick"
+                    disabled={busy}
+                    onClick={() => run(
+                      order.id,
+                      () => ordersApi.setStatus(order.id, next.estado),
+                      (updated) => `Pedido ${STATUS[updated.estado].label.toLowerCase()}.`,
+                    )}
+                  >
+                    {isAdmin ? next.admin : next.courier}
+                  </button>
+                )}
+                {unassigned && (
+                  <button type="button" className="btn-secondary order-quick" aria-haspopup="dialog" onClick={() => setDetailId(order.id)}>
+                    Asignar
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
-              {renderActions(order, busy, next)}
-            </li>
-          );
-        })}
-      </ul>
+      {isAdmin && !draft && (
+        <button type="button" className="fab" onClick={openForm}>
+          <PlusIcon />
+          <span>Nuevo pedido</span>
+        </button>
       )}
     </section>
   );

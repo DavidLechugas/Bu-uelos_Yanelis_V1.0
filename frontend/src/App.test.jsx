@@ -56,8 +56,9 @@ describe('App — sesión real y navegación por rol', () => {
     expect(await screen.findByText('Buenos días, Ana')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Perfil de Yanelys' })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
-    expect(within(screen.getByRole('dialog')).getByText('Administrador')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Más' }));
+    expect(screen.getByRole('heading', { name: 'Más', level: 1 })).toBeInTheDocument();
+    expect(screen.getByText('Administrador')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
 
     expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument();
@@ -80,7 +81,7 @@ describe('App — sesión real y navegación por rol', () => {
     expect(screen.queryByText(/no está implementada/)).not.toBeInTheDocument();
   });
 
-  it('el domiciliario solo ve sus pedidos, sin tablero ni barra inferior', async () => {
+  it('el domiciliario solo ve sus pedidos y «Más», sin tablero', async () => {
     const { calls } = mockApi({
       'GET /api/auth/session': { body: { usuario: COURIER } },
       'GET /api/orders': { body: [order({ estado: 'ASIGNADO', domiciliarioId: COURIER.id, domiciliarioNombre: 'Luis' })] },
@@ -88,7 +89,8 @@ describe('App — sesión real y navegación por rol', () => {
     render(<App />);
     expect(await screen.findByRole('heading', { name: 'Carmen' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Mis pedidos', level: 1 })).toBeInTheDocument();
-    expect(screen.queryByRole('navigation', { name: 'Navegación principal' })).not.toBeInTheDocument();
+    const nav = screen.getByRole('navigation', { name: 'Navegación principal' });
+    expect(within(nav).getAllByRole('button').map((button) => button.textContent)).toEqual(['Pedidos', 'Más']);
     expect(screen.queryByRole('button', { name: 'Nuevo pedido' })).not.toBeInTheDocument();
     expect(calls.some((call) => call.path === '/api/dashboard' || call.path === '/api/couriers')).toBe(false);
   });
@@ -101,8 +103,10 @@ describe('App — sesión real y navegación por rol', () => {
     render(<App />);
     await screen.findByText('Buenos días, Ana');
 
-    await user.click(screen.getByRole('button', { name: 'Abrir menú' }));
+    await user.click(screen.getByRole('button', { name: 'Más' }));
     await user.click(screen.getByRole('button', { name: 'Configuración' }));
+    expect(screen.getByRole('heading', { name: 'Configuración', level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Más' })).toHaveAttribute('aria-current', 'page');
     await user.click(screen.getByLabelText('Oscuro'));
     expect(document.documentElement.dataset.theme).toBe('dark');
     await user.click(screen.getByLabelText('Claro'));
@@ -120,13 +124,16 @@ describe('App — sesión real y navegación por rol', () => {
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('dialog', { name: 'Mi perfil' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Perfil de Yanelys Gómez' })).toHaveFocus();
+
+    await user.click(screen.getByRole('button', { name: 'Volver' }));
+    expect(screen.getByRole('heading', { name: 'Más', level: 1 })).toBeInTheDocument();
   });
 
   it('el tablero muestra los pedidos sin asignar y lleva a Pedidos', async () => {
     mockApi(adminRoutes({ 'GET /api/dashboard': { body: { ...DASHBOARD_DATA, pendientesSinAsignar: 2 } } }));
     const user = userEvent.setup();
     render(<App />);
-    expect(await screen.findByText(/En vivo · actualizado/)).toBeInTheDocument();
+    expect(await screen.findByText('En vivo')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /2 pedidos sin asignar/ }));
     expect(await screen.findByRole('heading', { name: 'Carmen' })).toBeInTheDocument();
   });

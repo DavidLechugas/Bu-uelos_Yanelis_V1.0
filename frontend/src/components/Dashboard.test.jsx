@@ -21,12 +21,8 @@ const DASHBOARD_DATA = {
   ],
 };
 
-const SESSION = { role: 'ADMIN', usuario: 'ana', nombre: 'Ana' };
-
-function renderDashboard(session = SESSION) {
-  return render(
-    <Dashboard session={session} onOpenDrawer={() => {}} onNavigate={() => {}} />,
-  );
+function renderDashboard() {
+  return render(<Dashboard onSelectNav={() => {}} />);
 }
 
 function stubFetch(result) {
@@ -44,12 +40,13 @@ describe('Dashboard', () => {
     vi.unstubAllGlobals();
   });
 
-  it('muestra el encabezado caramelo con menú, título y perfil', () => {
+  it('no repite el encabezado ni la navegación: los pone la app', async () => {
     stubFetch(DASHBOARD_DATA);
     renderDashboard();
-    expect(screen.getByRole('button', { name: 'Abrir menú' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Inicio' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Perfil de Ana' })).toBeInTheDocument();
+    await screen.findByText('Buenos días, Ana');
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
   });
 
   it('muestra estado de carga mientras consulta la API', () => {
@@ -67,7 +64,8 @@ describe('Dashboard', () => {
     expect(screen.getByText('$428.000')).toBeInTheDocument();
     expect(screen.getByText('36')).toBeInTheDocument();
     expect(screen.getByText('4')).toBeInTheDocument();
-    expect(screen.getByText('en curso')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Últimos 7 días' })).toBeInTheDocument();
+    expect(screen.getByText('En vivo')).toBeInTheDocument();
     const chart = await screen.findByRole('img', {
       name: /Gráfica de ventas de los últimos 7 días/,
     });

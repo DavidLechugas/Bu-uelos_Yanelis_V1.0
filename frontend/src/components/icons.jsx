@@ -44,9 +44,58 @@ export const DeliveryIcon = (props) => (
   </Svg>
 );
 
-export const MenuIcon = (props) => (
+export const MoreIcon = (props) => (
   <Svg {...props}>
-    <path d="M4 6.5h16M4 12h16M4 17.5h16" />
+    <circle cx="5" cy="12" r="1.25" />
+    <circle cx="12" cy="12" r="1.25" />
+    <circle cx="19" cy="12" r="1.25" />
+  </Svg>
+);
+
+export const PlusIcon = (props) => (
+  <Svg {...props}>
+    <path d="M12 5v14M5 12h14" />
+  </Svg>
+);
+
+export const BackIcon = (props) => (
+  <Svg {...props}>
+    <path d="M19 12H5M11 6l-6 6 6 6" />
+  </Svg>
+);
+
+export const ChevronRightIcon = (props) => (
+  <Svg {...props}>
+    <path d="m9 6 6 6-6 6" />
+  </Svg>
+);
+
+export const FilterIcon = (props) => (
+  <Svg {...props}>
+    <path d="M4 5h16l-6 7.5V19l-4-2v-4.5z" />
+  </Svg>
+);
+
+export const ProductIcon = (props) => (
+  <Svg {...props}>
+    <path d="m4 8 8-4 8 4v8l-8 4-8-4z" />
+    <path d="m4 8 8 4 8-4M12 12v8" />
+  </Svg>
+);
+
+export const SettingsIcon = (props) => (
+  <Svg {...props}>
+    <path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h9M17 17h3" />
+    <circle cx="15" cy="7" r="2" />
+    <circle cx="9" cy="12" r="2" />
+    <circle cx="15" cy="17" r="2" />
+  </Svg>
+);
+
+export const LogoutIcon = (props) => (
+  <Svg {...props}>
+    <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" />
+    <path d="m15 8 4 4-4 4M19 12H9" />
   </Svg>
 );
 

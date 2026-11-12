@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { BottomNav } from './BottomNav.jsx';
 
 describe('BottomNav', () => {
-  it('muestra Inicio, Pedidos y Domicilios, sin Inventario', () => {
+  it('muestra Inicio, Pedidos, Domicilios y Más, sin Inventario', () => {
     render(<BottomNav active="inicio" onSelect={() => {}} />);
     expect(
       screen.getByRole('button', { name: /Inicio/ }),
@@ -18,7 +18,13 @@ describe('BottomNav', () => {
     expect(
       screen.queryByRole('button', { name: /Inventario/ }),
     ).not.toBeInTheDocument();
-    expect(screen.getAllByRole('button')).toHaveLength(3);
+    expect(screen.getByRole('button', { name: /Más/ })).toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(4);
+  });
+
+  it('al domiciliario solo le muestra Pedidos y Más', () => {
+    render(<BottomNav admin={false} active="pedidos" onSelect={() => {}} />);
+    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['Pedidos', 'Más']);
   });
 
   it('marca la pestaña activa como página actual', () => {
