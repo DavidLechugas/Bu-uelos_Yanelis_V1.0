@@ -55,8 +55,8 @@ en teléfono, textos cortos. Guía en `AGENTS.md` («Diseño»).
   - [x] 11. Login (lema, campos, errores): 15 → 16 px.
   - [x] 12. Avisos, toasts y error de carga: 15 → 16 px.
   - Excepciones a propósito: etiquetas de estado y contador de chips 14 → 15 px; globos de conteo (12–14 px) sin cambio por su círculo fijo.
-- [ ] Pruebas completas (`npm run lint; npm run test; npm run build`) y capturas a 375/1280 px en claro y oscuro: aún no hechas para este bloque.
-- [ ] Commit: pendiente de autorización del usuario. Cerrar el mock de la API en el puerto 8080 (proceso de prueba, no es del proyecto) antes de terminar.
+- [x] Pruebas completas (lint, 116 pruebas, build) en verde; revisado en Chrome: 375 px oscuro (Inicio, Pedidos, Domicilios) y 1280 px claro (lista compacta). Commit `f3ebc8c`.
+- [x] Mock de la API en el 8080 cerrado. Vite (5173) sigue corriendo de la sesión.
 
 ## Otros pendientes conocidos
 - [x] Instalación Android de la PWA: confirmada por el usuario (modo offline en hosting, sin comprobar).
