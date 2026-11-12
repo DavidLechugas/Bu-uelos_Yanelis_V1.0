@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useId, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { Modal } from '../../components/Modal.jsx';
+import { PlusIcon } from '../../components/icons.jsx';
 import { Spinner } from '../../components/Spinner.jsx';
 import { ManagementField } from '../ManagementField.jsx';
 import { Toast, useNotice } from '../feedback/Toast.jsx';
@@ -43,8 +45,9 @@ function deactivationNotice(updated) {
 export const COURIER_TEAM = {
   titleId: 'couriers-title',
   title: 'Domiciliarios',
-  description: 'Crea las cuentas de tu equipo. No hay registro público.',
+  description: 'Cuentas de tu equipo.',
   newLabel: 'Nuevo domiciliario',
+  fab: true,
   created: 'Domiciliario creado.',
   activated: 'Domiciliario activado.',
   deactivated: deactivationNotice,
@@ -56,7 +59,7 @@ export const COURIER_TEAM = {
 export const ADMIN_TEAM = {
   titleId: 'admins-title',
   title: 'Administradores',
-  description: 'Encargados que pueden crear y asignar pedidos. Solo tu cuenta principal gestiona esta lista.',
+  description: 'Encargados de pedidos. Solo la cuenta principal los gestiona.',
   newLabel: 'Nuevo administrador',
   created: 'Administrador creado.',
   activated: 'Administrador activado.',
@@ -77,7 +80,6 @@ export function TeamSection({ config, api, active = true }) {
   const [newPassword, setNewPassword] = useState('');
   const [busyId, setBusyId] = useState(null);
   const [notice, setNotice] = useNotice();
-  const formTitleId = useId();
 
   const load = useCallback(async () => {
     try {
@@ -151,6 +153,9 @@ export function TeamSection({ config, api, active = true }) {
     }
   }
 
+  const passwordAccount = accounts?.find((account) => account.id === passwordFor);
+  const openForm = () => { setDraft(EMPTY_DRAFT); setErrors({}); setNotice(''); };
+
   return (
     <section className="management-section" aria-labelledby={config.titleId}>
       <div className="management-heading">
@@ -158,24 +163,22 @@ export function TeamSection({ config, api, active = true }) {
           <h2 id={config.titleId}>{config.title}</h2>
           <p>{config.description}</p>
         </div>
-        {!draft && (
-          <button className="btn-primary" type="button" onClick={() => { setDraft(EMPTY_DRAFT); setErrors({}); setNotice(''); }}>
-            {config.newLabel}
-          </button>
+        {!config.fab && !draft && (
+          <button className="btn-primary" type="button" onClick={openForm}>{config.newLabel}</button>
         )}
       </div>
 
       <Toast notice={notice} onClose={() => setNotice('')} />
 
+      <Modal open={Boolean(draft)} title={config.newLabel} onClose={() => { if (!saving) setDraft(null); }}>
       {draft && confirmed && (
-        <div className="card management-form management-form--done">
+        <div className="management-form--done">
           <Spinner size="md" done label={confirmed} />
         </div>
       )}
 
       {draft && !confirmed && (
-        <form className="card management-form" onSubmit={create} noValidate aria-labelledby={formTitleId}>
-          <h3 id={formTitleId}>{config.newLabel}</h3>
+        <form className="management-form" onSubmit={create} noValidate aria-label={config.newLabel}>
           <ManagementField label="Nombre" autoFocus maxLength={60} autoComplete="off" value={draft.nombre} onChange={(event) => setDraft({ ...draft, nombre: event.target.value })} error={errors.nombre} />
           <ManagementField
             label="Usuario"
@@ -206,6 +209,28 @@ export function TeamSection({ config, api, active = true }) {
           </div>
         </form>
       )}
+      </Modal>
+
+      <Modal open={Boolean(passwordAccount)} title="Cambiar contraseña" onClose={() => setPasswordFor(null)}>
+        {passwordAccount && (
+          <form className="management-form" onSubmit={(event) => savePassword(event, passwordAccount)} noValidate>
+            <ManagementField
+              label={`Nueva contraseña para ${passwordAccount.nombre}`}
+              type="password"
+              autoComplete="new-password"
+              maxLength={72}
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              error={errors.password}
+              hint="Mínimo 8 caracteres."
+            />
+            <div className="management-actions">
+              <button className="btn-primary" type="submit" disabled={busyId === passwordAccount.id} aria-busy={busyId === passwordAccount.id}>Guardar contraseña</button>
+              <button className="btn-secondary" type="button" onClick={() => setPasswordFor(null)}>Cancelar</button>
+            </div>
+          </form>
+        )}
+      </Modal>
 
       {loadError && (
         <div className="card error-card" role="alert">
@@ -237,40 +262,28 @@ export function TeamSection({ config, api, active = true }) {
                   <button type="button" className="btn-secondary" disabled={busy} onClick={() => toggle(account)}>
                     {account.activo ? 'Desactivar' : 'Activar'}
                   </button>
-                  {passwordFor !== account.id && (
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      disabled={busy}
-                      onClick={() => { setPasswordFor(account.id); setNewPassword(''); setErrors({}); }}
-                    >
-                      Cambiar contraseña
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    aria-haspopup="dialog"
+                    disabled={busy}
+                    onClick={() => { setPasswordFor(account.id); setNewPassword(''); setErrors({}); }}
+                  >
+                    Cambiar contraseña
+                  </button>
                 </div>
-              )}
-              {passwordFor === account.id && (
-                <form className="courier-password" onSubmit={(event) => savePassword(event, account)} noValidate>
-                  <ManagementField
-                    label={`Nueva contraseña para ${account.nombre}`}
-                    type="password"
-                    autoComplete="new-password"
-                    autoFocus
-                    maxLength={72}
-                    value={newPassword}
-                    onChange={(event) => setNewPassword(event.target.value)}
-                    error={errors.password}
-                  />
-                  <div className="management-actions">
-                    <button className="btn-primary" type="submit" disabled={busy}>Guardar contraseña</button>
-                    <button className="btn-secondary" type="button" onClick={() => setPasswordFor(null)}>Cancelar</button>
-                  </div>
-                </form>
               )}
             </li>
           );
         })}
       </ul>
+
+      {config.fab && !draft && (
+        <button type="button" className="fab" onClick={openForm}>
+          <PlusIcon />
+          <span>{config.newLabel}</span>
+        </button>
+      )}
     </section>
   );
 }
