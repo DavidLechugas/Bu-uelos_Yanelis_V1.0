@@ -1,8 +1,14 @@
 /* Buñuelos Yanelys: paleta crema/caramelo/marrón, texto mínimo de 14 px y objetivos táctiles de 48 px. Tipografía en rem. */
 
+* {
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
 :root {
-  scrollbar-color: var(--caramel-border) transparent;
-  scrollbar-width: thin;
   --cream-bg: #f4e3cb;
   --cream-surface: #fff9f0;
   --cream-deep: #f3e4c8;

@@ -164,7 +164,7 @@
   .management-list.orders-view--mosaico:has(> .order-card) { display: grid; grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); }
 }
 @media (max-width: 599px) {
-  .orders-view--mosaico { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
+  .orders-view--mosaico { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
   .orders-view--mosaico .order-card { padding: .625rem; }
 }
 
@@ -179,7 +179,7 @@
 .view-switch button:focus-visible { outline-width: 2px; outline-offset: -2px; }
 
 /* Vista «Lista compacta»: tabla dentro de un cuadro con encabezado fijo y desplazamiento propio. */
-.orders-table-wrap { overflow: auto; max-height: calc(100dvh - 19rem); min-height: 12rem; border: 1px solid var(--caramel-border); border-radius: var(--radius); background: var(--cream-surface); box-shadow: var(--shadow); overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--caramel-border) transparent; }
+.orders-table-wrap { overflow: auto; max-height: calc(100dvh - 19rem); min-height: 12rem; border: 1px solid var(--caramel-border); border-radius: var(--radius); background: var(--cream-surface); box-shadow: var(--shadow); overscroll-behavior: contain; }
 .orders-table { width: 100%; min-width: 50rem; border-collapse: separate; border-spacing: 0; font-size: 1rem; }
 .orders-table thead th { position: sticky; top: 0; z-index: 1; padding: .625rem .875rem; text-align: left; background: var(--cream-deep); color: var(--brown-800); font-size: .875rem; font-weight: 700; letter-spacing: .02em; white-space: nowrap; border-bottom: 1px solid var(--caramel-border); }
 .orders-table thead th.num { text-align: right; }
@@ -248,6 +248,6 @@
 .management-section:has(> .fab) { padding-bottom: 4.5rem; }
 .management-section:has(> .fab) .toast { bottom: calc(9.5rem + env(safe-area-inset-bottom, 0px)); }
 @media (max-width: 599px) {
-  .orders-view--mosaico { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
+  .orders-view--mosaico { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
   .orders-view--mosaico .order-card { padding: .625rem; }
 }
