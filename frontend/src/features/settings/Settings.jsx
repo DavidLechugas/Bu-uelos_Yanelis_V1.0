@@ -93,10 +93,7 @@ export function Settings({ onOpenProfile }) {
   return (
     <section className="management-section" aria-labelledby="settings-title">
       <div className="management-heading">
-        <div>
-          <h2 id="settings-title">Configuración</h2>
-          <p>Se guarda solo en este dispositivo.</p>
-        </div>
+        <h2 id="settings-title" className="visually-hidden">Configuración</h2>
       </div>
       <Choice legend="Apariencia" name="theme" options={THEMES} value={preferences.theme} onChange={(value) => update('theme', value)} />
       <Choice legend="Animaciones" name="motion" options={MOTION} value={preferences.motion} onChange={(value) => update('motion', value)} />

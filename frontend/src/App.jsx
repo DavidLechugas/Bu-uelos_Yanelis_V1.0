@@ -5,6 +5,8 @@ import { BOOT_DONE_MS, pause } from './features/feedback/timing.js';
 import { Login } from './components/Login.jsx';
 import { Dashboard } from './components/Dashboard.jsx';
 import { PwaStatus } from './components/PwaStatus.jsx';
+import { AddMenu } from './components/AddMenu.jsx';
+import { DeliveryIcon, UserIcon } from './components/icons.jsx';
 import { Header } from './components/Header.jsx';
 import { BottomNav } from './components/BottomNav.jsx';
 import { MoreMenu } from './components/MoreMenu.jsx';
@@ -33,6 +35,8 @@ export default function App() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [bootDone, setBootDone] = useState(false);
   const shell = useRef(null);
+  const courierForm = useRef(null);
+  const adminForm = useRef(null);
   const alerts = useOrderAlerts({ user, pedidosActive: view === 'pedidos' });
 
   useEffect(() => {
@@ -138,8 +142,17 @@ export default function App() {
         {isAdmin && (
           <>
             <div className="view-panel management-main management-stack" hidden={view !== 'domicilios'}>
-              <Couriers active={view === 'domicilios'} />
-              {user.principal && <Admins active={view === 'domicilios'} />}
+              <Couriers active={view === 'domicilios'} ref={courierForm} hideAdd={user.principal} />
+              {user.principal && <Admins active={view === 'domicilios'} ref={adminForm} hideAdd />}
+              {user.principal && (
+                <AddMenu
+                  label="Añadir"
+                  options={[
+                    { label: 'Administrador', icon: <UserIcon />, onSelect: () => adminForm.current?.open() },
+                    { label: 'Domiciliario', icon: <DeliveryIcon />, onSelect: () => courierForm.current?.open() },
+                  ]}
+                />
+              )}
             </div>
             <div className="view-panel management-main" hidden={view !== 'productos'}><Products active={view === 'productos'} /></div>
           </>

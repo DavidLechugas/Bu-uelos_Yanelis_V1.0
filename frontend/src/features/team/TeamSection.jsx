@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useState } from 'react';
 import { Modal } from '../../components/Modal.jsx';
 import { PlusIcon } from '../../components/icons.jsx';
 import { Spinner } from '../../components/Spinner.jsx';
@@ -45,7 +45,6 @@ function deactivationNotice(updated) {
 export const COURIER_TEAM = {
   titleId: 'couriers-title',
   title: 'Domiciliarios',
-  description: 'Cuentas de tu equipo.',
   newLabel: 'Nuevo domiciliario',
   fab: true,
   created: 'Domiciliario creado.',
@@ -59,7 +58,6 @@ export const COURIER_TEAM = {
 export const ADMIN_TEAM = {
   titleId: 'admins-title',
   title: 'Administradores',
-  description: 'Encargados de pedidos. Solo la cuenta principal los gestiona.',
   newLabel: 'Nuevo administrador',
   created: 'Administrador creado.',
   activated: 'Administrador activado.',
@@ -69,7 +67,7 @@ export const ADMIN_TEAM = {
   meta: (account) => `@${account.usuario}${account.principal ? ' · Cuenta principal' : ''}`,
 };
 
-export function TeamSection({ config, api, active = true }) {
+export function TeamSection({ config, api, active = true, hideAdd = false, ref }) {
   const [accounts, setAccounts] = useState(null);
   const [confirmed, setConfirmed] = useState('');
   const [loadError, setLoadError] = useState('');
@@ -155,15 +153,13 @@ export function TeamSection({ config, api, active = true }) {
 
   const passwordAccount = accounts?.find((account) => account.id === passwordFor);
   const openForm = () => { setDraft(EMPTY_DRAFT); setErrors({}); setNotice(''); };
+  useImperativeHandle(ref, () => ({ open: openForm }));
 
   return (
     <section className="management-section" aria-labelledby={config.titleId}>
       <div className="management-heading">
-        <div>
-          <h2 id={config.titleId}>{config.title}</h2>
-          <p>{config.description}</p>
-        </div>
-        {!config.fab && !draft && (
+        <h2 id={config.titleId} className={config.fab ? 'visually-hidden' : undefined}>{config.title}</h2>
+        {!config.fab && !draft && !hideAdd && (
           <button className="fab fab--inline" type="button" aria-label={config.newLabel} onClick={openForm}><PlusIcon size={34} /></button>
         )}
       </div>
@@ -278,7 +274,7 @@ export function TeamSection({ config, api, active = true }) {
         })}
       </ul>
 
-      {config.fab && !draft && (
+      {config.fab && !draft && !hideAdd && (
         <button type="button" className="fab" aria-label={config.newLabel} onClick={openForm}>
           <PlusIcon size={34} />
         </button>

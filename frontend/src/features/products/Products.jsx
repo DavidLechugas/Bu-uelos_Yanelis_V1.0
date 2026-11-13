@@ -90,7 +90,7 @@ export function Products({ active = true }) {
   return (
     <section className="management-section" aria-labelledby="products-title">
       <div className="management-heading">
-        <div><h2 id="products-title">Productos</h2><p>Catálogo simple, precios y disponibilidad.</p></div>
+        <h2 id="products-title" className="visually-hidden">Productos</h2>
       </div>
       <ManagementField label="Buscar productos" type="search" value={search} onChange={(event) => setSearch(event.target.value)} />
       <Toast notice={notice} onClose={() => setNotice('')} />

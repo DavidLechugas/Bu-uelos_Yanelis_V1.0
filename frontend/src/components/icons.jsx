@@ -58,6 +58,22 @@ export const PlusIcon = (props) => (
   </Svg>
 );
 
+export const UserIcon = (props) => (
+  <Svg {...props}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 20.5c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" />
+  </Svg>
+);
+
+export const StoreIcon = (props) => (
+  <Svg {...props}>
+    <path d="M4 9.5 5.5 4h13L20 9.5" />
+    <path d="M4 9.5a2.67 2.67 0 0 0 5.33 0 2.67 2.67 0 0 0 5.34 0 2.67 2.67 0 0 0 5.33 0" />
+    <path d="M5.5 12.5V20h13v-7.5" />
+    <path d="M10 20v-4.5h4V20" />
+  </Svg>
+);
+
 export const BackIcon = (props) => (
   <Svg {...props}>
     <path d="M19 12H5M11 6l-6 6 6 6" />

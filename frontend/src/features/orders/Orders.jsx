@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal } from '../../components/Modal.jsx';
+import { AddMenu } from '../../components/AddMenu.jsx';
 import { Spinner } from '../../components/Spinner.jsx';
 import { couriersApi, ordersApi } from '../../api/client.js';
-import { CardsViewIcon, ChatIcon, FilterIcon, GridViewIcon, ListViewIcon, MapPinIcon, PhoneIcon, PlusIcon } from '../../components/icons.jsx';
+import { CardsViewIcon, ChatIcon, DeliveryIcon, FilterIcon, GridViewIcon, ListViewIcon, MapPinIcon, PhoneIcon, StoreIcon } from '../../components/icons.jsx';
 import { useMediaQuery } from '../../hooks/useMediaQuery.js';
 import { ManagementField } from '../ManagementField.jsx';
 import { Toast, useNotice } from '../feedback/Toast.jsx';
@@ -266,7 +267,7 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
   const shownView = !wide && view === 'lista' ? 'tarjetas' : view;
   const detail = detailId ? (orders ?? []).find((order) => order.id === detailId) : null;
   const closeDetail = () => { setDetailId(null); setConfirmCancel(null); };
-  const openForm = () => { setDraft(EMPTY_DRAFT); setErrors({}); setNotice(''); };
+  const openForm = (tipo) => { setDraft({ ...EMPTY_DRAFT, tipo }); setErrors({}); setNotice(''); };
   const totalPreview = Number((draft?.totalCop ?? '').replace(/\D/g, ''));
 
   const renderActions = (order, busy, next) => (
@@ -421,16 +422,6 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
 
         {draft && !saved && (
           <form className="management-form" onSubmit={save} noValidate aria-label={draft.id ? 'Editar pedido' : 'Pedido nuevo'}>
-            {!draft.id && (
-              <label className="order-local-toggle">
-                <input
-                  type="checkbox"
-                  checked={draft.tipo === 'LOCAL'}
-                  onChange={(event) => setDraft({ ...draft, tipo: event.target.checked ? 'LOCAL' : 'DOMICILIO', domiciliarioId: '' })}
-                />
-                <span>Venta en local<small>Se registra como entregada, sin cliente ni domiciliario.</small></span>
-              </label>
-            )}
             {draft.tipo !== 'LOCAL' && (
               <>
                 <ManagementField label="Cliente" autoFocus maxLength={80} autoComplete="off" value={draft.cliente} onChange={change('cliente')} error={errors.cliente} />
@@ -695,9 +686,13 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
       ))}
 
       {isAdmin && !draft && (
-        <button type="button" className="fab" aria-label="Nuevo pedido" onClick={openForm}>
-          <PlusIcon size={34} />
-        </button>
+        <AddMenu
+          label="Nuevo pedido"
+          options={[
+            { label: 'Local', icon: <StoreIcon />, onSelect: () => openForm('LOCAL') },
+            { label: 'Domicilio', icon: <DeliveryIcon />, onSelect: () => openForm('DOMICILIO') },
+          ]}
+        />
       )}
     </section>
   );

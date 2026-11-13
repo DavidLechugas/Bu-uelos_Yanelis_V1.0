@@ -27,6 +27,7 @@ describe('Orders — administrador', () => {
     await screen.findByText(/No hay pedidos en «Todos»/);
 
     await user.click(screen.getByRole('button', { name: 'Nuevo pedido' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Domicilio' }));
     await user.type(screen.getByLabelText('Cliente'), 'Marta');
     await user.type(screen.getByLabelText('Teléfono'), '3001234567');
     await user.type(screen.getByLabelText('Dirección'), 'Calle 8 #3-10');
@@ -77,6 +78,7 @@ describe('Orders — administrador', () => {
     const user = userEvent.setup();
     render(<Orders user={ADMIN} />);
     await user.click(await screen.findByRole('button', { name: 'Nuevo pedido' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Domicilio' }));
     await user.click(screen.getByRole('button', { name: 'Guardar pedido' }));
     expect(screen.getByText('Escribe el nombre del cliente.')).toBeInTheDocument();
     expect(screen.getByText('Añade productos o describe el pedido.')).toBeInTheDocument();
@@ -95,6 +97,7 @@ describe('Orders — administrador', () => {
     const user = userEvent.setup();
     render(<Orders user={ADMIN} />);
     await user.click(await screen.findByRole('button', { name: 'Nuevo pedido' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Domicilio' }));
     await user.type(screen.getByLabelText('Cliente'), 'Marta');
     await user.type(screen.getByLabelText('Teléfono'), '3001234567');
     await user.type(screen.getByLabelText('Dirección'), 'Calle 8 #3-10');
@@ -152,6 +155,7 @@ describe('Orders — administrador', () => {
     const user = userEvent.setup();
     render(<Orders user={ADMIN} />);
     await user.click(await screen.findByRole('button', { name: 'Nuevo pedido' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Domicilio' }));
     expect(await screen.findByText(/No se pudo cargar el catálogo/)).toBeInTheDocument();
     expect(screen.getByLabelText('Notas o detalle del pedido')).toBeEnabled();
     expect(screen.getByLabelText('Total (COP)')).toBeEnabled();
@@ -325,11 +329,8 @@ describe('Orders — venta en local y pedidos disponibles', () => {
     render(<Orders user={ADMIN} />);
     await screen.findByText(/No hay pedidos en «Todos»/);
     await user.click(screen.getByRole('button', { name: 'Nuevo pedido' }));
-    const dialog = screen.getByRole('dialog', { name: 'Nuevo pedido' });
-    expect(within(dialog).getByLabelText('Cliente')).toBeInTheDocument();
-
-    await user.click(within(dialog).getByLabelText(/Venta en local/));
-    expect(screen.getByRole('dialog', { name: 'Venta en local' })).toBeInTheDocument();
+    await user.click(screen.getByRole('menuitem', { name: 'Local' }));
+    const dialog = screen.getByRole('dialog', { name: 'Venta en local' });
     expect(within(dialog).queryByLabelText('Cliente')).not.toBeInTheDocument();
     expect(within(dialog).queryByLabelText('Dirección')).not.toBeInTheDocument();
     expect(within(dialog).queryByLabelText('Domiciliario (opcional)')).not.toBeInTheDocument();

@@ -88,6 +88,10 @@ body {
   padding: 0;
 }
 
+html {
+  font-size: 112.5%;
+}
+
 body {
   background-color: var(--cream-bg);
   color: var(--text);
@@ -422,16 +426,16 @@ button {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 56px;
-  padding: 0 4px 0 16px;
+  min-height: 76px;
+  padding: 0 8px 0 16px;
   background-color: var(--header-bg);
   color: #fff;
 }
 
 .header-title {
   flex: 1;
-  font-size: clamp(1.125rem, 1rem + 0.75vw, 1.25rem);
-  font-weight: 700;
+  font-size: clamp(1.375rem, 1.2rem + 0.75vw, 1.5rem);
+  font-weight: 800;
 }
 
 .profile-circle {
@@ -813,7 +817,7 @@ button {
   border: 0;
   background: transparent;
   color: var(--muted);
-  font-size: 0.9375rem;
+  font-size: 0.8333rem;
 }
 
 .bottom-nav-label {
