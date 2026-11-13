@@ -101,6 +101,12 @@ separado: no acordado.
   a `main` (commit `74a05e5`, 2026-11-12: navegación, encabezado, Inicio, Pedidos, botón «Nuevo pedido»
   con color propio `--fab-*`); fase 2 en curso, una pantalla por vez (Domicilios hecha, commit `7b7f2dd`; faltan Productos, Perfil, Configuración, Login).
   Lista de tareas en `docs/PENDIENTES.md`.
+- Ramas (desde 2026-11-12): `main` queda estable; el trabajo va en `frontend` (`frontend/`), `backend`
+  (`backend/`) y `anotaciones` (`CLAUDE.md`, `AGENTS.md`, `docs/`). Antes de editar, `git switch <rama>`
+  según el área; un cambio que toca dos áreas va en dos commits, cada uno en su rama. A `main` solo
+  llega trabajo verificado (lint, pruebas y build en frontend; `mvnw test` en backend) con merge
+  `--ff-only` o pull request. Tras unir, actualizar la rama con `git merge main`. Sin CI en GitHub
+  (billing): la verificación es local. Rama de prueba larga o arriesgada: `frontend/<tema>`.
 - Sin microservicios ni refactors masivos junto con auth.
 - Commit/push de trabajo verificado autorizado (solo archivos necesarios); cambios de recursos cloud,
   cuentas o costes se consultan antes.
