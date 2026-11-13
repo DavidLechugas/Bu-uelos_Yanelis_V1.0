@@ -34,7 +34,7 @@ describe('Productos', () => {
     });
     render(<Products />);
     await screen.findByText('Combo familiar');
-    await user.click(screen.getByRole('button', { name: 'Agregar producto' }));
+    await user.click(screen.getByRole('button', { name: 'Nuevo producto' }));
     await user.click(screen.getByRole('button', { name: 'Guardar producto' }));
     expect(screen.getByText('Escribe un nombre.')).toBeInTheDocument();
     expect(screen.getByText('El precio debe ser un entero positivo en pesos.')).toBeInTheDocument();

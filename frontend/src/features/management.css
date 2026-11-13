@@ -164,7 +164,7 @@
   .management-list.orders-view--mosaico:has(> .order-card) { display: grid; grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); }
 }
 @media (max-width: 599px) {
-  .orders-view--mosaico { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+  .orders-view--mosaico { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
   .orders-view--mosaico .order-card { padding: .625rem; }
 }
 
@@ -241,12 +241,13 @@
 .order-sheet .order-meta dt { font-size: 1rem; }
 .order-sheet .order-meta dd { font-size: 1.125rem; }
 
-.fab { position: fixed; right: max(16px, calc((100% - var(--content-max)) / 2 + 16px)); bottom: calc(80px + env(safe-area-inset-bottom, 0px)); z-index: 20; display: inline-flex; align-items: center; gap: .5rem; min-height: 56px; padding: 0 20px 0 16px; border: 0; border-radius: 16px; background: var(--fab-bg); color: var(--fab-text); font-size: 1rem; font-weight: 700; box-shadow: var(--fab-shadow); transition: filter 160ms ease, transform 120ms ease; }
+.fab { position: fixed; right: max(16px, calc((100% - var(--content-max)) / 2 + 16px)); bottom: calc(80px + env(safe-area-inset-bottom, 0px)); z-index: 20; display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; padding: 0; border: 0; border-radius: 50%; background: var(--fab-bg); color: var(--fab-text); box-shadow: var(--fab-shadow); transition: filter 160ms ease, transform 120ms ease; }
+.fab--inline { position: static; flex: none; }
 .fab:hover { filter: brightness(1.06); }
 .fab:active { transform: scale(.96); }
 .management-section:has(> .fab) { padding-bottom: 4.5rem; }
 .management-section:has(> .fab) .toast { bottom: calc(9.5rem + env(safe-area-inset-bottom, 0px)); }
 @media (max-width: 599px) {
-  .orders-view--mosaico { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+  .orders-view--mosaico { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
   .orders-view--mosaico .order-card { padding: .625rem; }
 }

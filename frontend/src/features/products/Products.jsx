@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Modal } from '../../components/Modal.jsx';
+import { PlusIcon } from '../../components/icons.jsx';
 import { Spinner } from '../../components/Spinner.jsx';
 import { productsApi } from '../../api/client.js';
 import { ManagementField } from '../ManagementField.jsx';
@@ -89,29 +91,28 @@ export function Products({ active = true }) {
     <section className="management-section" aria-labelledby="products-title">
       <div className="management-heading">
         <div><h2 id="products-title">Productos</h2><p>Catálogo simple, precios y disponibilidad.</p></div>
-        <button className="btn-primary" type="button" onClick={(event) => openForm(null, event)}>Agregar producto</button>
       </div>
       <ManagementField label="Buscar productos" type="search" value={search} onChange={(event) => setSearch(event.target.value)} />
       <Toast notice={notice} onClose={() => setNotice('')} />
-      {draft && confirmed && (
-        <div className="card management-form management-form--done">
-          <Spinner size="md" done label={confirmed} />
-        </div>
-      )}
-
-      {draft && !confirmed && (
-        <form className="card management-form" onSubmit={save} noValidate aria-labelledby="product-form-title">
-          <h3 id="product-form-title">{draft.id ? 'Editar producto' : 'Nuevo producto'}</h3>
-          <ManagementField label="Nombre" ref={nameInput} autoFocus maxLength={100} value={draft.nombre} onChange={(event) => change('nombre', event.target.value)} error={errors.nombre} />
-          <ManagementField label="Descripción" maxLength={240} value={draft.descripcion} onChange={(event) => change('descripcion', event.target.value)} error={errors.descripcion} />
-          <ManagementField label="Precio (COP)" type="text" inputMode="numeric" value={draft.precio} onChange={(event) => change('precio', event.target.value)} error={errors.precio} />
-          <label className="management-checkbox"><input type="checkbox" checked={draft.disponible} onChange={(event) => change('disponible', event.target.checked)} />Disponible para venta</label>
-          <div className="management-actions">
-            <button className="btn-primary" type="submit" disabled={saving} aria-busy={saving}>{saving ? 'Guardando…' : 'Guardar producto'}</button>
-            <button className="btn-secondary" type="button" onClick={closeForm}>Cancelar</button>
+      <Modal open={Boolean(draft)} title={draft?.id ? 'Editar producto' : 'Nuevo producto'} onClose={() => { if (!saving) closeForm(); }}>
+        {draft && confirmed && (
+          <div className="management-form--done">
+            <Spinner size="md" done label={confirmed} />
           </div>
-        </form>
-      )}
+        )}
+        {draft && !confirmed && (
+          <form className="management-form" onSubmit={save} noValidate aria-label={draft.id ? 'Editar producto' : 'Nuevo producto'}>
+            <ManagementField label="Nombre" ref={nameInput} autoFocus maxLength={100} value={draft.nombre} onChange={(event) => change('nombre', event.target.value)} error={errors.nombre} />
+            <ManagementField label="Descripción" maxLength={240} value={draft.descripcion} onChange={(event) => change('descripcion', event.target.value)} error={errors.descripcion} />
+            <ManagementField label="Precio (COP)" type="text" inputMode="numeric" value={draft.precio} onChange={(event) => change('precio', event.target.value)} error={errors.precio} />
+            <label className="management-checkbox"><input type="checkbox" checked={draft.disponible} onChange={(event) => change('disponible', event.target.checked)} />Disponible para venta</label>
+            <div className="management-actions">
+              <button className="btn-primary" type="submit" disabled={saving} aria-busy={saving}>{saving ? 'Guardando…' : 'Guardar producto'}</button>
+              <button className="btn-secondary" type="button" onClick={closeForm}>Cancelar</button>
+            </div>
+          </form>
+        )}
+      </Modal>
       {loadError && (
         <div className="card error-card" role="alert">
           <p>{loadError}</p>
@@ -122,7 +123,7 @@ export function Products({ active = true }) {
       {products && !filtered.length && (
         <p className="card management-empty" role="status">
           <img className="empty-logo" src="/icons/logo.svg" alt="" />
-          {products.length ? 'No hay productos que coincidan.' : 'Aún no hay productos. Pulsa «Agregar producto».'}
+          {products.length ? 'No hay productos que coincidan.' : 'Aún no hay productos. Pulsa +.'}
         </p>
       )}
       <ul className="management-list">
@@ -133,6 +134,12 @@ export function Products({ active = true }) {
           </li>
         ))}
       </ul>
+
+      {!draft && (
+        <button type="button" className="fab" aria-label="Nuevo producto" onClick={(event) => openForm(null, event)}>
+          <PlusIcon size={34} />
+        </button>
+      )}
     </section>
   );
 }

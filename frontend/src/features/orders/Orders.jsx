@@ -695,9 +695,8 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
       ))}
 
       {isAdmin && !draft && (
-        <button type="button" className="fab" onClick={openForm}>
-          <PlusIcon />
-          <span>Nuevo pedido</span>
+        <button type="button" className="fab" aria-label="Nuevo pedido" onClick={openForm}>
+          <PlusIcon size={34} />
         </button>
       )}
     </section>

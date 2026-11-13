@@ -31,7 +31,13 @@ Plan acordado: navegación inferior, un encabezado, botón flotante como acción
 en teléfono, textos cortos. Guía en `AGENTS.md` («Diseño»).
 - [x] Fase 1 (commit `74a05e5`, subida a `main` 2026-11-12): encabezado y barra inferior comunes, menú «Más», Modal como hoja en teléfono, Pedidos (tarjetas, detalle y «Filtros»), Inicio. Lint y 114 pruebas en verde; capturas 320/390/768/1280 y oscuro revisadas.
 - [x] «Nuevo pedido»: color propio (`--fab-bg`) para que no se confunda con los botones de las tarjetas.
-- [ ] Fase 2: Domicilios, Productos, Perfil, Configuración y Login a la misma forma. Empezar solo cuando el usuario lo pida.
+- [ ] Fase 2 (una pantalla por vez, con visto bueno; orden: Domicilios, Productos, Perfil, Configuración, Login; botón flotante en Domicilios y Productos):
+  - [x] Domicilios (commit `7b7f2dd`, subido): «Nuevo domiciliario» como botón flotante, crear cuenta y cambiar contraseña en hojas (`Modal`), textos cortos; en Administradores el botón sigue en línea. Lint y pruebas focales en verde; **sin revisar en Chrome** (el usuario eligió no arrancar mock).
+  - [x] Productos (hoja para crear/editar y botón flotante). Decisión del usuario: todos los botones de añadir (Pedidos, Domicilios, Productos, Administradores) son solo un «+» grande con `aria-label`, sin texto; el mosaico de pedidos va de a una columna en teléfono. Sin revisar en Chrome.
+  - [ ] Perfil.
+  - [ ] Configuración.
+  - [ ] Login.
+  - [ ] Al terminar: revisar las cinco en Chrome a 375 y 1280 px (claro y oscuro), suite completa y actualizar `CLAUDE.md`.
 - [ ] Pendiente de verificar: teléfono real, animaciones reducidas, contraste medido, backend real en local (MongoDB detenido).
 
 ## 6. Entorno local (pendiente de la sesión)

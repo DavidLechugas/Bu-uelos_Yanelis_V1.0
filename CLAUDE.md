@@ -99,7 +99,7 @@ separado: no acordado.
 - Mantener paleta crema/caramelo/marrón y accesibilidad (ventanas y hojas: overlay, Escape, foco) y la
   forma de app descrita en `AGENTS.md` («Diseño»). Rediseño móvil por fases: fase 1 hecha y subida
   a `main` (commit `74a05e5`, 2026-11-12: navegación, encabezado, Inicio, Pedidos, botón «Nuevo pedido»
-  con color propio `--fab-*`); fase 2 pendiente (Domicilios, Productos, Perfil, Configuración, Login).
+  con color propio `--fab-*`); fase 2 en curso, una pantalla por vez (Domicilios hecha, commit `7b7f2dd`; faltan Productos, Perfil, Configuración, Login).
   Lista de tareas en `docs/PENDIENTES.md`.
 - Sin microservicios ni refactors masivos junto con auth.
 - Commit/push de trabajo verificado autorizado (solo archivos necesarios); cambios de recursos cloud,

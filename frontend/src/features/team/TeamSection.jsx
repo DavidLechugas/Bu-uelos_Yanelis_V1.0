@@ -52,7 +52,7 @@ export const COURIER_TEAM = {
   activated: 'Domiciliario activado.',
   deactivated: deactivationNotice,
   loading: 'Cargando domiciliarios',
-  empty: 'Todavía no hay domiciliarios. Crea el primero con «Nuevo domiciliario».',
+  empty: 'Todavía no hay domiciliarios. Crea el primero con +.',
   meta: (account) => `@${account.usuario} · ${pluralize(account.pedidosActivos, 'pedido activo', 'pedidos activos')}`,
 };
 
@@ -65,7 +65,7 @@ export const ADMIN_TEAM = {
   activated: 'Administrador activado.',
   deactivated: () => 'Administrador desactivado.',
   loading: 'Cargando administradores',
-  empty: 'Todavía no hay otros administradores. Crea uno con «Nuevo administrador».',
+  empty: 'Todavía no hay otros administradores. Crea uno con +.',
   meta: (account) => `@${account.usuario}${account.principal ? ' · Cuenta principal' : ''}`,
 };
 
@@ -164,7 +164,7 @@ export function TeamSection({ config, api, active = true }) {
           <p>{config.description}</p>
         </div>
         {!config.fab && !draft && (
-          <button className="btn-primary" type="button" onClick={openForm}>{config.newLabel}</button>
+          <button className="fab fab--inline" type="button" aria-label={config.newLabel} onClick={openForm}><PlusIcon size={34} /></button>
         )}
       </div>
 
@@ -279,9 +279,8 @@ export function TeamSection({ config, api, active = true }) {
       </ul>
 
       {config.fab && !draft && (
-        <button type="button" className="fab" onClick={openForm}>
-          <PlusIcon />
-          <span>{config.newLabel}</span>
+        <button type="button" className="fab" aria-label={config.newLabel} onClick={openForm}>
+          <PlusIcon size={34} />
         </button>
       )}
     </section>
