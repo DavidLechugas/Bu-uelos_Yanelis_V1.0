@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Modal } from './Modal.jsx';
 
@@ -13,6 +13,9 @@ function renderModal(overrides = {}) {
   );
   return { ...result, props };
 }
+
+// history.back() de jsdom es asíncrono: se vacía su cola para que una prueba no herede el cierre pendiente de la anterior.
+beforeEach(() => act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); }));
 
 describe('Modal', () => {
   it('se abre como diálogo modal con su título', () => {
@@ -77,5 +80,37 @@ describe('Modal', () => {
     expect(first).toHaveFocus();
     await user.keyboard('{Shift>}{Tab}{/Shift}');
     expect(last).toHaveFocus();
+  });
+
+  describe('botón «atrás»', () => {
+    const back = () => act(async () => {
+      window.history.back();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+
+    it('cierra el modal con «atrás» y no sale de la página', async () => {
+      const { props } = renderModal();
+      expect(window.history.state?.overlay).toBeTruthy();
+      await back();
+      expect(props.onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('al cerrarse por otro medio retira la entrada de historial que añadió', async () => {
+      const { rerender, props } = renderModal();
+      expect(window.history.state?.overlay).toBeTruthy();
+      rerender(<Modal {...props} open={false}><button type="button">Aplicar</button></Modal>);
+      await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
+      expect(window.history.state?.overlay).toBeUndefined();
+      expect(props.onClose).not.toHaveBeenCalled();
+    });
+
+    it('con dos modales abiertos, «atrás» cierra solo el de encima', async () => {
+      const lower = vi.fn();
+      const upper = vi.fn();
+      render(<><Modal open title="A" onClose={lower}><p>a</p></Modal><Modal open title="B" onClose={upper}><p>b</p></Modal></>);
+      await back();
+      expect(upper).toHaveBeenCalledTimes(1);
+      expect(lower).not.toHaveBeenCalled();
+    });
   });
 });

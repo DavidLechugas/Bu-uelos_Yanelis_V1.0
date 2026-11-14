@@ -2,6 +2,7 @@ import { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { CloseIcon } from './icons.jsx';
 import { trapTabKey } from './focusTrap.js';
+import { useBackToClose } from './useBackToClose.js';
 
 /**
  * Diálogo modal (hoja inferior en el teléfono, ventana centrada desde tableta): Escape o el fondo
@@ -13,6 +14,7 @@ export function Modal({ open, title, onClose, children, focusField = true }) {
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
   const titleId = useId();
+  useBackToClose(open, onClose);
 
   useEffect(() => {
     if (!open) return undefined;

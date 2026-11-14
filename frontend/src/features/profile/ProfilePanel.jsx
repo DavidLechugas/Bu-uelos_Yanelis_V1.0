@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { auth, ordersApi } from '../../api/client.js';
 import { Avatar } from '../../components/Avatar.jsx';
 import { trapTabKey } from '../../components/focusTrap.js';
+import { useBackToClose } from '../../components/useBackToClose.js';
 import { CameraIcon, CloseIcon } from '../../components/icons.jsx';
 import { ManagementField } from '../ManagementField.jsx';
 import { Toast, useNotice } from '../feedback/Toast.jsx';
@@ -48,6 +49,7 @@ export async function resizePhoto(file) {
 }
 
 export function ProfilePanel({ open, user, onClose, onUpdated, onLogout }) {
+  useBackToClose(open, onClose);
   const panelRef = useRef(null);
   const previousFocus = useRef(null);
   const [draft, setDraft] = useState({ nombre: '', foto: null, telefono: '', correo: '', sexo: '' });
