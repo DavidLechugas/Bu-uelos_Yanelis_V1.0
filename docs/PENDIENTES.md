@@ -34,9 +34,7 @@ en teléfono, textos cortos. Guía en `AGENTS.md` («Diseño»).
 - [ ] Fase 2 (una pantalla por vez, con visto bueno; orden: Domicilios, Productos, Perfil, Configuración, Login; botón flotante en Domicilios y Productos):
   - [x] Domicilios (commit `7b7f2dd`, subido): «Nuevo domiciliario» como botón flotante, crear cuenta y cambiar contraseña en hojas (`Modal`), textos cortos; en Administradores el botón sigue en línea. Lint y pruebas focales en verde; **sin revisar en Chrome** (el usuario eligió no arrancar mock).
   - [x] Productos (hoja para crear/editar y botón flotante). Decisión del usuario: todos los botones de añadir (Pedidos, Domicilios, Productos, Administradores) son solo un «+» grande con `aria-label`, sin texto; el mosaico de pedidos va de a una columna en teléfono. Sin revisar en Chrome.
-  - [ ] Perfil.
-  - [ ] Configuración.
-  - [ ] Login.
+  - [x] Perfil, Configuración y Login (2026-11-14): revisadas en Chrome a 375 y 1280 px, claro y oscuro (datos simulados); ya cumplen la forma de app (hoja inferior, tarjetas, textos cortos, objetivos ≥48 px) y no se cambió su diseño. **Pendiente el visto bueno del usuario.** Duda abierta: el perfil repite Apariencia y Animaciones, que ya están en Configuración.
   - [ ] Al terminar: revisar las cinco en Chrome a 375 y 1280 px (claro y oscuro), suite completa y actualizar `CLAUDE.md`.
 - [ ] Pendiente de verificar: teléfono real, animaciones reducidas, contraste medido, backend real en local (MongoDB detenido).
 
@@ -63,6 +61,11 @@ en teléfono, textos cortos. Guía en `AGENTS.md` («Diseño»).
   - Excepciones a propósito: etiquetas de estado y contador de chips 14 → 15 px; globos de conteo (12–14 px) sin cambio por su círculo fijo.
 - [x] Pruebas completas (lint, 116 pruebas, build) en verde; revisado en Chrome: 375 px oscuro (Inicio, Pedidos, Domicilios) y 1280 px claro (lista compacta). Commit `f3ebc8c`.
 - [x] Mock de la API en el 8080 cerrado. Vite (5173) sigue corriendo de la sesión.
+
+## 8. Botón «atrás» y sin conexión (2026-11-14)
+- [x] «Atrás» cierra la ventana abierta (`components/useBackToClose.js`, en `Modal` y `ProfilePanel`); en Productos y Configuración vuelve a Inicio (domiciliario: Pedidos). Comprobado en Chrome.
+- [x] Aviso «No tienes acceso a internet» (`components/OfflineNotice.jsx`) fijo sobre la barra inferior; al volver la conexión confirma 4 s. Comprobado en Chrome (claro/oscuro, 375 y 1280 px). Lint, 124 pruebas y build en verde; subido a `main` (`c261de2`).
+- [ ] Comprobar en el teléfono real tras el despliegue de Workers.
 
 ## Otros pendientes conocidos
 - [x] Instalación Android de la PWA: confirmada por el usuario (modo offline en hosting, sin comprobar).

@@ -82,6 +82,8 @@ Además (2026-10-17): pedidos de tipo `DOMICILIO` o `LOCAL` (venta en local: nac
 
 Botón «atrás» (2026-11-14): `components/useBackToClose.js` da a cada ventana (`Modal`, `ProfilePanel`) una entrada de historial para que «atrás» la cierre en vez de salir de la app; con varias abiertas cierra la de encima. `App.jsx` lo usa también en las pantallas de segundo nivel (Productos, Configuración): «atrás» vuelve a Inicio (domiciliario: Pedidos). Toda ventana nueva debe usar `Modal` o el hook.
 
+Sin internet (2026-11-14): `components/OfflineNotice.jsx` muestra un aviso fijo («No tienes acceso a internet…») mientras `navigator.onLine` sea falso y confirma unos segundos al volver; está en el login y en el shell.
+
 Pedidos tiene un conmutador de vista (tarjetas, lista compacta = tabla ID/Cliente/Productos/Total/Fecha/Domicilio/Estado/Acciones, mosaico; las tres vistas comparten las mismas acciones; se recuerda por dispositivo en localStorage `bunuelos.orders.view`) y el backend rechaza (400) cambiar el `tipo` al editar un pedido: se cancela y se crea otro.
 
 Además: la cuenta principal (el administrador más antiguo, sin migrar datos) crea, activa y cambia la contraseña de administradores extra desde «Domicilios» (`/api/admins`); los extra hacen todo menos gestionar administradores. Avisos de pedidos: dentro de la app (`features/alerts`: sonido, vibración, globo en la barra, título y badge) y push real (`push/`: claves VAPID generadas y guardadas en Mongo, `PushNotifier` con virtual threads, `public/push-sw.js` importado por el service worker; se activa por dispositivo en Configuración).
