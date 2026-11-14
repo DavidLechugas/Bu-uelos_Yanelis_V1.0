@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App.jsx';
 import { ADMIN, COURIER, mockApi, order } from './test/mockApi.js';
@@ -127,6 +127,23 @@ describe('App — sesión real y navegación por rol', () => {
 
     await user.click(screen.getByRole('button', { name: 'Volver' }));
     expect(screen.getByRole('heading', { name: 'Más', level: 1 })).toBeInTheDocument();
+  });
+
+  it('«atrás» en una pantalla de segundo nivel vuelve a Inicio', async () => {
+    mockApi(adminRoutes());
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText('Buenos días, Ana');
+
+    await user.click(screen.getByRole('button', { name: 'Más' }));
+    await user.click(screen.getByRole('button', { name: 'Configuración' }));
+    expect(screen.getByRole('heading', { name: 'Configuración', level: 1 })).toBeInTheDocument();
+
+    await act(async () => {
+      window.history.back();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+    expect(screen.getByRole('heading', { name: 'Inicio', level: 1 })).toBeInTheDocument();
   });
 
   it('el tablero muestra los pedidos sin asignar y lleva a Pedidos', async () => {

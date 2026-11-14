@@ -5,11 +5,13 @@ import { BOOT_DONE_MS, pause } from './features/feedback/timing.js';
 import { Login } from './components/Login.jsx';
 import { Dashboard } from './components/Dashboard.jsx';
 import { PwaStatus } from './components/PwaStatus.jsx';
+import { OfflineNotice } from './components/OfflineNotice.jsx';
 import { AddMenu } from './components/AddMenu.jsx';
 import { DeliveryIcon, UserIcon } from './components/icons.jsx';
 import { Header } from './components/Header.jsx';
 import { BottomNav } from './components/BottomNav.jsx';
 import { MoreMenu } from './components/MoreMenu.jsx';
+import { useBackToClose } from './components/useBackToClose.js';
 import { Products } from './features/products/Products.jsx';
 import { Orders } from './features/orders/Orders.jsx';
 import { Admins } from './features/admins/Admins.jsx';
@@ -38,6 +40,9 @@ export default function App() {
   const courierForm = useRef(null);
   const adminForm = useRef(null);
   const alerts = useOrderAlerts({ user, pedidosActive: view === 'pedidos' });
+  const underMore = UNDER_MORE.has(view);
+  // «Atrás» en una pantalla de segundo nivel lleva al inicio de cada rol, no fuera de la app.
+  useBackToClose(underMore, () => setView(user?.role === 'COURIER' ? 'pedidos' : 'inicio'));
 
   useEffect(() => {
     const startedAt = Date.now();
@@ -119,13 +124,13 @@ export default function App() {
       <>
         <Login onLogin={handleLogin} connectionError={loginMessage} />
         <PwaStatus />
+        <OfflineNotice />
       </>
     );
   }
 
   const isAdmin = user.role === 'ADMIN';
   const title = !isAdmin && view === 'pedidos' ? 'Mis pedidos' : TITLES[view];
-  const underMore = UNDER_MORE.has(view);
 
   return (
     <div className="app-shell" ref={shell}>
@@ -166,6 +171,7 @@ export default function App() {
       <Toast notice={alerts.notice} onClose={alerts.closeNotice} />
       <ProfilePanel open={profileOpen} user={user} onClose={() => setProfileOpen(false)} onUpdated={setUser} onLogout={handleLogout} />
       <PwaStatus />
+      <OfflineNotice />
     </div>
   );
 }
