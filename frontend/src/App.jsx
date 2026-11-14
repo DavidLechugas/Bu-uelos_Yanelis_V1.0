@@ -10,6 +10,7 @@ import { DeliveryIcon, UserIcon } from './components/icons.jsx';
 import { Header } from './components/Header.jsx';
 import { BottomNav } from './components/BottomNav.jsx';
 import { MoreMenu } from './components/MoreMenu.jsx';
+import { useBackToClose } from './components/useBackToClose.js';
 import { Products } from './features/products/Products.jsx';
 import { Orders } from './features/orders/Orders.jsx';
 import { Admins } from './features/admins/Admins.jsx';
@@ -38,6 +39,9 @@ export default function App() {
   const courierForm = useRef(null);
   const adminForm = useRef(null);
   const alerts = useOrderAlerts({ user, pedidosActive: view === 'pedidos' });
+  const underMore = UNDER_MORE.has(view);
+  // «Atrás» en una pantalla de segundo nivel lleva al inicio de cada rol, no fuera de la app.
+  useBackToClose(underMore, () => setView(user?.role === 'COURIER' ? 'pedidos' : 'inicio'));
 
   useEffect(() => {
     const startedAt = Date.now();
@@ -125,7 +129,6 @@ export default function App() {
 
   const isAdmin = user.role === 'ADMIN';
   const title = !isAdmin && view === 'pedidos' ? 'Mis pedidos' : TITLES[view];
-  const underMore = UNDER_MORE.has(view);
 
   return (
     <div className="app-shell" ref={shell}>
