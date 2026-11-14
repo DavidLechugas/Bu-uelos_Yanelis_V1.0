@@ -199,3 +199,15 @@ export const GridViewIcon = (props) => (
     <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
   </Svg>
 );
+
+export const WifiOffIcon = (props) => (
+  <Svg {...props}>
+    <path d="M2 8.8a15 15 0 0 1 4.2-2.6" />
+    <path d="M10.7 5.1A15 15 0 0 1 22 8.8" />
+    <path d="M5 12.9a10 10 0 0 1 5.2-2.7" />
+    <path d="M14.5 10.4a10 10 0 0 1 4.5 2.5" />
+    <path d="M8.5 16.4a5 5 0 0 1 7 0" />
+    <path d="M12 20h.01" />
+    <path d="m2 2 20 20" />
+  </Svg>
+);

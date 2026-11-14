@@ -5,6 +5,7 @@ import { BOOT_DONE_MS, pause } from './features/feedback/timing.js';
 import { Login } from './components/Login.jsx';
 import { Dashboard } from './components/Dashboard.jsx';
 import { PwaStatus } from './components/PwaStatus.jsx';
+import { OfflineNotice } from './components/OfflineNotice.jsx';
 import { AddMenu } from './components/AddMenu.jsx';
 import { DeliveryIcon, UserIcon } from './components/icons.jsx';
 import { Header } from './components/Header.jsx';
@@ -123,6 +124,7 @@ export default function App() {
       <>
         <Login onLogin={handleLogin} connectionError={loginMessage} />
         <PwaStatus />
+        <OfflineNotice />
       </>
     );
   }
@@ -169,6 +171,7 @@ export default function App() {
       <Toast notice={alerts.notice} onClose={alerts.closeNotice} />
       <ProfilePanel open={profileOpen} user={user} onClose={() => setProfileOpen(false)} onUpdated={setUser} onLogout={handleLogout} />
       <PwaStatus />
+      <OfflineNotice />
     </div>
   );
 }
