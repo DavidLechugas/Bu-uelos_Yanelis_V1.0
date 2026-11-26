@@ -53,32 +53,83 @@ class PushFlowTest extends ApiTestSupport {
     void sinSesionNoSePuedeSuscribirNiPedirLaClave() throws Exception {
         mvc.perform(get("/api/push/key")).andExpect(status().isUnauthorized());
         mvc.perform(anonymous().with(post("/api/push/subscribe")).contentType(MediaType.APPLICATION_JSON)
-                .content(subscription("https://push.example/1"))).andExpect(status().isUnauthorized());
+                .content(subscription("https://fcm.googleapis.com/fcm/send/1"))).andExpect(status().isUnauthorized());
     }
 
     @Test
     void unDispositivoGuardaUnaSolaSuscripcionYPasaALaUltimaCuenta() throws Exception {
         Browser courier = login("luis");
         mvc.perform(courier.with(post("/api/push/subscribe")).contentType(MediaType.APPLICATION_JSON)
-                .content(subscription("https://push.example/1"))).andExpect(status().isNoContent());
+                .content(subscription("https://fcm.googleapis.com/fcm/send/1"))).andExpect(status().isNoContent());
         mvc.perform(courier.with(post("/api/push/subscribe")).contentType(MediaType.APPLICATION_JSON)
-                .content(subscription("https://push.example/1"))).andExpect(status().isNoContent());
+                .content(subscription("https://fcm.googleapis.com/fcm/send/1"))).andExpect(status().isNoContent());
         assertEquals(1, subscriptions.count());
 
         mvc.perform(login("admin").with(post("/api/push/subscribe")).contentType(MediaType.APPLICATION_JSON)
-                .content(subscription("https://push.example/1"))).andExpect(status().isNoContent());
+                .content(subscription("https://fcm.googleapis.com/fcm/send/1"))).andExpect(status().isNoContent());
         assertEquals(1, subscriptions.count());
         assertFalse(subscriptions.findByUserIdIn(java.util.List.of(luis.getId())).iterator().hasNext());
 
+        // Quien no es dueño de la suscripción no puede darla de baja.
         mvc.perform(courier.with(post("/api/push/unsubscribe")).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"endpoint\":\"https://push.example/1\"}")).andExpect(status().isNoContent());
+                .content("{\"endpoint\":\"https://fcm.googleapis.com/fcm/send/1\"}")).andExpect(status().isNoContent());
+        assertEquals(1, subscriptions.count());
+        mvc.perform(login("admin").with(post("/api/push/unsubscribe")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"endpoint\":\"https://fcm.googleapis.com/fcm/send/1\"}")).andExpect(status().isNoContent());
         assertEquals(0, subscriptions.count());
     }
 
     @Test
     void rechazaSuscripcionesSinClaves() throws Exception {
         mvc.perform(login("luis").with(post("/api/push/subscribe")).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"endpoint\":\"https://push.example/2\"}")).andExpect(status().isBadRequest());
+                .content("{\"endpoint\":\"https://fcm.googleapis.com/fcm/send/2\"}")).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void rechazaDestinosQueNoSonServiciosPush() throws Exception {
+        Browser courier = login("luis");
+        for (String endpoint : new String[] {
+                "http://fcm.googleapis.com/fcm/send/1",
+                "https://169.254.169.254/latest/meta-data",
+                "https://127.0.0.1:8080/api/health",
+                "https://fcm.googleapis.com.evil.example/x",
+                "https://evil.example/fcm.googleapis.com",
+                "https://user@fcm.googleapis.com/x",
+                "https://fcm.googleapis.com:8443/x"}) {
+            mvc.perform(courier.with(post("/api/push/subscribe")).contentType(MediaType.APPLICATION_JSON)
+                    .content(subscription(endpoint))).andExpect(status().isBadRequest());
+        }
+        assertEquals(0, subscriptions.count());
+    }
+
+    @Test
+    void limitaLosDispositivosPorCuenta() throws Exception {
+        Browser courier = login("luis");
+        for (int i = 0; i < PushController.MAX_PER_USER; i++) {
+            mvc.perform(courier.with(post("/api/push/subscribe")).contentType(MediaType.APPLICATION_JSON)
+                    .content(subscription("https://fcm.googleapis.com/fcm/send/d" + i))).andExpect(status().isNoContent());
+        }
+        mvc.perform(courier.with(post("/api/push/subscribe")).contentType(MediaType.APPLICATION_JSON)
+                .content(subscription("https://fcm.googleapis.com/fcm/send/extra"))).andExpect(status().isConflict());
+        mvc.perform(courier.with(post("/api/push/subscribe")).contentType(MediaType.APPLICATION_JSON)
+                .content(subscription("https://fcm.googleapis.com/fcm/send/d0"))).andExpect(status().isNoContent());
+    }
+
+    @Test
+    void restablecerLaContrasenaOdesactivarQuitaSusDispositivos() throws Exception {
+        Browser admin = login("admin");
+        mvc.perform(login("luis").with(post("/api/push/subscribe")).contentType(MediaType.APPLICATION_JSON)
+                .content(subscription("https://fcm.googleapis.com/fcm/send/luis"))).andExpect(status().isNoContent());
+        mvc.perform(admin.with(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/couriers/" + luis.getId() + "/password"))
+                .contentType(MediaType.APPLICATION_JSON).content("{\"password\":\"otra-clave-99\"}")).andExpect(status().isOk());
+        assertEquals(0, subscriptions.count());
+    }
+
+    @Test
+    void rechazaCuerposDemasiadoGrandes() throws Exception {
+        String body = "{\"endpoint\":\"" + "a".repeat(300_000) + "\"}";
+        mvc.perform(login("luis").with(post("/api/push/unsubscribe")).contentType(MediaType.APPLICATION_JSON)
+                .content(body)).andExpect(status().isContentTooLarge());
     }
 
     @Test

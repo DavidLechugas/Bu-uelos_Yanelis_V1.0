@@ -31,6 +31,7 @@ import com.bunuelosyanelys.backend.auth.AppUser;
 import com.bunuelosyanelys.backend.auth.Role;
 import com.sun.net.httpserver.HttpServer;
 
+@org.springframework.test.context.TestPropertySource(properties = "app.push.extra-hosts=127.0.0.1")
 /** Comprueba de punta a punta que un pedido nuevo genera un push cifrado y firmado hacia el dispositivo. */
 class PushDeliveryTest extends ApiTestSupport {
 

@@ -24,6 +24,7 @@ import com.bunuelosyanelys.backend.auth.PrincipalAdmin;
 import com.bunuelosyanelys.backend.auth.Role;
 import com.bunuelosyanelys.backend.auth.SessionService;
 import com.bunuelosyanelys.backend.common.ApiException;
+import com.bunuelosyanelys.backend.push.PushNotifier;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -61,14 +62,16 @@ public class AdminController {
     private final PasswordEncoder encoder;
     private final SessionService sessions;
     private final PrincipalAdmin principal;
+    private final PushNotifier push;
     private final Clock clock;
 
     public AdminController(AppUserRepository users, PasswordEncoder encoder, SessionService sessions,
-            PrincipalAdmin principal, Clock clock) {
+            PrincipalAdmin principal, PushNotifier push, Clock clock) {
         this.users = users;
         this.encoder = encoder;
         this.sessions = sessions;
         this.principal = principal;
+        this.push = push;
         this.clock = clock;
     }
 
@@ -105,6 +108,7 @@ public class AdminController {
         AppUser saved = users.save(admin);
         if (!request.activo()) {
             sessions.revokeAll(id);
+            push.forget(id);
         }
         return view(saved);
     }
@@ -117,6 +121,7 @@ public class AdminController {
         admin.setPasswordHash(encoder.encode(request.password()));
         AppUser saved = users.save(admin);
         sessions.revokeAll(id);
+        push.forget(id);
         return view(saved);
     }
 

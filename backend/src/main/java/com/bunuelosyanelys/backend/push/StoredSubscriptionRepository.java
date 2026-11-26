@@ -9,5 +9,9 @@ interface StoredSubscriptionRepository extends MongoRepository<StoredSubscriptio
 
     List<StoredSubscription> findByUserIdIn(Collection<String> userIds);
 
+    long countByUserId(String userId);
+
     void deleteByUserId(String userId);
+
+    void deleteByIdAndUserId(String id, String userId);
 }

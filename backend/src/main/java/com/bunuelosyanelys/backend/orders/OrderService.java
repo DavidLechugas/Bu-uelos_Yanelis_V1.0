@@ -1,6 +1,8 @@
 package com.bunuelosyanelys.backend.orders;
 
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -30,6 +32,9 @@ public class OrderService {
     static final int LIST_LIMIT = 200;
     static final String LOCAL_CLIENT = "Venta en local";
 
+    /** Tras este tiempo de cerrado, el domiciliario deja de ver teléfono y dirección de sus pedidos. */
+    static final Duration CONTACT_RETENTION = Duration.ofDays(3);
+
     private static final Map<OrderStatus, OrderStatus> COURIER_TRANSITIONS = Map.of(
             OrderStatus.ASIGNADO, OrderStatus.EN_CAMINO,
             OrderStatus.EN_CAMINO, OrderStatus.ENTREGADO);
@@ -58,15 +63,37 @@ public class OrderService {
         if (user.isAdmin()) {
             return orders.findAllByOrderByCreadoEnDesc(page);
         }
+        Instant staleBefore = clock.instant().minus(CONTACT_RETENTION);
         List<Order> result = new ArrayList<>(orders.findByDomiciliarioIdOrderByCreadoEnDesc(user.id(), page));
-        // Disponibles: se ven para decidir si tomarlos, pero sin el teléfono hasta que sean suyos.
+        // Cerrado hace tiempo: ya no hace falta contactar al cliente.
+        for (Order own : result) {
+            if (!own.getEstado().isOpen() && own.getActualizadoEn() != null && own.getActualizadoEn().isBefore(staleBefore)) {
+                own.setTelefono("");
+                own.setDireccion("");
+            }
+        }
+        // Disponibles: solo lo necesario para decidir si tomarlos; el resto llega al hacerlos suyos.
         for (Order available : orders.findByEstadoAndDomiciliarioIdIsNullAndTipoNotOrderByCreadoEnDesc(
                 OrderStatus.PENDIENTE, OrderType.LOCAL, page)) {
             available.setTelefono("");
+            available.setCliente(firstName(available.getCliente()));
+            available.setDireccion(area(available.getDireccion()));
             result.add(available);
         }
         result.sort(Comparator.comparing(Order::getCreadoEn).reversed());
         return result.size() > LIST_LIMIT ? result.subList(0, LIST_LIMIT) : result;
+    }
+
+    private static String firstName(String name) {
+        String trimmed = name == null ? "" : name.trim();
+        int space = trimmed.indexOf(' ');
+        return space < 0 ? trimmed : trimmed.substring(0, space);
+    }
+
+    /** Solo la zona (lo que sigue a la primera coma, p. ej. el barrio); sin coma no se muestra nada. */
+    static String area(String address) {
+        int comma = address == null ? -1 : address.indexOf(',');
+        return comma < 0 ? "" : address.substring(comma + 1).trim();
     }
 
     /** Toma atómica: solo uno gana si varios lo intentan a la vez. */
