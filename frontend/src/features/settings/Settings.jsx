@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { disablePush, enablePush, pushStatus } from '../push/push.js';
+import { LegalLinks } from '../legal/LegalLinks.jsx';
 import { loadPreferences, savePreferences } from './preferences.js';
 
 export const THEMES = [
@@ -103,6 +104,10 @@ export function Settings({ onOpenProfile }) {
         <h3>Cuenta</h3>
         <p className="management-hint">Cambia tu nombre, tu foto o tu contraseña.</p>
         <button type="button" className="btn-secondary" onClick={onOpenProfile}>Abrir mi perfil</button>
+      </div>
+      <div className="card settings-group">
+        <h3>Legal</h3>
+        <LegalLinks prefix="Consulta la " />
       </div>
     </section>
   );

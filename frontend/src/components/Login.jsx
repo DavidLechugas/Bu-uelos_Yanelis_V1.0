@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { auth } from '../api/client.js';
+import { LegalLinks } from '../features/legal/LegalLinks.jsx';
 import { EyeIcon, EyeOffIcon } from './icons.jsx';
 
 export function Login({ onLogin, connectionError }) {
@@ -128,6 +129,7 @@ export function Login({ onLogin, connectionError }) {
           </p>
         )}
       </form>
+      <LegalLinks prefix="Al entrar aceptas la " />
     </main>
   );
 }
