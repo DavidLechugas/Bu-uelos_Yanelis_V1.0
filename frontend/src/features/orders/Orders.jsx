@@ -493,7 +493,7 @@ export function Orders({ user, active = true, onFetched, onChanged }) {
               <div><dt>Creado</dt><dd><time dateTime={detail.creadoEn}>{dateTime.format(new Date(detail.creadoEn))}</time></dd></div>
             </dl>
 
-            {CONTACTABLE.has(detail.estado) && !isLocal(detail) && (
+            {CONTACTABLE.has(detail.estado) && !isLocal(detail) && detail.telefono && (
               <div className="order-contact">
                 <a className="btn-secondary" href={`tel:${detail.telefono.replace(/[^0-9+]/g, '')}`} aria-label={`Llamar a ${detail.cliente}`}>
                   <PhoneIcon size={18} /> Llamar

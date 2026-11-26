@@ -38,6 +38,9 @@ export default {
       if (request.headers.has(name)) headers.set(name, request.headers.get(name));
     }
     headers.set('cache-control', 'no-store');
+    // IP real del cliente para el límite de intentos de login; la fija el Worker, nunca el navegador.
+    const clientIp = request.headers.get('cf-connecting-ip');
+    if (clientIp) headers.set('x-client-ip', clientIp);
     const target = `${BACKEND_ORIGIN}${url.pathname}${url.search}`;
     const upstream = new Request(target, {
       method: request.method,

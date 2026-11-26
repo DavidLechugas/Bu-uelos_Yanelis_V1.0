@@ -96,6 +96,10 @@ export default function App() {
   async function handleLogout() {
     try {
       await releasePush();
+    } catch {
+      // Dar de baja el push no debe impedir cerrar la sesión.
+    }
+    try {
       await auth.logout();
     } catch {
       // Aunque falle la red, la interfaz sale; la sesión caduca sola.

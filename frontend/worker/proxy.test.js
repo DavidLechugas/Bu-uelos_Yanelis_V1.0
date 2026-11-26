@@ -56,6 +56,18 @@ describe('Worker: API bajo el mismo origen', () => {
     }
   });
 
+  it('fija x-client-ip con la IP de Cloudflare e ignora la del navegador', async () => {
+    const fetch = vi.fn().mockResolvedValue(Response.json({}));
+    vi.stubGlobal('fetch', fetch);
+    await worker.fetch(new Request(`${origin}/api/auth/session`, {
+      headers: { 'x-client-ip': '6.6.6.6', 'cf-connecting-ip': '203.0.113.5' },
+    }), environment());
+    expect(fetch.mock.calls[0][0].headers.get('x-client-ip')).toBe('203.0.113.5');
+
+    await worker.fetch(new Request(`${origin}/api/auth/session`, { headers: { 'x-client-ip': '6.6.6.6' } }), environment());
+    expect(fetch.mock.calls[1][0].headers.get('x-client-ip')).toBeNull();
+  });
+
   it('conserva las cookies de respuesta separadas y los errores de autorización', async () => {
     const headers = new Headers({ 'content-type': 'application/json', 'cache-control': 'public, max-age=3600' });
     headers.append('set-cookie', 'BY_SESSION=opaque; Path=/; HttpOnly; Secure; SameSite=Lax');
