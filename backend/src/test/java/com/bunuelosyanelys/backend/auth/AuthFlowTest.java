@@ -83,6 +83,26 @@ class AuthFlowTest extends ApiTestSupport {
     }
 
     @Test
+    void elBloqueoDeUnOrigenNoDejaFueraAlDuenoDeLaCuenta() throws Exception {
+        createUser("duenio", "Dueño", Role.ADMIN, true);
+        Browser browser = anonymous();
+        for (int i = 0; i < LoginAttemptLimiter.MAX_FAILURES; i++) {
+            mvc.perform(browser.with(post("/api/auth/login")).header("X-Client-IP", "203.0.113.9")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json("usuario", "duenio", "password", "mala-clave-" + i)))
+                    .andExpect(status().isUnauthorized());
+        }
+        mvc.perform(browser.with(post("/api/auth/login")).header("X-Client-IP", "203.0.113.9")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json("usuario", "duenio", "password", PASSWORD)))
+                .andExpect(status().isTooManyRequests());
+        mvc.perform(browser.with(post("/api/auth/login")).header("X-Client-IP", "198.51.100.7")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json("usuario", "duenio", "password", PASSWORD)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void logoutRevocaLaSesionEnElServidor() throws Exception {
         createUser("admin", "Yanelys", Role.ADMIN, true);
         Browser admin = login("admin");

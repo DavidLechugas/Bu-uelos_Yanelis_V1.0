@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bunuelosyanelys.backend.common.ApiException;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -61,9 +62,11 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest request,
+            HttpServletRequest http,
             @CookieValue(name = AuthProperties.SESSION_COOKIE, required = false) String previousToken) {
         String username = Credentials.normalizeUsername(request.usuario());
-        if (limiter.isLocked(username)) {
+        String origin = clientOrigin(http);
+        if (limiter.isLocked(username, origin)) {
             throw new ApiException(HttpStatus.TOO_MANY_REQUESTS,
                     "Demasiados intentos fallidos. Espera 15 minutos e inténtalo de nuevo.");
         }
@@ -71,15 +74,21 @@ public class AuthController {
         boolean matches = encoder.matches(request.password(),
                 found.map(AppUser::getPasswordHash).orElse(dummyHash));
         if (found.isEmpty() || !matches || !found.get().isActivo()) {
-            limiter.failure(username);
+            limiter.failure(username, origin);
             throw new ApiException(HttpStatus.UNAUTHORIZED, INVALID_CREDENTIALS);
         }
-        limiter.success(username);
+        limiter.success(username, origin);
         sessions.revoke(previousToken);
         String token = sessions.create(found.get().getId());
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, sessions.cookie(token).toString())
                 .body(Map.of("usuario", AuthUser.of(found.get(), principal.is(found.get()))));
+    }
+
+    /** El Worker de Cloudflare fija X-Client-IP con la IP real; sin él (acceso directo) se usa la del socket. */
+    private static String clientOrigin(HttpServletRequest http) {
+        String header = http.getHeader("X-Client-IP");
+        return header == null || header.isBlank() || header.length() > 64 ? http.getRemoteAddr() : header.trim();
     }
 
     static final String PHOTO_PATTERN = "data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+";

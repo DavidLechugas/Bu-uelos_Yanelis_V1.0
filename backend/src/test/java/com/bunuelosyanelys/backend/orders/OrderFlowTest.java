@@ -82,13 +82,37 @@ class OrderFlowTest extends ApiTestSupport {
     }
 
     @Test
-    void losDisponiblesSeVenSinTelefonoYElPrimeroQueLosTomaSeQuedaConEl() throws Exception {
+    void laZonaDeUnDisponibleEsLoQueSigueALaPrimeraComa() {
+        org.junit.jupiter.api.Assertions.assertEquals("Barrio Centro", OrderService.area("Cra 5 #10-20, Barrio Centro"));
+        org.junit.jupiter.api.Assertions.assertEquals("", OrderService.area("Cra 5 #10-20"));
+    }
+
+    @Test
+    void unDomiciliarioDejaDeVerContactoDeSusPedidosCerradosHaceDias() throws Exception {
+        String id = createOrder(luis.getId());
+        mongo.updateFirst(org.springframework.data.mongodb.core.query.Query.query(
+                org.springframework.data.mongodb.core.query.Criteria.where("_id").is(id)),
+                new org.springframework.data.mongodb.core.query.Update()
+                        .set("estado", OrderStatus.ENTREGADO)
+                        .set("actualizadoEn", java.time.Instant.now().minus(java.time.Duration.ofDays(10))),
+                Order.class);
+        mvc.perform(login("luis").with(get("/api/orders")))
+                .andExpect(jsonPath("$[0].telefono").value(""))
+                .andExpect(jsonPath("$[0].direccion").value(""))
+                .andExpect(jsonPath("$[0].cliente").value("Carmen"));
+        mvc.perform(admin.with(get("/api/orders")))
+                .andExpect(jsonPath("$[0].telefono").value("300 123 4567"));
+    }
+
+    @Test
+    void losDisponiblesSeVenSinDatosPersonalesYElPrimeroQueLosTomaSeQuedaConEl() throws Exception {
         String libre = createOrder(null);
         mvc.perform(login("luis").with(get("/api/orders")))
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].estado").value("PENDIENTE"))
                 .andExpect(jsonPath("$[0].telefono").value(""))
-                .andExpect(jsonPath("$[0].direccion").value("Cra 5 #10-20"));
+                .andExpect(jsonPath("$[0].cliente").value("Carmen"))
+                .andExpect(jsonPath("$[0].direccion").value(""));
 
         Browser luisBrowser = login("luis");
         mvc.perform(luisBrowser.with(post("/api/orders/" + libre + "/tomar")))
@@ -96,7 +120,8 @@ class OrderFlowTest extends ApiTestSupport {
                 .andExpect(jsonPath("$.estado").value("ASIGNADO"))
                 .andExpect(jsonPath("$.domiciliarioNombre").value("Luis"));
         mvc.perform(luisBrowser.with(get("/api/orders")))
-                .andExpect(jsonPath("$[0].telefono").value("300 123 4567"));
+                .andExpect(jsonPath("$[0].telefono").value("300 123 4567"))
+                .andExpect(jsonPath("$[0].direccion").value("Cra 5 #10-20"));
         Browser martaBrowser = login("marta");
         mvc.perform(martaBrowser.with(post("/api/orders/" + libre + "/tomar")))
                 .andExpect(status().isConflict());

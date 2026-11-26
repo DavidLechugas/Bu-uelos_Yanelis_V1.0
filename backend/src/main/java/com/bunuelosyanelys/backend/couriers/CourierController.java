@@ -25,6 +25,7 @@ import com.bunuelosyanelys.backend.common.ApiException;
 import com.bunuelosyanelys.backend.orders.OrderRepository;
 import com.bunuelosyanelys.backend.orders.OrderService;
 import com.bunuelosyanelys.backend.orders.OrderStatus;
+import com.bunuelosyanelys.backend.push.PushNotifier;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -67,15 +68,17 @@ public class CourierController {
     private final OrderService orderService;
     private final PasswordEncoder encoder;
     private final SessionService sessions;
+    private final PushNotifier push;
     private final Clock clock;
 
     public CourierController(AppUserRepository users, OrderRepository orders, OrderService orderService,
-            PasswordEncoder encoder, SessionService sessions, Clock clock) {
+            PasswordEncoder encoder, SessionService sessions, PushNotifier push, Clock clock) {
         this.users = users;
         this.orders = orders;
         this.orderService = orderService;
         this.encoder = encoder;
         this.sessions = sessions;
+        this.push = push;
         this.clock = clock;
     }
 
@@ -109,6 +112,7 @@ public class CourierController {
         long released = 0;
         if (!request.activo()) {
             sessions.revokeAll(id);
+            push.forget(id);
             released = orderService.releaseAssigned(id);
         }
         return view(saved, released);
@@ -120,6 +124,7 @@ public class CourierController {
         courier.setPasswordHash(encoder.encode(request.password()));
         AppUser saved = users.save(courier);
         sessions.revokeAll(id);
+        push.forget(id);
         return view(saved);
     }
 

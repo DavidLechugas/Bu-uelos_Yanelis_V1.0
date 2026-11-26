@@ -1,6 +1,8 @@
 package com.bunuelosyanelys.backend.push;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -25,18 +27,30 @@ public class PushNotifier {
 
     private static final Logger log = LoggerFactory.getLogger(PushNotifier.class);
     private static final int TTL_SECONDS = 600;
+    /** Cada inicio de sesión renueva la suscripción del dispositivo; una más vieja se da por abandonada. */
+    static final Duration MAX_AGE = Duration.ofDays(90);
 
     private final StoredSubscriptionRepository subscriptions;
     private final AppUserRepository users;
+    private final PushEndpoints endpoints;
+    private final Clock clock;
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private final PushService service;
 
-    PushNotifier(StoredSubscriptionRepository subscriptions, AppUserRepository users, VapidKeys keys,
+    PushNotifier(StoredSubscriptionRepository subscriptions, AppUserRepository users, PushEndpoints endpoints,
+            Clock clock, VapidKeys keys,
             @Value("${VAPID_SUBJECT:https://bu-uelos-yanelis-v1-0.davidinternet224.workers.dev}") String subject)
             throws Exception {
         this.subscriptions = subscriptions;
         this.users = users;
+        this.endpoints = endpoints;
+        this.clock = clock;
         this.service = new PushService(keys.publicKey(), keys.privateKey(), subject);
+    }
+
+    /** Quita los dispositivos de una cuenta (al desactivarla o restablecer su contraseña). */
+    public void forget(String userId) {
+        subscriptions.deleteByUserId(userId);
     }
 
     public void toUser(String userId, String title, String body, String tag) {
@@ -71,6 +85,11 @@ public class PushNotifier {
 
     private void send(StoredSubscription subscription, byte[] payload) {
         try {
+            if (subscription.getCreadoEn().plus(MAX_AGE).isBefore(clock.instant())) {
+                subscriptions.deleteById(subscription.getId());
+                return;
+            }
+            endpoints.require(subscription.getEndpoint());
             int status = service.send(new Notification(subscription.getEndpoint(), subscription.getP256dh(),
                     subscription.getAuth(), payload, TTL_SECONDS), Encoding.AES128GCM).getStatusLine().getStatusCode();
             if (status == 404 || status == 410) {
